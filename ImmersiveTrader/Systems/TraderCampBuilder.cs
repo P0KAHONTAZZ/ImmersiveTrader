@@ -11,25 +11,44 @@ public static class TraderCampBuilder
         var camp = TraderCampRegistry.Camps.FirstOrDefault(x => x.TraderId == traderId);
         if (camp == null) return;
 
+        var root = new GameObject($"ImmersiveTrader_Camp_{traderId}");
+        root.transform.SetParent(parent, false);
+
         foreach (var prop in camp.Props)
         {
             var source = PrefabManager.Instance.GetPrefab(prop.Prefab);
             if (source == null)
             {
-                // Camps are atmosphere, never a hard dependency for trader generation.
+                if (!prop.Optional)
+                    Plugin.Log.LogWarning($"Required camp prop '{prop.Prefab}' missing for {traderId}.");
                 continue;
             }
 
-            var instance = Object.Instantiate(source, parent);
-            instance.name = $"ImmersiveTrader_Camp_{traderId}_{prop.Prefab}";
+            var instance = Object.Instantiate(source, root.transform);
+            instance.name = $"{prop.Prefab}_decor";
             instance.transform.localPosition = prop.Position;
             instance.transform.localRotation = Quaternion.Euler(prop.Rotation);
             instance.transform.localScale = source.transform.localScale * prop.Scale;
 
-            // Location containers are authored prefabs. Runtime-spawn networking on copied
-            // decorative pieces is unnecessary and can create duplicate ownership/ZDO state.
-            var nview = instance.GetComponent<ZNetView>();
-            if (nview != null) Object.DestroyImmediate(nview);
+            MakeDecoration(instance);
         }
+    }
+
+    private static void MakeDecoration(GameObject instance)
+    {
+        // These objects are baked into the generated trader location. Strip networking
+        // and player interaction from the copied props so a chest/workbench/log remains
+        // scenery instead of creating duplicate ZDO ownership or usable camp equipment.
+        foreach (var nview in instance.GetComponentsInChildren<ZNetView>(true))
+            Object.DestroyImmediate(nview);
+
+        foreach (var container in instance.GetComponentsInChildren<Container>(true))
+            Object.DestroyImmediate(container);
+
+        foreach (var crafting in instance.GetComponentsInChildren<CraftingStation>(true))
+            Object.DestroyImmediate(crafting);
+
+        foreach (var wear in instance.GetComponentsInChildren<WearNTear>(true))
+            Object.DestroyImmediate(wear);
     }
 }
