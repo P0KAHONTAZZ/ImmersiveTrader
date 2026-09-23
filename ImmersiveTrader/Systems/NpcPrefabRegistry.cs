@@ -105,9 +105,29 @@ public static class NpcPrefabRegistry
         var wolf = PrefabManager.Instance.CreateClonedPrefab("ImmersiveTrader_Jackie", "Wolf");
         if (wolf == null) return;
 
+        // Jackie must use the same neutral/player faction as our traders.
+        // Keeping native Wolf MonsterAI is fine, but leaving the cloned wolf on its
+        // original ForestMonsters faction makes it attack both the player and Troldad.
         var character = wolf.GetComponent<Character>();
         if (character != null)
+        {
             character.m_name = "Jackie";
+            character.m_faction = Character.Faction.Players;
+        }
+
+        var monsterAi = wolf.GetComponent<MonsterAI>();
+        if (monsterAi != null)
+        {
+            monsterAi.m_viewRange = 0f;
+            monsterAi.m_viewAngle = 0f;
+            monsterAi.m_hearRange = 0f;
+            monsterAi.m_alertRange = 0f;
+            monsterAi.m_fleeIfNotAlerted = false;
+        }
+
+        var tameable = wolf.GetComponent<Tameable>();
+        if (tameable != null)
+            Object.DestroyImmediate(tameable);
 
         wolf.transform.localScale = Vector3.one * 0.9f;
         PrefabManager.Instance.AddPrefab(wolf);
