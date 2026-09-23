@@ -18,7 +18,7 @@ public static class NpcPrefabRegistry
         ["grimvald"] = ("Haldor", 1.00f),
         ["rudy_warg"] = ("Dverger", 1.00f),
         ["mokra_dzika"] = ("BogWitch", 1.00f),
-        ["bogdan_bones"] = ("Draugr", 0.95f),
+        ["encek"] = ("Draugr", 0.95f),
         ["hrothgar"] = ("Fenring", 0.82f),
         ["ylva_frost"] = ("DvergerMage", 0.95f),
         ["bjarki_goldtooth"] = ("Goblin", 1.05f),
