@@ -15,7 +15,7 @@ public sealed class Plugin : BaseUnityPlugin
     internal static BepInEx.Logging.ManualLogSource Log = null!;
     public const string ModGuid = "p0kahontazz.immersivetrader";
     public const string ModName = "ImmersiveTrader";
-    public const string ModVersion = "0.4.1";
+    public const string ModVersion = "0.5.0";
 
     internal static ConfigEntry<float> TreasureWeight = null!;
     internal static ConfigEntry<int> MaxCarriedTreasures = null!;
