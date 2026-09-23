@@ -57,10 +57,11 @@ public static class NpcPrefabRegistry
 
             if (trader.Id == "troldad")
             {
-                // Troll's native hit colliders win Valheim's hover raycast. Put the
-                // interaction implementation on every collider object as well, so the
-                // exact object hit by the player resolves Troldad's Hoverable.
-                AttachInteractionToColliders(prefab, interaction);
+                // Valheim resolves hover/interact through the Rigidbody owner of a hit
+                // collider. Troll uses child hitboxes but the Rigidbody lives on the
+                // creature root, so keep TraderNpc on that exact root and disable the
+                // enemy HUD flag while retaining Character + MonsterAI.
+                PrepareTroldad(prefab, interaction);
             }
 
             PrefabManager.Instance.AddPrefab(prefab);
@@ -112,14 +113,29 @@ public static class NpcPrefabRegistry
         if (tameable != null) Object.DestroyImmediate(tameable);
     }
 
-    private static void AttachInteractionToColliders(GameObject prefab, TraderNpc owner)
+    private static void PrepareTroldad(GameObject prefab, TraderNpc owner)
     {
-        foreach (var collider in prefab.GetComponentsInChildren<Collider>(true))
+        // Keep proxies on both the Rigidbody owner and child hitboxes. Different
+        // interaction paths in Valheim may resolve either object.
+        var rigidbody = prefab.GetComponentInChildren<Rigidbody>(true);
+        if (rigidbody != null)
         {
-            var hitObject = collider.gameObject;
-            var proxy = hitObject.GetComponent<TraderInteractionProxy>() ?? hitObject.AddComponent<TraderInteractionProxy>();
+            var proxy = rigidbody.gameObject.GetComponent<TraderInteractionProxy>() ?? rigidbody.gameObject.AddComponent<TraderInteractionProxy>();
             proxy.Owner = owner;
         }
+
+        foreach (var collider in prefab.GetComponentsInChildren<Collider>(true))
+        {
+            var proxy = collider.gameObject.GetComponent<TraderInteractionProxy>() ?? collider.gameObject.AddComponent<TraderInteractionProxy>();
+            proxy.Owner = owner;
+        }
+
+        var character = prefab.GetComponent<Character>();
+        if (character != null)
+            character.m_name = string.Empty;
+
+        // EnemyHud ignores creatures without a visible name. Do not destroy Character
+        // or MonsterAI: both are required by Troll animation/AI.
     }
 
     private static void RegisterJackie()
