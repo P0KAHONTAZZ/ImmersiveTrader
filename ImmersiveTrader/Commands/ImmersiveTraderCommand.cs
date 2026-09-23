@@ -13,7 +13,7 @@ namespace ImmersiveTrader.Commands;
 public sealed class ImmersiveTraderCommand : ConsoleCommand
 {
     public override string Name => "it";
-    public override string Help => "ImmersiveTrader tools: it help | list | spawn <id> | look <id> | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId>";
+    public override string Help => "ImmersiveTrader tools: it help | list | spawn <id> | look <id> | diagnose | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId>";
 
     public override void Run(string[] args, Terminal context)
     {
@@ -24,6 +24,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             case "spawn": SpawnTrader(args, context); break;
             case "look": SpawnNpcLook(args, context); break;
             case "clearspawned": ClearSpawnedTraders(context); break;
+            case "diagnose": DiagnoseNearby(context); break;
             case "items": PrintTreasures(context); break;
             case "give": GiveTreasure(args, context); break;
             case "route": PrintRoute(args, context); break;
@@ -32,7 +33,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "spawn", "look", "clearspawned", "items", "give", "route", "task" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -42,6 +43,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it list");
         c.AddString("  it spawn <traderId>");
         c.AddString("  it look <traderId>");
+        c.AddString("  it diagnose");
         c.AddString("  it clearspawned");
         c.AddString("  it items");
         c.AddString("  it give <treasureId> <sourceTraderId>");
@@ -85,6 +87,36 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         var spawned = UnityEngine.Object.Instantiate(prefab, p.transform.position + p.transform.forward * 3f, Quaternion.identity);
         c.AddString(spawned != null ? $"Spawned NPC-shell prototype for {trader.Name}." : "Spawn failed.");
     }
+
+    private static void DiagnoseNearby(Terminal c)
+    {
+        var player = Player.m_localPlayer;
+        if (player == null) { c.AddString("Enter a world first."); return; }
+
+        c.AddString("=== ImmersiveTrader nearby diagnostic (30m) ===");
+        int index = 0;
+        foreach (var npc in UnityEngine.Object.FindObjectsOfType<TraderNpc>())
+        {
+            if (npc == null) continue;
+            float distance = Vector3.Distance(player.transform.position, npc.transform.position);
+            if (distance > 30f) continue;
+
+            var view = npc.GetComponent<ZNetView>();
+            string zdo = view == null ? "no-ZNetView" :
+                (!view.IsValid() ? "ZNetView-invalid" : $"ZNetView-valid owner={view.IsOwner()}");
+            int visuals = npc.GetComponentsInChildren<PlayerLikeNpcVisual>(true).Length;
+            int renderers = npc.GetComponentsInChildren<Renderer>(true).Count(x => x.enabled);
+            string parent = npc.transform.parent != null ? npc.transform.parent.name : "<root>";
+            c.AddString($"#{++index} id={npc.TraderId} go={npc.gameObject.name} parent={parent} dist={distance:0.0}m {zdo} playerLooks={visuals} enabledRenderers={renderers}");
+        }
+
+        if (index == 0) c.AddString("No TraderNpc components within 30m.");
+
+        int playerVisuals = UnityEngine.Object.FindObjectsOfType<PlayerLikeNpcVisual>().Count(x =>
+            Vector3.Distance(player.transform.position, x.transform.position) <= 30f);
+        c.AddString($"Nearby PlayerLikeNpcVisual roots: {playerVisuals}");
+    }
+
 
     private static void ClearSpawnedTraders(Terminal c)
     {
