@@ -8,48 +8,45 @@ public static class QuestDelivery
 {
     public static bool TryDeliverAny(Player player, TraderDefinition target)
     {
-        long playerId = player.GetPlayerID();
-        var active = QuestState.GetActive(playerId)
-            .FirstOrDefault(x => x.SourceTraderId != target.Id && HasTreasure(player, x.TreasureId));
+        var carried = InventoryTreasureService.GetCarried(player)
+            .FirstOrDefault(x => x.SourceTraderId != target.Id);
 
-        if (active == null)
-            return false;
+        if (carried == null) return false;
+
+        if (!ProgressionGate.CanReceiveTier(target.BiomeTier))
+        {
+            player.Message(MessageHud.MessageType.Center,
+                $"{target.Name}: You are not ready for goods from this region yet.");
+            return true;
+        }
 
         var reward = RewardRegistry.Rewards.FirstOrDefault(x =>
-            x.TraderId == target.Id && x.TreasureId == active.TreasureId);
-
-        if (reward == null)
-            return false;
+            x.TraderId == target.Id && x.TreasureId == carried.TreasureId);
+        if (reward == null) return false;
 
         var rewardPrefab = ObjectDB.instance.GetItemPrefab(reward.ItemPrefab);
         if (rewardPrefab == null)
         {
             player.Message(MessageHud.MessageType.Center, $"{target.Name}: I cannot prepare your payment.");
-            return false;
+            return true;
         }
 
-        int amount = RewardScaling.GetRewardAmount(reward.BaseAmount, active.SourceBiomeTier, target.BiomeTier);
+        int amount = RewardScaling.GetRewardAmount(reward.BaseAmount, carried.SourceBiomeTier, target.BiomeTier);
         if (!player.GetInventory().CanAddItem(rewardPrefab, amount))
         {
             player.Message(MessageHud.MessageType.Center, $"{target.Name}: Make room for your payment first.");
-            return false;
+            return true;
         }
 
-        string treasurePrefab = $"ImmersiveTrader_{active.TreasureId}";
-        player.GetInventory().RemoveItem(treasurePrefab, 1);
+        player.GetInventory().RemoveItem(carried.Item);
         GiveReward(player, rewardPrefab, amount);
-        QuestState.TryRemove(playerId, active.TreasureId, out _);
 
         string message = target.LiesAboutRewards
             ? TroldadDialogue.GetLie(reward.ItemPrefab, amount)
             : $"{target.Name}: Deal. Your payment: {amount} {reward.ItemPrefab}.";
-
         player.Message(MessageHud.MessageType.Center, message);
         return true;
     }
-
-    private static bool HasTreasure(Player player, string treasureId)
-        => player.GetInventory().CountItems($"ImmersiveTrader_{treasureId}") > 0;
 
     private static void GiveReward(Player player, GameObject prefab, int amount)
     {
