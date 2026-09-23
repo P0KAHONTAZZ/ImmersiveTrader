@@ -8,7 +8,9 @@ public static class InventoryTreasureService
     public sealed record CarriedTreasure(
         ItemDrop.ItemData Item,
         string TreasureId,
-        string SourceTraderId,\n        int SourceBiomeTier,\n        string ShipmentId);
+        string SourceTraderId,
+        int SourceBiomeTier,
+        string ShipmentId);
 
     public static IReadOnlyList<CarriedTreasure> GetCarried(Player player)
     {
@@ -22,7 +24,12 @@ public static class InventoryTreasureService
             if (!TreasureMetadata.TryRead(item, out var sourceTrader, out var sourceTier))
                 continue;
 
-            result.Add(new CarriedTreasure(item, treasureId, sourceTrader, sourceTier, TreasureMetadata.GetShipmentId(item)));
+            result.Add(new CarriedTreasure(
+                item,
+                treasureId,
+                sourceTrader,
+                sourceTier,
+                TreasureMetadata.GetShipmentId(item)));
         }
 
         return result;
