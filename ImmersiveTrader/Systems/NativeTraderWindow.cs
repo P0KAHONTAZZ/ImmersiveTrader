@@ -27,7 +27,35 @@ public static class NativeTraderWindow
             return false;
         }
 
-        var trader = npc.GetComponent<Trader>() ?? npc.AddComponent<Trader>();
+        // Never AddComponent<Trader>() to our NPC: Trader.Awake/Update expects a fully
+        // authored vanilla trader hierarchy (talk points, dialogue lists, effects, etc.).
+        // Clone Haldor's initialized Trader component data onto a disabled helper instead.
+        var haldor = ZNetScene.instance?.GetPrefab("Haldor");
+        var template = haldor?.GetComponent<Trader>();
+        if (template == null)
+        {
+            player.Message(MessageHud.MessageType.Center, "Native trader template is unavailable.");
+            return false;
+        }
+
+        var helper = UnityEngine.Object.Instantiate(haldor, npc.transform.position, npc.transform.rotation);
+        helper.name = $"ImmersiveTrader_Store_{definition.Id}";
+        helper.transform.SetParent(npc.transform, true);
+
+        // Hide the helper completely; it exists only to provide a valid vanilla Trader
+        // object to StoreGui. The visible/interactable NPC remains our custom shell.
+        foreach (var renderer in helper.GetComponentsInChildren<Renderer>(true))
+            renderer.enabled = false;
+        foreach (var collider in helper.GetComponentsInChildren<Collider>(true))
+            collider.enabled = false;
+
+        var trader = helper.GetComponent<Trader>();
+        if (trader == null)
+        {
+            UnityEngine.Object.Destroy(helper);
+            return false;
+        }
+
         trader.m_name = definition.Name;
         trader.m_items.Clear();
 
