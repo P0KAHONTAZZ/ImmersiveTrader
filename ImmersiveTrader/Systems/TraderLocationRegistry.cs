@@ -18,7 +18,7 @@ public static class TraderLocationRegistry
             if (trader.IsLegendary) continue;
 
             var container = ZoneManager.Instance.CreateLocationContainer($"ImmersiveTrader_Location_{trader.Id}");
-            var npcPrefab = PrefabManager.Instance.GetPrefab($"ImmersiveTrader_NPC_{trader.Id}");
+            var npcPrefab = PrefabManager.Instance.GetPrefab($"ImmersiveTrader_NPCLOOK_{trader.Id}");
             if (npcPrefab == null) continue;
 
             var npc = Object.Instantiate(npcPrefab, container.transform);
