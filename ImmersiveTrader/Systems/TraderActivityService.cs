@@ -32,11 +32,17 @@ public static class TraderActivityService
     public static bool TryAccept(Player player, string traderId)
     {
         long playerId = player.GetPlayerID();
-        int activeForTrader = Active.Values.Count(x => x.Definition.TraderId == traderId &&
-            Active.Any(a => a.Key.PlayerId == playerId && ReferenceEquals(a.Value, x)));
-        if (activeForTrader >= 5)
+        int activeTotal = Active.Count(x => x.Key.PlayerId == playerId);
+        if (activeTotal >= 5)
         {
-            player.Message(MessageHud.MessageType.Center, "You already have all 5 contracts active from this trader.");
+            player.Message(MessageHud.MessageType.Center, "You already have 5 active contracts in total.");
+            return false;
+        }
+
+        int activeForTrader = Active.Count(x => x.Key.PlayerId == playerId && x.Value.Definition.TraderId == traderId);
+        if (activeForTrader >= 2)
+        {
+            player.Message(MessageHud.MessageType.Center, "You already have 2 active contracts from this trader.");
             return false;
         }
 
@@ -74,9 +80,9 @@ public static class TraderActivityService
         CompletedOnce.Add((playerId, state.Definition.Id));
         Active.Remove(entry.Key);
 
-        int activeCount = Active.Count(x => x.Key.PlayerId == playerId && x.Value.Definition.TraderId == traderId);
+        int activeTotal = Active.Count(x => x.Key.PlayerId == playerId);
         player.Message(MessageHud.MessageType.Center,
-            $"Contract complete: +{state.Definition.RewardSkillLevels:0} {state.Definition.RewardSkill} | active contracts {activeCount}/5");
+            $"Contract complete: +{state.Definition.RewardSkillLevels:0} {state.Definition.RewardSkill} | active contracts {activeTotal}/5");
         return true;
     }
 
@@ -102,7 +108,7 @@ public static class TraderActivityService
 
         return string.Join(" | ", active.Select(x =>
             $"{x.Definition.Title}: {x.Progress}/{x.Definition.RequiredAmount} (+{x.Definition.RewardSkillLevels:0} {x.Definition.RewardSkill})")) +
-            $" | active {active.Length}/5";
+            $" | active overall {activeTotal}/5";
     }
 
     private static int GetWorldDay()
