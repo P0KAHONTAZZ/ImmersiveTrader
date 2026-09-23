@@ -6,7 +6,7 @@ namespace ImmersiveTrader;
 
 public static class QuestDelivery
 {
-    public static bool TryDeliverAny(Player player, TraderDefinition target)
+    public static bool TryDeliverAny(Player player, TraderDefinition target, Vector3 targetPosition)
     {
         var carried = InventoryTreasureService.GetCarried(player).FirstOrDefault(x => x.SourceTraderId != target.Id);
         if (carried == null) return false;
@@ -43,8 +43,7 @@ public static class QuestDelivery
         float routeMetres = 0f;
         if (!target.IsLegendary && TreasureMetadata.TryGetSourcePosition(carried.Item, out float sourceX, out float sourceZ))
         {
-            var here = player.transform.position;
-            routeMetres = Vector2.Distance(new Vector2(sourceX, sourceZ), new Vector2(here.x, here.z));
+            routeMetres = Vector2.Distance(new Vector2(sourceX, sourceZ), new Vector2(targetPosition.x, targetPosition.z));
         }
         float distanceMultiplier = target.IsLegendary ? 1f : RewardScaling.GetDistanceMultiplier(routeMetres);
         int amount = target.IsLegendary
