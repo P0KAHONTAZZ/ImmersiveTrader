@@ -12,7 +12,7 @@ namespace ImmersiveTrader.Commands;
 public sealed class ImmersiveTraderCommand : ConsoleCommand
 {
     public override string Name => "it";
-    public override string Help => "ImmersiveTrader tools: it help | list | spawn <id> | items | give <treasureId> <sourceTraderId> | route <source> <target>";
+    public override string Help => "ImmersiveTrader tools: it help | list | spawn <id> | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId>";
 
     public override void Run(string[] args, Terminal context)
     {
@@ -24,11 +24,12 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             case "items": PrintTreasures(context); break;
             case "give": GiveTreasure(args, context); break;
             case "route": PrintRoute(args, context); break;
+            case "task": TaskCommand(args, context); break;
             default: context.AddString($"Unknown ImmersiveTrader command: {args[0]}"); PrintHelp(context); break;
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "spawn", "items", "give", "route" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "spawn", "items", "give", "route", "task" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -40,6 +41,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it items");
         c.AddString("  it give <treasureId> <sourceTraderId>");
         c.AddString("  it route <sourceTraderId> <targetTraderId>");
+        c.AddString("  it task <offer|accept|status|turnin> <traderId>");
     }
 
     private static void PrintTraders(Terminal c)
@@ -95,6 +97,37 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         if (item == null) { c.AddString("Treasure was added but could not be identified."); return; }
         TreasureMetadata.Stamp(item, source.Id, source.BiomeTier);
         c.AddString($"Added {def.DisplayName} from {source.Name}. Use 'it items' to inspect it.");
+    }
+
+
+    private static void TaskCommand(string[] args, Terminal c)
+    {
+        var player = Player.m_localPlayer;
+        if (player == null) { c.AddString("Enter a world first."); return; }
+        if (args.Length < 3) { c.AddString("Usage: it task <offer|accept|status|turnin> <traderId>"); return; }
+        var trader = FindTrader(args[2]);
+        if (trader == null) { c.AddString("Unknown trader ID."); return; }
+
+        switch (args[1].ToLowerInvariant())
+        {
+            case "offer":
+                var offer = TraderActivityService.GetOffer(trader.Id);
+                c.AddString(offer == null ? "No task configured." :
+                    $"{offer.Title}: {offer.Description} Target={offer.TargetPrefab} x{offer.RequiredAmount}, reward={offer.RewardPrefab} x{offer.RewardAmount}");
+                break;
+            case "accept":
+                c.AddString(TraderActivityService.TryAccept(player, trader.Id) ? "Task accepted." : "Could not accept task.");
+                break;
+            case "status":
+                c.AddString(TraderActivityService.GetStatus(player, trader.Id));
+                break;
+            case "turnin":
+                c.AddString(TraderActivityService.TryTurnIn(player, trader.Id) ? "Task interaction handled." : "No active task.");
+                break;
+            default:
+                c.AddString("Usage: it task <offer|accept|status|turnin> <traderId>");
+                break;
+        }
     }
 
     private static void PrintRoute(string[] args, Terminal c)
