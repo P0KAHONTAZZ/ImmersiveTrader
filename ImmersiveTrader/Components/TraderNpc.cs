@@ -12,7 +12,7 @@ public sealed class TraderNpc : MonoBehaviour, Hoverable, Interactable
         TraderRegistry.Traders.FirstOrDefault(x => x.Id == TraderId);
 
     public string GetHoverName() => Definition?.Name ?? "Trader";
-    public Vector3 GetHoverOffset() => Vector3.up * 1.8f;
+    public float GetHoverOffset() => 1.8f;
 
     public string GetHoverText()
     {
