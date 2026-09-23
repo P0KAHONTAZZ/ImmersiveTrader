@@ -10,18 +10,17 @@ public static class QuestDelivery
     {
         var carried = InventoryTreasureService.GetCarried(player)
             .FirstOrDefault(x => x.SourceTraderId != target.Id);
-
         if (carried == null) return false;
 
-        if (!ProgressionGate.CanReceiveTier(target.BiomeTier))
+        if (!target.IsLegendary && !ProgressionGate.CanReceiveTier(target.BiomeTier))
         {
             player.Message(MessageHud.MessageType.Center,
                 $"{target.Name}: You are not ready for goods from this region yet.");
             return true;
         }
 
-        var reward = RewardRegistry.Rewards.FirstOrDefault(x =>
-            x.TraderId == target.Id && x.TreasureId == carried.TreasureId);
+        var table = target.IsLegendary ? LegendaryRewardRegistry.Rewards : RewardRegistry.Rewards;
+        var reward = table.FirstOrDefault(x => x.TraderId == target.Id && x.TreasureId == carried.TreasureId);
         if (reward == null) return false;
 
         var rewardPrefab = ObjectDB.instance.GetItemPrefab(reward.ItemPrefab);
@@ -31,7 +30,10 @@ public static class QuestDelivery
             return true;
         }
 
-        int amount = RewardScaling.GetRewardAmount(reward.BaseAmount, carried.SourceBiomeTier, target.BiomeTier);
+        int amount = target.IsLegendary
+            ? reward.BaseAmount
+            : RewardScaling.GetRewardAmount(reward.BaseAmount, carried.SourceBiomeTier, target.BiomeTier);
+
         if (!player.GetInventory().CanAddItem(rewardPrefab, amount))
         {
             player.Message(MessageHud.MessageType.Center, $"{target.Name}: Make room for your payment first.");
@@ -41,9 +43,12 @@ public static class QuestDelivery
         player.GetInventory().RemoveItem(carried.Item);
         GiveReward(player, rewardPrefab, amount);
 
-        string message = target.LiesAboutRewards
-            ? TroldadDialogue.GetLie(reward.ItemPrefab, amount)
-            : $"{target.Name}: Deal. Your payment: {amount} {reward.ItemPrefab}.";
+        string message = target.IsLegendary
+            ? $"???: Those who trade in gold count coins. Those who trade in favors count roads.\nReceived: {amount} {reward.ItemPrefab}"
+            : target.LiesAboutRewards
+                ? TroldadDialogue.GetLie(reward.ItemPrefab, amount)
+                : $"{target.Name}: Deal. Your payment: {amount} {reward.ItemPrefab}.";
+
         player.Message(MessageHud.MessageType.Center, message);
         return true;
     }
