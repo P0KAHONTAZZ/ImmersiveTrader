@@ -45,7 +45,11 @@ public sealed class LegendaryMietegPresence : MonoBehaviour
         int activeSite = PositiveModulo(StableWorldSeed() + window, Mathf.Max(1, SiteCount));
         bool shouldBeActive = SiteIndex == activeSite;
 
-        if (!force && shouldBeActive == _active) return;
+        if (!force && shouldBeActive == _active)
+        {
+            if (_active) RefreshDiscoveryPin();
+            return;
+        }
         _active = shouldBeActive;
 
         foreach (var renderer in _renderers) renderer.enabled = _active;
