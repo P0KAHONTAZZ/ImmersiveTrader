@@ -34,9 +34,9 @@ public static class TraderActivityService
         long playerId = player.GetPlayerID();
         int activeForTrader = Active.Values.Count(x => x.Definition.TraderId == traderId &&
             Active.Any(a => a.Key.PlayerId == playerId && ReferenceEquals(a.Value, x)));
-        if (activeForTrader >= 2)
+        if (activeForTrader >= 5)
         {
-            player.Message(MessageHud.MessageType.Center, "You already have 2 active contracts from this trader.");
+            player.Message(MessageHud.MessageType.Center, "You already have all 5 contracts active from this trader.");
             return false;
         }
 
@@ -74,10 +74,9 @@ public static class TraderActivityService
         CompletedOnce.Add((playerId, state.Definition.Id));
         Active.Remove(entry.Key);
 
-        int done = TraderActivityRegistry.Activities.Count(x => x.TraderId == traderId &&
-            CompletedOnce.Contains((playerId, x.Id)));
+        int activeCount = Active.Count(x => x.Key.PlayerId == playerId && x.Value.Definition.TraderId == traderId);
         player.Message(MessageHud.MessageType.Center,
-            $"Contract complete: +{state.Definition.RewardSkillLevels:0} {state.Definition.RewardSkill} | trader contracts {done}/5");
+            $"Contract complete: +{state.Definition.RewardSkillLevels:0} {state.Definition.RewardSkill} | active contracts {activeCount}/5");
         return true;
     }
 
@@ -97,13 +96,13 @@ public static class TraderActivityService
         long playerId = player.GetPlayerID();
         var active = Active.Where(x => x.Key.PlayerId == playerId && x.Value.Definition.TraderId == traderId)
             .Select(x => x.Value).ToArray();
-        int done = TraderActivityRegistry.Activities.Count(x => x.TraderId == traderId && CompletedOnce.Contains((playerId, x.Id)));
+        int activeCount = Active.Count(x => x.Key.PlayerId == playerId && x.Value.Definition.TraderId == traderId);
         if (active.Length == 0)
             return $"No active task. Unique contracts completed: {done}/5.";
 
         return string.Join(" | ", active.Select(x =>
             $"{x.Definition.Title}: {x.Progress}/{x.Definition.RequiredAmount} (+{x.Definition.RewardSkillLevels:0} {x.Definition.RewardSkill})")) +
-            $" | complete {done}/5";
+            $" | active {active.Length}/5";
     }
 
     private static int GetWorldDay()
