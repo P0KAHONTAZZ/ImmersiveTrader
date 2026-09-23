@@ -61,6 +61,9 @@ public static class NpcPrefabRegistry
         var vanillaTrader = prefab.GetComponent<Trader>();
         if (vanillaTrader != null) Object.DestroyImmediate(vanillaTrader);
 
+        var npcTalk = prefab.GetComponent<NpcTalk>();
+        if (npcTalk != null) Object.DestroyImmediate(npcTalk);
+
         var monsterAi = prefab.GetComponent<MonsterAI>();
         if (monsterAi != null) Object.DestroyImmediate(monsterAi);
 
@@ -80,10 +83,7 @@ public static class NpcPrefabRegistry
 
         var character = wolf.GetComponent<Character>();
         if (character != null)
-        {
             character.m_name = "Jackie";
-            character.SetTamed(true);
-        }
 
         wolf.transform.localScale = Vector3.one * 0.9f;
         PrefabManager.Instance.AddPrefab(wolf);
