@@ -18,10 +18,10 @@ public static class RewardScaling
 
     public static float GetDistanceMultiplier(float metres)
     {
-        if (metres < 1500f) return 1f;
-        if (metres < 3000f) return 1.25f;
-        if (metres < 5000f) return 1.5f;
-        if (metres < 7500f) return 1.75f;
+        if (metres < Plugin.DistanceTier1Metres.Value) return 1f;
+        if (metres < Plugin.DistanceTier2Metres.Value) return 1.25f;
+        if (metres < Plugin.DistanceTier3Metres.Value) return 1.5f;
+        if (metres < Plugin.DistanceTier4Metres.Value) return 1.75f;
         return 2f;
     }
 
