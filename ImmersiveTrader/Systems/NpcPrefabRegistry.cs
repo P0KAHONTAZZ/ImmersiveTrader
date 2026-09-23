@@ -49,6 +49,11 @@ public static class NpcPrefabRegistry
             var prefab = PrefabManager.Instance.CreateClonedPrefab($"ImmersiveTrader_NPC_{trader.Id}", source);
             if (prefab == null) continue;
 
+            // Parallel NPC-shell prototype: every regular trader also gets a native
+            // Hildir-based interaction shell. This lets us compare the current visual
+            // prefab against known-good NPC behaviour without replacing the live roster.
+            RegisterNpcShellPrototype(trader.Id, source, look.Item2);
+
             MakePassive(prefab);
             prefab.transform.localScale = Vector3.one * look.Item2;
 
@@ -67,6 +72,33 @@ public static class NpcPrefabRegistry
 
         RegisterJackie();
         _registered = true;
+    }
+
+    private static void RegisterNpcShellPrototype(string traderId, string visualSource, float visualScale)
+    {
+        string shellName = $"ImmersiveTrader_NPCLOOK_{traderId}";
+        if (PrefabManager.Instance.GetPrefab(shellName) != null) return;
+
+        var shell = PrefabManager.Instance.CreateClonedPrefab(shellName, "Hildir");
+        if (shell == null) return;
+
+        var vanillaTrader = shell.GetComponent<Trader>();
+        if (vanillaTrader != null) Object.DestroyImmediate(vanillaTrader);
+
+        var npcTalk = shell.GetComponent<NpcTalk>();
+        if (npcTalk != null) Object.DestroyImmediate(npcTalk);
+
+        var npc = shell.GetComponent<TraderNpc>() ?? shell.AddComponent<TraderNpc>();
+        npc.TraderId = traderId;
+
+        // Keep Hildir's root, colliders, Rigidbody and NPC interaction hierarchy intact.
+        // The visual source is stored on the prototype for the next step: transplanting
+        // only render/animation presentation instead of cloning Monster Character logic.
+        var descriptor = shell.AddComponent<NpcLookPrototype>();
+        descriptor.VisualSource = visualSource;
+        descriptor.VisualScale = visualScale;
+
+        PrefabManager.Instance.AddPrefab(shell);
     }
 
     private static void MakePassive(GameObject prefab)
