@@ -8,7 +8,8 @@ public static class QuestDelivery
 {
     public static bool TryDeliverAny(Player player, TraderDefinition target)
     {
-        var eligible = InventoryTreasureService.GetCarried(player)\n            .Where(x => x.SourceTraderId != target.Id)\n            .ToList();\n        var carried = eligible.FirstOrDefault();
+        var carried = InventoryTreasureService.GetCarried(player)
+            .FirstOrDefault(x => x.SourceTraderId != target.Id);
         if (carried == null) return false;
 
         if (!target.IsLegendary && !ProgressionGate.CanReceiveTier(target.BiomeTier))
@@ -29,7 +30,10 @@ public static class QuestDelivery
             return true;
         }
 
-        int multiplier = target.IsLegendary ? 1 : RewardScaling.GetMultiplier(carried.SourceBiomeTier, target.BiomeTier);\n        int amount = target.IsLegendary\n            ? reward.BaseAmount\n            : reward.BaseAmount * multiplier;
+        int multiplier = target.IsLegendary
+            ? 1
+            : RewardScaling.GetMultiplier(carried.SourceBiomeTier, target.BiomeTier);
+        int amount = reward.BaseAmount * multiplier;
 
         if (!player.GetInventory().CanAddItem(rewardPrefab, amount))
         {
