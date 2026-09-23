@@ -103,6 +103,34 @@ public static class NativeTraderWindow
             Plugin.Log.LogInfo($"Native shop {definition.Id}: {offer.ItemPrefab}, configured={offer.Price}, native={tradeItem.m_price}, stack={tradeItem.m_stack}");
         }
 
+        // Cargo checkpoint: one real physical shipment in the SAME native StoreGui.
+        // For this step we intentionally use vanilla purchase handling only. Once its
+        // presence/purchase is runtime-verified, the next commit will stamp issuer metadata.
+        var cargoDef = TreasureRegistry.Treasures.FirstOrDefault();
+        if (cargoDef != null)
+        {
+            var cargoPrefab = ObjectDB.instance?.GetItemPrefab($"ImmersiveTrader_{cargoDef.Id}");
+            var cargoDrop = cargoPrefab?.GetComponent<ItemDrop>();
+            if (cargoDrop != null)
+            {
+                trader.m_items.Add(new Trader.TradeItem
+                {
+                    m_prefab = cargoDrop,
+                    m_price = 10,
+                    m_stack = 1,
+                    m_requiredGlobalKey = string.Empty,
+                    m_levelUpEffect = false,
+                    m_buyPlayerEffects = new EffectList(),
+                    m_icon = null,
+                    m_name = cargoDrop.m_itemData?.m_shared?.m_name ?? cargoDef.DisplayName,
+                    m_tooltip = "Transport cargo. Heavy and cannot pass through portals.",
+                    m_buyKey = string.Empty,
+                    m_incrementKey = string.Empty,
+                    m_incrementAmount = 0
+                });
+            }
+        }
+
         if (trader.m_items.Count == 0)
             return false;
 
