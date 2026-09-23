@@ -1,13 +1,12 @@
 using HarmonyLib;
-using UnityEngine;
 
 namespace ImmersiveTrader.Patches;
 
 /// <summary>
-/// Counts only kills credited by Valheim to the local Player. This is a prototype hook;
-/// persistence/server reconciliation remains separate from task rules.
+/// Counts a hunt kill only when Valheim reports the local player as the last attacker.
+/// Prefix is used because Character death cleanup can clear attacker state afterwards.
 /// </summary>
-[HarmonyPatch(typeof(Character), nameof(Character.OnDeath))]
+[HarmonyPatch(typeof(Character), "OnDeath")]
 internal static class TraderActivityKillPatch
 {
     private static void Prefix(Character __instance)
@@ -15,9 +14,10 @@ internal static class TraderActivityKillPatch
         var local = Player.m_localPlayer;
         if (local == null || __instance == null || __instance.IsPlayer()) return;
 
-        var attacker = __instance.GetLastAttacker();
+        Character attacker = __instance.GetLastAttacker();
         if (attacker != local) return;
 
-        TraderActivityService.RegisterKill(local, Utils.GetPrefabName(__instance.gameObject));
+        string prefabName = Utils.GetPrefabName(__instance.gameObject);
+        TraderActivityService.RegisterKill(local, prefabName);
     }
 }
