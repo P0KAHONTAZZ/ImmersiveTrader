@@ -7,41 +7,51 @@ public static class TraderInteraction
 {
     public static void Handle(Player player, TraderDefinition trader, bool alternateUse, Vector3 traderPosition)
     {
+        // Alternate interaction remains the quick shop action while the native StoreGui
+        // integration is developed. Normal interaction is now deterministic: an existing
+        // delivery/task is handled before a new courier shipment is issued.
         if (alternateUse)
         {
-            var offers = TraderShop.GetAvailableOffers(trader.Id);
-            if (offers.Length > 0)
-            {
-                // Temporary direct-buy path. The backend is intentionally UI-agnostic so
-                // StoreGui/native-panel wiring can replace this without changing economy.
-                TraderShop.TryBuy(player, offers[0]);
-                return;
-            }
-
-            var activity = TraderActivityService.GetOffer(trader.Id);
-            if (activity != null)
-            {
-                player.Message(MessageHud.MessageType.Center,
-                    $"{trader.Name}: {activity.Title} - {activity.Description}");
-                return;
-            }
+            ShowOrBuyStock(player, trader);
+            return;
         }
 
         if (QuestDelivery.TryDeliverAny(player, trader, traderPosition))
             return;
 
-        // Existing task takes priority over issuing another courier shipment.
-        if (TraderActivityService.TryTurnIn(player, trader.Id))
+        string taskStatus = TraderActivityService.GetStatus(player, trader.Id);
+        if (taskStatus != "No active task.")
+        {
+            TraderActivityService.TryTurnIn(player, trader.Id);
             return;
+        }
 
         if (QuestIssuing.TryGiveTreasure(player, trader, traderPosition))
             return;
 
-        // If the player cannot take another shipment, the same trader can still offer
-        // their local hunt/gather job instead of becoming a dead interaction.
         if (TraderActivityService.TryAccept(player, trader.Id))
             return;
 
+        ShowStock(player, trader);
+    }
+
+    private static void ShowOrBuyStock(Player player, TraderDefinition trader)
+    {
+        var offers = TraderShop.GetAvailableOffers(trader.Id);
+        if (offers.Length == 0)
+        {
+            var activity = TraderActivityService.GetOffer(trader.Id);
+            player.Message(MessageHud.MessageType.Center, activity == null
+                ? $"{trader.Name}: Nothing for sale right now."
+                : $"{trader.Name}: {activity.Title} - {activity.Description}");
+            return;
+        }
+
+        TraderShop.TryBuy(player, offers[0]);
+    }
+
+    private static void ShowStock(Player player, TraderDefinition trader)
+    {
         var stock = TraderShop.GetAvailableOffers(trader.Id);
         if (stock.Length > 0)
         {
@@ -51,6 +61,14 @@ public static class TraderInteraction
             return;
         }
 
-        player.Message(MessageHud.MessageType.Center, $"{trader.Name}: Come back when you can carry another shipment.");
+        var activity = TraderActivityService.GetOffer(trader.Id);
+        if (activity != null)
+        {
+            player.Message(MessageHud.MessageType.Center,
+                $"{trader.Name}: {activity.Title} - {activity.Description}");
+            return;
+        }
+
+        player.Message(MessageHud.MessageType.Center, $"{trader.Name}: Nothing available right now.");
     }
 }
