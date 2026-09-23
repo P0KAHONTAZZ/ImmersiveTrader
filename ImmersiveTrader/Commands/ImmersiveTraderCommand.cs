@@ -93,28 +93,32 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         var player = Player.m_localPlayer;
         if (player == null) { c.AddString("Enter a world first."); return; }
 
-        c.AddString("=== ImmersiveTrader nearby diagnostic (30m) ===");
-        int index = 0;
-        foreach (var npc in UnityEngine.Object.FindObjectsOfType<TraderNpc>())
+        c.AddString("=== Nearby object diagnostic (30m) ===");
+        int traderCount = 0, namedCount = 0, hildirCount = 0;
+        var all = Resources.FindObjectsOfTypeAll<GameObject>();
+        foreach (var go in all)
         {
-            if (npc == null) continue;
-            float distance = Vector3.Distance(player.transform.position, npc.transform.position);
+            if (go == null || !go.scene.IsValid() || !go.activeInHierarchy) continue;
+            float distance = Vector3.Distance(player.transform.position, go.transform.position);
             if (distance > 30f) continue;
 
-            var view = npc.GetComponent<ZNetView>();
-            string zdo = view == null ? "no-ZNetView" :
-                (!view.IsValid() ? "ZNetView-invalid" : $"ZNetView-valid owner={view.IsOwner()}");
-            int visuals = npc.GetComponentsInChildren<PlayerLikeNpcVisual>(true).Length;
-            int renderers = npc.GetComponentsInChildren<Renderer>(true).Count(x => x.enabled);
-            string parent = npc.transform.parent != null ? npc.transform.parent.name : "<root>";
-            c.AddString($"#{++index} id={npc.TraderId} go={npc.gameObject.name} parent={parent} dist={distance:0.0}m {zdo} playerLooks={visuals} enabledRenderers={renderers}");
+            string name = go.name ?? string.Empty;
+            bool oursByName = name.IndexOf("ImmersiveTrader", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool vanillaShell = name.IndexOf("Hildir", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                name.IndexOf("Haldor", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                name.IndexOf("Troll", StringComparison.OrdinalIgnoreCase) >= 0;
+            var npc = go.GetComponent<TraderNpc>();
+            var trader = go.GetComponent<Trader>();
+            if (!oursByName && !vanillaShell && npc == null && trader == null) continue;
+
+            var view = go.GetComponent<ZNetView>();
+            string zdo = view == null ? "no-ZNV" : (!view.IsValid() ? "ZNV-invalid" : $"ZNV-valid owner={view.IsOwner()}");
+            string parent = go.transform.parent != null ? go.transform.parent.name : "<root>";
+            c.AddString($"OBJ {++namedCount}: {name} parent={parent} d={distance:0.0} {zdo} TraderNpc={(npc != null ? npc.TraderId : "-")} Trader={(trader != null)}");
+            if (npc != null) traderCount++;
+            if (name.IndexOf("Hildir", StringComparison.OrdinalIgnoreCase) >= 0) hildirCount++;
         }
-
-        if (index == 0) c.AddString("No TraderNpc components within 30m.");
-
-        int playerVisuals = UnityEngine.Object.FindObjectsOfType<PlayerLikeNpcVisual>().Count(x =>
-            Vector3.Distance(player.transform.position, x.transform.position) <= 30f);
-        c.AddString($"Nearby PlayerLikeNpcVisual roots: {playerVisuals}");
+        c.AddString($"Summary: matchingObjects={namedCount}, TraderNpc={traderCount}, HildirNamed={hildirCount}");
     }
 
 
