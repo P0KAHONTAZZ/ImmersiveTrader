@@ -38,10 +38,23 @@ public static class NativeTraderWindow
             return false;
         }
 
+        // Instantiate the helper while the Haldor prefab is disabled. Otherwise its
+        // ZNetView.Awake can create a persistent vanilla Haldor ZDO before we hide it,
+        // which then reappears as a real Haldor after the next world load.
+        bool haldorWasActive = haldor.activeSelf;
+        haldor.SetActive(false);
         var helper = UnityEngine.Object.Instantiate(haldor, npc.transform.position + Vector3.down * 1000f, npc.transform.rotation);
+        haldor.SetActive(haldorWasActive);
+
         helper.name = $"ImmersiveTrader_Store_{definition.Id}";
         helper.transform.SetParent(npc.transform, true);
         helper.transform.localScale = Vector3.zero;
+
+        var helperView = helper.GetComponent<ZNetView>();
+        if (helperView != null)
+            UnityEngine.Object.DestroyImmediate(helperView);
+
+        helper.SetActive(true);
 
         // Hide the helper completely; it exists only to provide a valid vanilla Trader
         // object to StoreGui. The visible/interactable NPC remains our custom shell.
