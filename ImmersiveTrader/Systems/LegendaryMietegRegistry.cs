@@ -33,6 +33,8 @@ public static class LegendaryMietegRegistry
 
         // Prepared rare sites. Runtime activation/deactivation is deliberately separated
         // from world generation so one site can be selected for a 1-2 day appearance.
+        int siteIndex = 0;
+        const int totalSites = 8;
         foreach (var biome in new[] { Heightmap.Biome.BlackForest, Heightmap.Biome.Swamp, Heightmap.Biome.Mountain, Heightmap.Biome.Plains })
         {
             var container = ZoneManager.Instance.CreateLocationContainer($"ImmersiveTrader_MietegSite_{biome}");
@@ -42,6 +44,9 @@ public static class LegendaryMietegRegistry
             var npc = Object.Instantiate(prefab, container.transform);
             npc.name = prefab.name;
             npc.transform.localPosition = Vector3.zero;
+            var presence = npc.GetComponent<LegendaryMietegPresence>() ?? npc.AddComponent<LegendaryMietegPresence>();
+            presence.SiteIndex = siteIndex++;
+            presence.SiteCount = totalSites;
 
             var config = new LocationConfig
             {
