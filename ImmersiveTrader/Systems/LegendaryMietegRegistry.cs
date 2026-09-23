@@ -15,14 +15,38 @@ public static class LegendaryMietegRegistry
     {
         if (_prefabRegistered) return;
 
-        var prefab = PrefabManager.Instance.CreateClonedPrefab("ImmersiveTrader_NPC_legendary_mieteg", "Haldor");
+        var prefab = PrefabManager.Instance.CreateClonedPrefab("ImmersiveTrader_NPC_legendary_mieteg", "Odin");
         if (prefab == null) return;
+
+        // Mieteg deliberately uses Odin's hooded one-eyed presentation. Strip Odin's
+        // encounter controller so he cannot vanish or run the vanilla apparition logic;
+        // ImmersiveTrader controls his 1-2 day presence instead.
+        foreach (var behaviour in prefab.GetComponents<MonoBehaviour>())
+        {
+            if (behaviour != null && behaviour.GetType().Name == "Odin")
+                Object.DestroyImmediate(behaviour);
+        }
 
         var vanillaTrader = prefab.GetComponent<Trader>();
         if (vanillaTrader != null) Object.DestroyImmediate(vanillaTrader);
 
+        var npcTalk = prefab.GetComponent<NpcTalk>();
+        if (npcTalk != null) Object.DestroyImmediate(npcTalk);
+
+        // Odin is primarily an apparition and may not expose a normal trader hit volume.
+        // Give Mieteg a dedicated interaction surface without touching his visuals.
+        var interaction = new GameObject("ImmersiveTrader_MietegInteraction");
+        interaction.transform.SetParent(prefab.transform, false);
+        interaction.transform.localPosition = new Vector3(0f, 1.15f, 0f);
+        var collider = interaction.AddComponent<SphereCollider>();
+        collider.radius = 0.85f;
+        collider.isTrigger = false;
+
         var npc = prefab.GetComponent<TraderNpc>() ?? prefab.AddComponent<TraderNpc>();
         npc.TraderId = "legendary_mieteg";
+        var proxy = interaction.AddComponent<TraderInteractionProxy>();
+        proxy.Owner = npc;
+
         PrefabManager.Instance.AddPrefab(prefab);
         _prefabRegistered = true;
     }
