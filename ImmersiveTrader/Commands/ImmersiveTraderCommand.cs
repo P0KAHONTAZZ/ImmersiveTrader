@@ -12,7 +12,7 @@ namespace ImmersiveTrader.Commands;
 public sealed class ImmersiveTraderCommand : ConsoleCommand
 {
     public override string Name => "it";
-    public override string Help => "ImmersiveTrader tools: it help | list | spawn <id> | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId>";
+    public override string Help => "ImmersiveTrader tools: it help | list | spawn <id> | look <id> | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId>";
 
     public override void Run(string[] args, Terminal context)
     {
@@ -21,6 +21,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         {
             case "list": PrintTraders(context); break;
             case "spawn": SpawnTrader(args, context); break;
+            case "look": SpawnNpcLook(args, context); break;
             case "items": PrintTreasures(context); break;
             case "give": GiveTreasure(args, context); break;
             case "route": PrintRoute(args, context); break;
@@ -29,7 +30,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "spawn", "items", "give", "route", "task" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "spawn", "look", "items", "give", "route", "task" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -38,6 +39,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("ImmersiveTrader developer commands:");
         c.AddString("  it list");
         c.AddString("  it spawn <traderId>");
+        c.AddString("  it look <traderId>");
         c.AddString("  it items");
         c.AddString("  it give <treasureId> <sourceTraderId>");
         c.AddString("  it route <sourceTraderId> <targetTraderId>");
@@ -64,6 +66,21 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         var p = Player.m_localPlayer;
         var spawned = UnityEngine.Object.Instantiate(prefab, p.transform.position + p.transform.forward * 2f, Quaternion.identity);
         c.AddString(spawned != null ? $"Spawned {trader.Name}." : $"Failed to spawn {trader.Name}.");
+    }
+
+
+    private static void SpawnNpcLook(string[] args, Terminal c)
+    {
+        if (Player.m_localPlayer == null) { c.AddString("Enter a world first."); return; }
+        if (args.Length < 2) { c.AddString("Usage: it look <traderId>"); return; }
+        var trader = FindTrader(args[1]);
+        if (trader == null || trader.IsLegendary) { c.AddString("Unknown regular trader."); return; }
+        string prefabName = $"ImmersiveTrader_NPCLOOK_{trader.Id}";
+        var prefab = PrefabManager.Instance.GetPrefab(prefabName);
+        if (prefab == null) { c.AddString($"Prototype not registered: {prefabName}"); return; }
+        var p = Player.m_localPlayer;
+        var spawned = UnityEngine.Object.Instantiate(prefab, p.transform.position + p.transform.forward * 3f, Quaternion.identity);
+        c.AddString(spawned != null ? $"Spawned NPC-shell prototype for {trader.Name}." : "Spawn failed.");
     }
 
     private static void PrintTreasures(Terminal c)
