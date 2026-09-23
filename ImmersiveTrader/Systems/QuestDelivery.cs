@@ -29,8 +29,17 @@ public static class QuestDelivery
             return true;
         }
 
-        int routeMultiplier = target.IsLegendary ? 1 : RewardScaling.GetMultiplier(carried.SourceBiomeTier, target.BiomeTier);
-        int amount = Mathf.Max(1, reward.BaseAmount * routeMultiplier);
+        int biomeMultiplier = target.IsLegendary ? 1 : RewardScaling.GetBiomeMultiplier(carried.SourceBiomeTier, target.BiomeTier);
+        float routeMetres = 0f;
+        if (!target.IsLegendary && TreasureMetadata.TryGetSourcePosition(carried.Item, out float sourceX, out float sourceZ))
+        {
+            var here = player.transform.position;
+            routeMetres = Vector2.Distance(new Vector2(sourceX, sourceZ), new Vector2(here.x, here.z));
+        }
+        float distanceMultiplier = target.IsLegendary ? 1f : RewardScaling.GetDistanceMultiplier(routeMetres);
+        int amount = target.IsLegendary
+            ? reward.BaseAmount
+            : RewardScaling.GetRewardAmount(reward.BaseAmount, carried.SourceBiomeTier, target.BiomeTier, routeMetres);
 
         if (!player.GetInventory().CanAddItem(rewardPrefab, amount))
         {
@@ -45,7 +54,7 @@ public static class QuestDelivery
             ? $"???: Those who trade in gold count coins. Those who trade in favors count roads. Received: {amount} {reward.ItemPrefab}"
             : target.LiesAboutRewards
                 ? TroldadDialogue.GetLie(reward.ItemPrefab, amount)
-                : $"{target.Name}: Deal. Route x{routeMultiplier}. Your payment: {amount} {reward.ItemPrefab}.";
+                : $"{target.Name}: Deal. Biome x{biomeMultiplier}, distance {routeMetres:0}m x{distanceMultiplier:0.##}. Your payment: {amount} {reward.ItemPrefab}.";
 
         player.Message(MessageHud.MessageType.Center, message);
         return true;
