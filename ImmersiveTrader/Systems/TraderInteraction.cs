@@ -22,7 +22,16 @@ public static class TraderInteraction
         if (QuestDelivery.TryDeliverAny(player, trader, traderPosition))
             return;
 
+        // Existing task takes priority over issuing another courier shipment.
+        if (TraderActivityService.TryTurnIn(player, trader.Id))
+            return;
+
         if (QuestIssuing.TryGiveTreasure(player, trader, traderPosition))
+            return;
+
+        // If the player cannot take another shipment, the same trader can still offer
+        // their local hunt/gather job instead of becoming a dead interaction.
+        if (TraderActivityService.TryAccept(player, trader.Id))
             return;
 
         var stock = TraderShop.GetAvailableOffers(trader.Id);
