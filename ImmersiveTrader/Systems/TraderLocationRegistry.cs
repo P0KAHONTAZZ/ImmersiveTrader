@@ -27,10 +27,24 @@ public static class TraderLocationRegistry
             // before Jotunn resolves references, instead of being appended to an already
             // created empty location container.
             var locationPrefab = new GameObject($"ImmersiveTrader_LocationPrefab_{trader.Id}");
+            // Runtime-created templates must never become live scene objects. Unlike an
+            // AssetBundle prefab (MWL's case), Object.Instantiate on an active networked
+            // NPC immediately runs its Valheim lifecycle and can create a ZDO at world
+            // origin. That was the source of traders appearing on the player spawn and
+            // multiplying after every restart.
+            //
+            // Keep the entire source location inactive while assembling it. Jotunn can
+            // then clone/fix it as a location template without any template NPC ever
+            // entering ZNetScene as a live world instance.
+            locationPrefab.SetActive(false);
 
+            bool npcPrefabWasActive = npcPrefab.activeSelf;
+            npcPrefab.SetActive(false);
             var npc = Object.Instantiate(npcPrefab, locationPrefab.transform);
+            npcPrefab.SetActive(npcPrefabWasActive);
             npc.name = npcPrefab.name;
             npc.transform.localPosition = Vector3.zero;
+            npc.SetActive(true);
 
             // Camp props belong to the generated location container so the trader never
             // spawns as an isolated character in an empty biome.
@@ -41,8 +55,12 @@ public static class TraderLocationRegistry
                 var jackiePrefab = PrefabManager.Instance.GetPrefab("ImmersiveTrader_Jackie");
                 if (jackiePrefab != null)
                 {
+                    bool jackiePrefabWasActive = jackiePrefab.activeSelf;
+                    jackiePrefab.SetActive(false);
                     var jackie = Object.Instantiate(jackiePrefab, locationPrefab.transform);
+                    jackiePrefab.SetActive(jackiePrefabWasActive);
                     jackie.name = "Jackie";
+                    jackie.SetActive(true);
                     jackie.transform.localPosition = new Vector3(2.2f, 0f, 1.2f);
                     jackie.transform.localRotation = Quaternion.Euler(0f, 210f, 0f);
 
