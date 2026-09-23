@@ -1,26 +1,41 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\Environment.props" Condition="Exists('..\Environment.props')" />
+
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <AssemblyName>ImmersiveTrader</AssemblyName>
     <RootNamespace>ImmersiveTrader</RootNamespace>
+    <ValheimManaged>$(VALHEIM_INSTALL)\valheim_Data\Managed</ValheimManaged>
+    <BepInExCore>$(VALHEIM_INSTALL)\BepInEx\core</BepInExCore>
+    <BepInExPlugins>$(VALHEIM_INSTALL)\BepInEx\plugins</BepInExPlugins>
   </PropertyGroup>
+
+  <Target Name="ValidateValheimPath" BeforeTargets="ResolveReferences">
+    <Error Condition="'$(VALHEIM_INSTALL)' == ''" Text="VALHEIM_INSTALL is not set. Copy Environment.props.example to Environment.props and set the Valheim installation path." />
+    <Error Condition="!Exists('$(VALHEIM_INSTALL)\valheim.exe')" Text="Valheim was not found at: $(VALHEIM_INSTALL)" />
+  </Target>
+
   <ItemGroup>
     <Reference Include="BepInEx">
-      <HintPath>lib/BepInEx.dll</HintPath>
+      <HintPath>$(BepInExCore)\BepInEx.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Jotunn">
-      <HintPath>lib/Jotunn.dll</HintPath>
+      <HintPath>$(BepInExPlugins)\Jotunn\Jotunn.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="assembly_valheim">
-      <HintPath>lib/assembly_valheim.dll</HintPath>
+      <HintPath>$(ValheimManaged)\assembly_valheim.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>lib/UnityEngine.dll</HintPath>
+      <HintPath>$(ValheimManaged)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ValheimManaged)\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
