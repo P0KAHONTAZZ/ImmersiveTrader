@@ -41,11 +41,11 @@ public static class RewardRegistry
         Add("mokra_dzika", "merchants_gem", "ElderBark", 15);
         Add("mokra_dzika", "runic_ledger", "Ooze", 10);
 
-        Add("bogdan_bones", "ancient_parcel", "Entrails", 15);
-        Add("bogdan_bones", "carved_idol", "Chain", 10);
-        Add("bogdan_bones", "sealed_mead_cask", "Bloodbag", 15);
-        Add("bogdan_bones", "merchants_gem", "Thistle", 20);
-        Add("bogdan_bones", "runic_ledger", "SurtlingCore", 10);
+        Add("encek", "ancient_parcel", "Entrails", 15);
+        Add("encek", "carved_idol", "Chain", 10);
+        Add("encek", "sealed_mead_cask", "Bloodbag", 15);
+        Add("encek", "merchants_gem", "Thistle", 20);
+        Add("encek", "runic_ledger", "SurtlingCore", 10);
 
         Add("hrothgar", "ancient_parcel", "Obsidian", 20);
         Add("hrothgar", "carved_idol", "WolfFang", 10);
