@@ -8,14 +8,13 @@ public static class QuestDelivery
 {
     public static bool TryDeliverAny(Player player, TraderDefinition target)
     {
-        var carried = InventoryTreasureService.GetCarried(player)
-            .FirstOrDefault(x => x.SourceTraderId != target.Id);
+        var carried = InventoryTreasureService.GetCarried(player).FirstOrDefault(x => x.SourceTraderId != target.Id);
         if (carried == null) return false;
 
-        if (!target.IsLegendary && !ProgressionGate.CanReceiveTier(target.BiomeTier))
+        if (!target.IsLegendary && !ProgressionGate.IsRewardTierUnlocked(target.BiomeTier))
         {
             player.Message(MessageHud.MessageType.Center,
-                $"{target.Name}: You are not ready for goods from this region yet.");
+                $"{target.Name}: My better stock is not available yet. Defeat the previous biome boss first.");
             return true;
         }
 
@@ -30,10 +29,12 @@ public static class QuestDelivery
             return true;
         }
 
-        int multiplier = target.IsLegendary
-            ? 1
-            : RewardScaling.GetMultiplier(carried.SourceBiomeTier, target.BiomeTier);
-        long playerId = player.GetPlayerID();\n        int completedBefore = DeliveryReputation.GetCompleted(playerId);\n        float reputationMultiplier = DeliveryReputation.GetMultiplier(playerId);\n        int amount = Mathf.Max(1, Mathf.RoundToInt(reward.BaseAmount * multiplier * reputationMultiplier));
+        int routeMultiplier = target.IsLegendary ? 1 : RewardScaling.GetMultiplier(carried.SourceBiomeTier, target.BiomeTier);
+        long playerId = player.GetPlayerID();
+        int completedBefore = DeliveryReputation.GetCompleted(playerId);
+        int reputationPercent = DeliveryReputation.GetBonusPercent(playerId);
+        float reputationMultiplier = DeliveryReputation.GetMultiplier(playerId);
+        int amount = Mathf.Max(1, Mathf.RoundToInt(reward.BaseAmount * routeMultiplier * reputationMultiplier));
 
         if (!player.GetInventory().CanAddItem(rewardPrefab, amount))
         {
@@ -42,13 +43,14 @@ public static class QuestDelivery
         }
 
         player.GetInventory().RemoveItem(carried.Item);
-        GiveReward(player, rewardPrefab, amount);\n        DeliveryReputation.MarkCompleted(playerId);
+        GiveReward(player, rewardPrefab, amount);
+        DeliveryReputation.MarkCompleted(playerId);
 
         string message = target.IsLegendary
-            ? $"???: Those who trade in gold count coins. Those who trade in favors count roads.\nReceived: {amount} {reward.ItemPrefab}"
+            ? $"???: Those who trade in gold count coins. Those who trade in favors count roads. Received: {amount} {reward.ItemPrefab}"
             : target.LiesAboutRewards
                 ? TroldadDialogue.GetLie(reward.ItemPrefab, amount)
-                : $"{target.Name}: Deal. Route x{multiplier}, reputation +{completedBefore * Plugin.ReputationBonusPerDeliveryPercent.Value}%. Your payment: {amount} {reward.ItemPrefab}.";
+                : $"{target.Name}: Deal. Route x{routeMultiplier}, reputation +{reputationPercent}%. Your payment: {amount} {reward.ItemPrefab}.";
 
         player.Message(MessageHud.MessageType.Center, message);
         return true;
