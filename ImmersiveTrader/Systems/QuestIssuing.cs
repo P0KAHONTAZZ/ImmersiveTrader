@@ -53,7 +53,8 @@ public static class QuestIssuing
             return true;
         }
 
-        TreasureMetadata.Stamp(item, source.Id, source.BiomeTier);
+        var sourcePosition = player.transform.position;
+        TreasureMetadata.Stamp(item, source.Id, source.BiomeTier, sourcePosition.x, sourcePosition.z);
         TraderCooldown.MarkIssued(playerId, source.Id);
         player.Message(MessageHud.MessageType.Center,
             $"{source.Name}: Take {def.DisplayName}. Deliver it to another trader.");
