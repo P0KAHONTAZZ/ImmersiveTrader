@@ -16,8 +16,7 @@ public static class TreasureMetadata
         item.m_customData[ShipmentIdKey] = Guid.NewGuid().ToString("N");
     }
 
-    public static bool TryRead(ItemDrop.ItemData item, out string sourceTraderId, out int sourceBiomeTier)
-    {
+    public static string GetShipmentId(ItemDrop.ItemData item)\n        => item.m_customData.TryGetValue(ShipmentIdKey, out var id) ? id : string.Empty;\n\n    public static bool TryRead(ItemDrop.ItemData item, out string sourceTraderId, out int sourceBiomeTier)\n    {
         sourceTraderId = string.Empty;
         sourceBiomeTier = 0;
 
