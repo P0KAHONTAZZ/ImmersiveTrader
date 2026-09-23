@@ -69,14 +69,14 @@ public static class TraderActivityService
 
         if (!player.GetInventory().AddItem(reward, state.Definition.RewardAmount))
         {
-            // Gather materials were removed only after capacity validation. In the very
-            // unlikely event AddItem still fails, restore them when their prefab exists.
+            // Capacity was checked above. Keep the task active if Valheim still rejects
+            // the reward; for gather jobs restore consumed materials before returning.
             if (state.Definition.Type == TraderActivityType.Gather)
             {
                 var target = ObjectDB.instance?.GetItemPrefab(state.Definition.TargetPrefab);
                 if (target != null) player.GetInventory().AddItem(target, state.Definition.RequiredAmount);
             }
-            player.Message(MessageHud.MessageType.Center, "Task reward failed; gathered items were restored.");
+            player.Message(MessageHud.MessageType.Center, "Task reward failed; nothing was lost.");
             return true;
         }
 
