@@ -16,7 +16,7 @@ public static class TraderActivityService
 
     private static readonly Dictionary<(long PlayerId, string ContractId), State> Active = new();
     private static readonly Dictionary<(long PlayerId, string ContractId), int> LastAcceptedDay = new();
-    private static readonly HashSet<(long PlayerId, string ContractId)> Completed = new();
+    private static readonly HashSet<(long PlayerId, string ContractId)> CompletedOnce = new();
 
     public static TraderActivityDefinition? GetOffer(string traderId) =>
         TraderActivityRegistry.Activities.FirstOrDefault(x => x.TraderId == traderId);
@@ -25,7 +25,7 @@ public static class TraderActivityService
     {
         long id = player.GetPlayerID();
         return TraderActivityRegistry.Activities
-            .Where(x => x.TraderId == traderId && !Completed.Contains((id, x.Id)))
+            .Where(x => x.TraderId == traderId)
             .ToArray();
     }
 
@@ -46,7 +46,7 @@ public static class TraderActivityService
             .FirstOrDefault(x => !LastAcceptedDay.TryGetValue((playerId, x.Id), out int lastDay) || today - lastDay >= 7);
         if (offer == null)
         {
-            player.Message(MessageHud.MessageType.Center, "All contracts from this trader are complete.");
+            player.Message(MessageHud.MessageType.Center, "No contract is currently available; active contracts or weekly cooldowns are blocking the remaining offers.");
             return false;
         }
         Active[(playerId, offer.Id)] = new State { Definition = offer };
@@ -71,11 +71,11 @@ public static class TraderActivityService
 
         var state = entry.Value;
         player.RaiseSkill(state.Definition.RewardSkill, state.Definition.RewardSkillLevels);
-        Completed.Add((playerId, state.Definition.Id));
+        CompletedOnce.Add((playerId, state.Definition.Id));
         Active.Remove(entry.Key);
 
         int done = TraderActivityRegistry.Activities.Count(x => x.TraderId == traderId &&
-            Completed.Contains((playerId, x.Id)));
+            CompletedOnce.Contains((playerId, x.Id)));
         player.Message(MessageHud.MessageType.Center,
             $"Contract complete: +{state.Definition.RewardSkillLevels:0} {state.Definition.RewardSkill} | trader contracts {done}/5");
         return true;
@@ -97,9 +97,9 @@ public static class TraderActivityService
         long playerId = player.GetPlayerID();
         var active = Active.Where(x => x.Key.PlayerId == playerId && x.Value.Definition.TraderId == traderId)
             .Select(x => x.Value).ToArray();
-        int done = TraderActivityRegistry.Activities.Count(x => x.TraderId == traderId && Completed.Contains((playerId, x.Id)));
+        int done = TraderActivityRegistry.Activities.Count(x => x.TraderId == traderId && CompletedOnce.Contains((playerId, x.Id)));
         if (active.Length == 0)
-            return done >= 5 ? "All contracts complete (5/5)." : $"No active task. Contracts complete: {done}/5.";
+            return $"No active task. Unique contracts completed: {done}/5.";
 
         return string.Join(" | ", active.Select(x =>
             $"{x.Definition.Title}: {x.Progress}/{x.Definition.RequiredAmount} (+{x.Definition.RewardSkillLevels:0} {x.Definition.RewardSkill})")) +
