@@ -35,9 +35,18 @@ public static class LegendaryMietegRegistry
         // from world generation so one site can be selected for a 1-2 day appearance.
         int siteIndex = 0;
         const int totalSites = 8;
-        foreach (var biome in new[] { Heightmap.Biome.BlackForest, Heightmap.Biome.Swamp, Heightmap.Biome.Mountain, Heightmap.Biome.Plains })
+        var biomes = new[]
         {
-            var container = ZoneManager.Instance.CreateLocationContainer($"ImmersiveTrader_MietegSite_{biome}");
+            Heightmap.Biome.BlackForest, Heightmap.Biome.BlackForest,
+            Heightmap.Biome.Swamp, Heightmap.Biome.Swamp,
+            Heightmap.Biome.Mountain, Heightmap.Biome.Mountain,
+            Heightmap.Biome.Plains, Heightmap.Biome.Plains
+        };
+
+        foreach (var biome in biomes)
+        {
+            int currentSite = siteIndex++;
+            var container = ZoneManager.Instance.CreateLocationContainer($"ImmersiveTrader_MietegSite_{currentSite}_{biome}");
             var prefab = PrefabManager.Instance.GetPrefab("ImmersiveTrader_NPC_legendary_mieteg");
             if (prefab == null) continue;
 
@@ -45,13 +54,13 @@ public static class LegendaryMietegRegistry
             npc.name = prefab.name;
             npc.transform.localPosition = Vector3.zero;
             var presence = npc.GetComponent<LegendaryMietegPresence>() ?? npc.AddComponent<LegendaryMietegPresence>();
-            presence.SiteIndex = siteIndex++;
+            presence.SiteIndex = currentSite;
             presence.SiteCount = totalSites;
 
             var config = new LocationConfig
             {
                 Biome = biome,
-                Quantity = 2,
+                Quantity = 1,
                 Unique = false,
                 Priotized = false,
                 ClearArea = false,
