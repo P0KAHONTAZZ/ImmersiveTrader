@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ImmersiveTrader.Models;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using UnityEngine;
@@ -10,117 +11,100 @@ namespace ImmersiveTrader.Commands;
 public sealed class ImmersiveTraderCommand : ConsoleCommand
 {
     public override string Name => "it";
-
-    public override string Help => "ImmersiveTrader tools: it help | it list | it spawn <traderId> | it items";
+    public override string Help => "ImmersiveTrader tools: it help | list | spawn <id> | items | give <treasureId> <sourceTraderId> | route <source> <target>";
 
     public override void Run(string[] args, Terminal context)
     {
-        if (args.Length == 0 || args[0].Equals("help", StringComparison.OrdinalIgnoreCase))
-        {
-            PrintHelp(context);
-            return;
-        }
-
+        if (args.Length == 0 || Eq(args[0], "help")) { PrintHelp(context); return; }
         switch (args[0].ToLowerInvariant())
         {
-            case "list":
-                PrintTraders(context);
-                break;
-            case "spawn":
-                SpawnTrader(args, context);
-                break;
-            case "items":
-                PrintTreasures(context);
-                break;
-            default:
-                context.AddString($"Unknown ImmersiveTrader command: {args[0]}");
-                PrintHelp(context);
-                break;
+            case "list": PrintTraders(context); break;
+            case "spawn": SpawnTrader(args, context); break;
+            case "items": PrintTreasures(context); break;
+            case "give": GiveTreasure(args, context); break;
+            case "route": PrintRoute(args, context); break;
+            default: context.AddString($"Unknown ImmersiveTrader command: {args[0]}"); PrintHelp(context); break;
         }
     }
 
-    public override List<string> CommandOptionList() => new()
-    {
-        "help",
-        "list",
-        "spawn",
-        "items"
-    };
+    public override List<string> CommandOptionList() => new() { "help", "list", "spawn", "items", "give", "route" };
 
-    private static void PrintHelp(Terminal context)
+    private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
+
+    private static void PrintHelp(Terminal c)
     {
-        context.AddString("ImmersiveTrader developer commands:");
-        context.AddString("  it list                 - list trader IDs");
-        context.AddString("  it spawn <traderId>     - spawn a trader 2 m in front of you");
-        context.AddString("  it items                - show carried ImmersiveTrader treasures");
+        c.AddString("ImmersiveTrader developer commands:");
+        c.AddString("  it list");
+        c.AddString("  it spawn <traderId>");
+        c.AddString("  it items");
+        c.AddString("  it give <treasureId> <sourceTraderId>");
+        c.AddString("  it route <sourceTraderId> <targetTraderId>");
     }
 
-    private static void PrintTraders(Terminal context)
+    private static void PrintTraders(Terminal c)
     {
-        foreach (var trader in TraderRegistry.Traders)
-            context.AddString($"{trader.Id} - {trader.Name} [{trader.Biome}]");
+        foreach (var t in TraderRegistry.Traders) c.AddString($"{t.Id} - {t.Name} [{t.Biome}] tier={t.BiomeTier}");
     }
 
-    private static void SpawnTrader(string[] args, Terminal context)
+    private static TraderDefinition? FindTrader(string id) =>
+        TraderRegistry.Traders.FirstOrDefault(t => Eq(t.Id, id));
+
+    private static void SpawnTrader(string[] args, Terminal c)
     {
-        if (Player.m_localPlayer == null)
-        {
-            context.AddString("This command can only be used after entering a world.");
-            return;
-        }
-
-        if (args.Length < 2)
-        {
-            context.AddString("Usage: it spawn <traderId>");
-            return;
-        }
-
-        var traderId = args[1].Trim().ToLowerInvariant();
-        var trader = TraderRegistry.Traders.FirstOrDefault(t =>
-            t.Id.Equals(traderId, StringComparison.OrdinalIgnoreCase));
-
-        if (trader == null)
-        {
-            context.AddString($"Unknown trader ID: {traderId}. Use 'it list'.");
-            return;
-        }
-
+        if (Player.m_localPlayer == null) { c.AddString("Enter a world first."); return; }
+        if (args.Length < 2) { c.AddString("Usage: it spawn <traderId>"); return; }
+        var trader = FindTrader(args[1]);
+        if (trader == null) { c.AddString("Unknown trader. Use 'it list'."); return; }
         var prefabName = $"ImmersiveTrader_NPC_{trader.Id}";
         var prefab = PrefabManager.Instance.GetPrefab(prefabName);
-        if (prefab == null)
-        {
-            context.AddString($"Prefab is not registered: {prefabName}");
-            return;
-        }
-
-        var player = Player.m_localPlayer;
-        var position = player.transform.position + player.transform.forward * 2f;
-        var spawned = UnityEngine.Object.Instantiate(prefab, position, Quaternion.identity);
-        context.AddString(spawned != null
-            ? $"Spawned {trader.Name} ({prefabName})."
-            : $"Failed to spawn {trader.Name}.");
+        if (prefab == null) { c.AddString($"Prefab not registered: {prefabName}"); return; }
+        var p = Player.m_localPlayer;
+        var spawned = UnityEngine.Object.Instantiate(prefab, p.transform.position + p.transform.forward * 2f, Quaternion.identity);
+        c.AddString(spawned != null ? $"Spawned {trader.Name}." : $"Failed to spawn {trader.Name}.");
     }
 
-    private static void PrintTreasures(Terminal context)
+    private static void PrintTreasures(Terminal c)
     {
-        if (Player.m_localPlayer == null)
+        if (Player.m_localPlayer == null) { c.AddString("Enter a world first."); return; }
+        var carried = InventoryTreasureService.GetCarried(Player.m_localPlayer);
+        if (carried.Count == 0) { c.AddString("No active ImmersiveTrader shipments."); return; }
+        int i = 1;
+        foreach (var x in carried)
         {
-            context.AddString("This command can only be used after entering a world.");
-            return;
+            var source = FindTrader(x.SourceTraderId);
+            c.AddString($"#{i++} {x.TreasureId} | from={source?.Name ?? x.SourceTraderId} | tier={x.SourceBiomeTier} | shipment={x.ShipmentId}");
         }
+        c.AddString($"Active shipments: {carried.Count}/{Plugin.MaxCarriedTreasures.Value}");
+    }
 
-        var inventory = Player.m_localPlayer.GetInventory();
-        var found = 0;
+    private static void GiveTreasure(string[] args, Terminal c)
+    {
+        if (Player.m_localPlayer == null) { c.AddString("Enter a world first."); return; }
+        if (args.Length < 3) { c.AddString("Usage: it give <treasureId> <sourceTraderId>"); return; }
+        var def = TreasureRegistry.Treasures.FirstOrDefault(t => Eq(t.Id, args[1]));
+        var source = FindTrader(args[2]);
+        if (def == null || source == null || source.IsLegendary) { c.AddString("Unknown treasure/source or legendary source."); return; }
+        if (InventoryTreasureService.Count(Player.m_localPlayer) >= Plugin.MaxCarriedTreasures.Value) { c.AddString("Shipment limit reached."); return; }
+        var prefab = ObjectDB.instance.GetItemPrefab($"ImmersiveTrader_{def.Id}");
+        if (prefab == null) { c.AddString("Treasure prefab not found."); return; }
+        var inv = Player.m_localPlayer.GetInventory();
+        var before = inv.GetAllItems().ToList();
+        if (!inv.AddItem(prefab, 1)) { c.AddString("Could not add treasure."); return; }
+        var item = inv.GetAllItems().LastOrDefault(x => !before.Contains(x) && x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith($"ImmersiveTrader_{def.Id}"));
+        if (item == null) { c.AddString("Treasure was added but could not be identified."); return; }
+        TreasureMetadata.Stamp(item, source.Id, source.BiomeTier);
+        c.AddString($"Added {def.DisplayName} from {source.Name}. Use 'it items' to inspect it.");
+    }
 
-        foreach (var item in inventory.GetAllItems())
-        {
-            if (!item.m_dropPrefab || !item.m_dropPrefab.name.StartsWith("ImmersiveTrader_", StringComparison.Ordinal))
-                continue;
-
-            context.AddString($"{item.m_dropPrefab.name} x{item.m_stack}");
-            found += item.m_stack;
-        }
-
-        context.AddString($"ImmersiveTrader items carried: {found}");
+    private static void PrintRoute(string[] args, Terminal c)
+    {
+        if (args.Length < 3) { c.AddString("Usage: it route <sourceTraderId> <targetTraderId>"); return; }
+        var source = FindTrader(args[1]);
+        var target = FindTrader(args[2]);
+        if (source == null || target == null) { c.AddString("Unknown trader ID."); return; }
+        if (source.Id == target.Id) { c.AddString("Same trader cannot receive its own shipment."); return; }
+        if (target.IsLegendary) { c.AddString($"{source.Name} -> {target.Name}: legendary fixed reward table (no distance multiplier)."); return; }
+        int mult = RewardScaling.GetMultiplier(source.BiomeTier, target.BiomeTier);
+        c.AddString($"{source.Name} (tier {source.BiomeTier}) -> {target.Name} (tier {target.BiomeTier}) = x{mult}");
     }
 }
