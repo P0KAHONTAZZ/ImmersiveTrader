@@ -60,14 +60,21 @@ public sealed class TraderLocationAnchor : MonoBehaviour
             return;
         }
 
+        // The registered prefab is intentionally inactive. This prevents ZNetView from
+        // creating a ZDO before we can enforce the location-owned non-persistent policy.
+        bool wasActive = prefab.activeSelf;
+        prefab.SetActive(false);
         _npc = UnityEngine.Object.Instantiate(prefab, transform.position, transform.rotation);
+        prefab.SetActive(wasActive);
         _npc.name = $"ImmersiveTrader_LocationNpc_{TraderId}";
 
-        // This instance belongs to the currently loaded location. Do not leave a ZDO
-        // behind after the zone unloads; the anchor will recreate it next time.
         var view = _npc.GetComponent<ZNetView>();
         if (view != null)
             view.m_persistent = false;
+        _npc.SetActive(true);
+
+        // This instance belongs to the currently loaded location. Do not leave a ZDO
+        // behind after the zone unloads; the anchor will recreate it next time.
 
         Plugin.Log.LogInfo($"Location anchor created {TraderId} at {transform.position.x:0},{transform.position.z:0}");
     }
