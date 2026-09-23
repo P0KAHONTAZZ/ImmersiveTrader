@@ -3,59 +3,69 @@ using UnityEngine;
 namespace ImmersiveTrader.Components;
 
 /// <summary>
-/// Keeps Jackie as a loose ambient companion around Troldad without allowing him
-/// to wander away with the player. Vanilla wolf AI still provides movement/animation.
+/// Keeps Jackie as an ambient wolf companion around Troldad.
+/// Native Wolf/MonsterAI remains responsible for locomotion and animation.
+/// This component only maintains a home anchor and performs a rare safety reset
+/// if the vanilla AI ever carries Jackie far outside Troldad's camp.
 /// </summary>
 public sealed class JackieCompanion : MonoBehaviour
 {
     public Transform? Home;
-    public float SoftRadius = 5f;
-    public float HardRadius = 11f;
+    public float HardRadius = 12f;
+    public float CheckInterval = 2f;
 
-    private Character? _character;
+    private MonsterAI? _ai;
+    private ZNetView? _nview;
     private Vector3 _spawnHome;
     private float _nextCheck;
 
     private void Awake()
     {
-        _character = GetComponent<Character>();
+        _ai = GetComponent<MonsterAI>();
+        _nview = GetComponent<ZNetView>();
         _spawnHome = transform.position;
+
+        // Jackie is scenery/companionship, not a tameable pet that can be
+        // commanded or taken away by a player.
+        var tameable = GetComponent<Tameable>();
+        if (tameable != null)
+            Destroy(tameable);
     }
 
     public void SetHome(Transform home)
     {
         Home = home;
         _spawnHome = home.position;
+        ApplyPatrolAnchor();
+    }
+
+    private void Start()
+    {
+        ApplyPatrolAnchor();
+    }
+
+    private void ApplyPatrolAnchor()
+    {
+        if (_ai == null) return;
+
+        // Let vanilla MonsterAI choose idle/wander movement around this point.
+        // We intentionally do not call Character.SetMoveDir here.
+        _ai.m_spawnPoint = Home != null ? Home.position : _spawnHome;
     }
 
     private void Update()
     {
         if (Time.time < _nextCheck) return;
-        _nextCheck = Time.time + 1f;
+        _nextCheck = Time.time + CheckInterval;
 
         Vector3 home = Home != null ? Home.position : _spawnHome;
-        float distance = Vector3.Distance(transform.position, home);
+        if (Vector3.Distance(transform.position, home) <= HardRadius) return;
 
-        if (distance > HardRadius)
-        {
-            transform.position = home + new Vector3(1.8f, 0.2f, 1.2f);
-            return;
-        }
+        // Network owner is authoritative. This is only a failsafe; ordinary
+        // movement inside the camp remains entirely vanilla AI.
+        if (_nview != null && _nview.IsValid() && !_nview.IsOwner()) return;
 
-        if (_character != null && distance > SoftRadius)
-        {
-            Vector3 direction = home - transform.position;
-            direction.y = 0f;
-            if (direction.sqrMagnitude > 0.01f)
-            {
-                direction.Normalize();
-                _character.SetMoveDir(direction);
-                _character.SetLookDir(direction, 0f);
-            }
-        }
-        else if (_character != null)
-        {
-            _character.SetMoveDir(Vector3.zero);
-        }
+        transform.position = home + new Vector3(1.8f, 0.2f, 1.2f);
+        ApplyPatrolAnchor();
     }
 }
