@@ -41,12 +41,15 @@ public static class NativeTraderWindow
                 continue;
             }
 
-            trader.m_items.Add(new Trader.TradeItem
+            var tradeItem = new Trader.TradeItem
             {
                 m_prefab = itemDrop,
                 m_price = offer.Price,
                 m_stack = offer.Stack
-            });
+            };
+
+            trader.m_items.Add(tradeItem);
+            Plugin.Log.LogInfo($"Native shop {definition.Id}: {offer.ItemPrefab}, configured={offer.Price}, native={tradeItem.m_price}, stack={tradeItem.m_stack}");
         }
 
         if (trader.m_items.Count == 0)
