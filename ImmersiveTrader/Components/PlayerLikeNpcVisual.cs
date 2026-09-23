@@ -11,6 +11,19 @@ namespace ImmersiveTrader.Components;
 public sealed class PlayerLikeNpcVisual : MonoBehaviour
 {
     public string TraderId = string.Empty;
+    private Transform? _playerVisual;
+
+    private void LateUpdate()
+    {
+        // Native NPC equipment/visual systems may re-enable shell renderers after Start.
+        // Keep every shell/helper renderer hidden and allow only our mounted Player visual.
+        if (_playerVisual == null) return;
+        foreach (var renderer in GetComponentsInChildren<Renderer>(true))
+        {
+            if (!renderer.transform.IsChildOf(_playerVisual) && renderer.transform != _playerVisual)
+                renderer.enabled = false;
+        }
+    }
 
     private void Start()
     {
@@ -41,6 +54,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         var copy = Object.Instantiate(visual.gameObject, transform);
         visual.gameObject.SetActive(sourceActive);
         copy.name = "ImmersiveTrader_PlayerVisual";
+        _playerVisual = copy.transform;
         copy.transform.localPosition = Vector3.zero;
         copy.transform.localRotation = Quaternion.identity;
         copy.transform.localScale = Vector3.one;
