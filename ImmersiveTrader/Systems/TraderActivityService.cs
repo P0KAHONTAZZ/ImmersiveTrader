@@ -5,10 +5,6 @@ using UnityEngine;
 
 namespace ImmersiveTrader;
 
-/// <summary>
-/// Runtime side-task state. Deliberately isolated behind this service so the current
-/// in-memory prototype can later be replaced by ZDO/server persistence without changing UI.
-/// </summary>
 public static class TraderActivityService
 {
     private sealed class State
@@ -19,18 +15,31 @@ public static class TraderActivityService
     }
 
     private static readonly Dictionary<(long PlayerId, string TraderId), State> Active = new();
+    private static readonly HashSet<(long PlayerId, string ContractId)> Completed = new();
 
     public static TraderActivityDefinition? GetOffer(string traderId) =>
         TraderActivityRegistry.Activities.FirstOrDefault(x => x.TraderId == traderId);
+
+    public static TraderActivityDefinition[] GetOffers(Player player, string traderId)
+    {
+        long id = player.GetPlayerID();
+        return TraderActivityRegistry.Activities
+            .Where(x => x.TraderId == traderId && !Completed.Contains((id, x.Id)))
+            .ToArray();
+    }
 
     public static bool TryAccept(Player player, string traderId)
     {
         var key = (player.GetPlayerID(), traderId);
         if (Active.ContainsKey(key)) return false;
-        var offer = GetOffer(traderId);
-        if (offer == null) return false;
+        var offer = GetOffers(player, traderId).FirstOrDefault();
+        if (offer == null)
+        {
+            player.Message(MessageHud.MessageType.Center, "All contracts from this trader are complete.");
+            return false;
+        }
         Active[key] = new State { Definition = offer };
-        player.Message(MessageHud.MessageType.Center, $"Task accepted: {offer.Title} (0/{offer.RequiredAmount})");
+        player.Message(MessageHud.MessageType.Center, $"Contract accepted: {offer.Title} (0/{offer.RequiredAmount}) | reward +{offer.RewardSkillLevels:0} {offer.RewardSkill}");
         return true;
     }
 
@@ -38,51 +47,20 @@ public static class TraderActivityService
     {
         var key = (player.GetPlayerID(), traderId);
         if (!Active.TryGetValue(key, out var state)) return false;
-
-        if (state.Definition.Type == TraderActivityType.Gather)
-        {
-            int have = player.GetInventory().CountItems(state.Definition.TargetPrefab);
-            state.Progress = Mathf.Min(have, state.Definition.RequiredAmount);
-        }
-
         if (!state.Completed)
         {
-            player.Message(MessageHud.MessageType.Center,
-                $"{state.Definition.Title}: {state.Progress}/{state.Definition.RequiredAmount}");
+            player.Message(MessageHud.MessageType.Center, $"{state.Definition.Title}: {state.Progress}/{state.Definition.RequiredAmount}");
             return true;
         }
 
-        var reward = ObjectDB.instance?.GetItemPrefab(state.Definition.RewardPrefab);
-        if (reward == null)
-        {
-            player.Message(MessageHud.MessageType.Center, "This task reward is unavailable.");
-            return true;
-        }
-        if (!player.GetInventory().CanAddItem(reward, state.Definition.RewardAmount))
-        {
-            player.Message(MessageHud.MessageType.Center, "Make room for the task reward first.");
-            return true;
-        }
-
-        if (state.Definition.Type == TraderActivityType.Gather)
-            player.GetInventory().RemoveItem(state.Definition.TargetPrefab, state.Definition.RequiredAmount);
-
-        if (!player.GetInventory().AddItem(reward, state.Definition.RewardAmount))
-        {
-            // Capacity was checked above. Keep the task active if Valheim still rejects
-            // the reward; for gather jobs restore consumed materials before returning.
-            if (state.Definition.Type == TraderActivityType.Gather)
-            {
-                var target = ObjectDB.instance?.GetItemPrefab(state.Definition.TargetPrefab);
-                if (target != null) player.GetInventory().AddItem(target, state.Definition.RequiredAmount);
-            }
-            player.Message(MessageHud.MessageType.Center, "Task reward failed; nothing was lost.");
-            return true;
-        }
-
-        player.Message(MessageHud.MessageType.Center,
-            $"Task complete: {state.Definition.RewardAmount}x {state.Definition.RewardPrefab}");
+        player.RaiseSkill(state.Definition.RewardSkill, state.Definition.RewardSkillLevels);
+        Completed.Add((player.GetPlayerID(), state.Definition.Id));
         Active.Remove(key);
+
+        int done = TraderActivityRegistry.Activities.Count(x => x.TraderId == traderId &&
+            Completed.Contains((player.GetPlayerID(), x.Id)));
+        player.Message(MessageHud.MessageType.Center,
+            $"Contract complete: +{state.Definition.RewardSkillLevels:0} {state.Definition.RewardSkill} | trader contracts {done}/5");
         return true;
     }
 
@@ -91,22 +69,20 @@ public static class TraderActivityService
         long playerId = player.GetPlayerID();
         foreach (var state in Active.Where(x => x.Key.PlayerId == playerId).Select(x => x.Value))
         {
-            if (state.Definition.Type != TraderActivityType.Hunt || state.Completed) continue;
-            if (!PrefabMatches(prefabName, state.Definition.TargetPrefab)) continue;
+            if (state.Completed || !PrefabMatches(prefabName, state.Definition.TargetPrefab)) continue;
             state.Progress = Mathf.Min(state.Progress + 1, state.Definition.RequiredAmount);
-            player.Message(MessageHud.MessageType.TopLeft,
-                $"{state.Definition.Title}: {state.Progress}/{state.Definition.RequiredAmount}");
+            player.Message(MessageHud.MessageType.TopLeft, $"{state.Definition.Title}: {state.Progress}/{state.Definition.RequiredAmount}");
         }
     }
 
     public static string GetStatus(Player player, string traderId)
     {
-        if (!Active.TryGetValue((player.GetPlayerID(), traderId), out var state))
-            return "No active task.";
-        int progress = state.Definition.Type == TraderActivityType.Gather
-            ? Mathf.Min(player.GetInventory().CountItems(state.Definition.TargetPrefab), state.Definition.RequiredAmount)
-            : state.Progress;
-        return $"{state.Definition.Title}: {progress}/{state.Definition.RequiredAmount}";
+        long playerId = player.GetPlayerID();
+        if (Active.TryGetValue((playerId, traderId), out var state))
+            return $"{state.Definition.Title}: {state.Progress}/{state.Definition.RequiredAmount} | +{state.Definition.RewardSkillLevels:0} {state.Definition.RewardSkill}";
+
+        int done = TraderActivityRegistry.Activities.Count(x => x.TraderId == traderId && Completed.Contains((playerId, x.Id)));
+        return done >= 5 ? "All contracts complete (5/5)." : $"No active task. Contracts complete: {done}/5.";
     }
 
     private static bool PrefabMatches(string actual, string expected) =>
