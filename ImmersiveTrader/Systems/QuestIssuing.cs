@@ -6,7 +6,7 @@ namespace ImmersiveTrader;
 
 public static class QuestIssuing
 {
-    public static bool TryGiveTreasure(Player player, TraderDefinition source)
+    public static bool TryGiveTreasure(Player player, TraderDefinition source, Vector3 sourcePosition)
     {
         if (source.IsLegendary) return false;
 
@@ -53,7 +53,6 @@ public static class QuestIssuing
             return true;
         }
 
-        var sourcePosition = player.transform.position;
         TreasureMetadata.Stamp(item, source.Id, source.BiomeTier, sourcePosition.x, sourcePosition.z);
         TraderCooldown.MarkIssued(playerId, source.Id);
         player.Message(MessageHud.MessageType.Center,
