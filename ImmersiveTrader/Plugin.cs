@@ -11,17 +11,19 @@ public sealed class Plugin : BaseUnityPlugin
 {
     public const string ModGuid = "p0kahontazz.immersivetrader";
     public const string ModName = "ImmersiveTrader";
-    public const string ModVersion = "0.2.0";
+    public const string ModVersion = "0.3.0";
 
     internal static ConfigEntry<float> TreasureWeight = null!;
     internal static ConfigEntry<int> MaxCarriedTreasures = null!;
     internal static ConfigEntry<int> MidkaHealingMeadPrice = null!;
+    internal static ConfigEntry<bool> ProgressionLock = null!;
 
     private void Awake()
     {
         TreasureWeight = Config.Bind("Treasures", "Weight", 80f, "Weight of each quest treasure.");
         MaxCarriedTreasures = Config.Bind("Treasures", "MaxCarried", 2, "Maximum number of active quest treasures.");
         MidkaHealingMeadPrice = Config.Bind("Midka", "MinorHealingMeadPrice", 50, "Coins required for one Minor Healing Mead.");
+        ProgressionLock = Config.Bind("Progression", "Enabled", true, "Prevent receiving rewards from biomes not unlocked by boss progression.");
 
         PrefabManager.OnVanillaPrefabsAvailable += OnVanillaPrefabsAvailable;
         ZoneManager.OnVanillaLocationsAvailable += OnVanillaLocationsAvailable;
