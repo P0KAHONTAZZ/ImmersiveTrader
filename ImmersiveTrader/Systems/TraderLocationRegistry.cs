@@ -25,6 +25,18 @@ public static class TraderLocationRegistry
             npc.name = npcPrefab.name;
             npc.transform.localPosition = Vector3.zero;
 
+            if (trader.Id == "troldad")
+            {
+                var jackiePrefab = PrefabManager.Instance.GetPrefab("ImmersiveTrader_Jackie");
+                if (jackiePrefab != null)
+                {
+                    var jackie = Object.Instantiate(jackiePrefab, container.transform);
+                    jackie.name = "Jackie";
+                    jackie.transform.localPosition = new Vector3(2.2f, 0f, 1.2f);
+                    jackie.transform.localRotation = Quaternion.Euler(0f, 210f, 0f);
+                }
+            }
+
             var range = GetDistanceRange(trader.Biome);
             var config = new LocationConfig
             {
