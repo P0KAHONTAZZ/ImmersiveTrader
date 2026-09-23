@@ -51,8 +51,6 @@ public static class TraderLocationRegistry
                 CenterFirst = false,
                 ClearArea = true,
                 ExteriorRadius = 10f,
-                ForestThresholdMin = trader.Biome == "Black Forest" ? 0.55f : 0f,
-                ForestThresholdMax = 1f,
                 MinAltitude = 3f,
                 MinDistance = range.min,
                 MaxDistance = range.max,
