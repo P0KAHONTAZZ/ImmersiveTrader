@@ -21,18 +21,17 @@ public static class TraderLocationRegistry
             var npcPrefab = PrefabManager.Instance.GetPrefab($"ImmersiveTrader_NPCLOOK_{trader.Id}");
             if (npcPrefab == null) continue;
 
-            // Location templates are persisted by Valheim/Jotunn as part of the generated
-            // location. A networked ZNetView on the embedded NPC would also persist its
-            // own ZDO, so after reloading the world Valheim restored that old NPC and the
-            // location instantiated another one at the same coordinates. The location
-            // itself is the persistence owner; prevent the embedded trader template from
-            // creating a second persistent world object.
+            // Keep the trader prefab structurally intact. Character/Humanoid, AI,
+            // ZSyncTransform and ZSyncAnimation all require their ZNetView during Awake.
+            // Removing it from a location template creates a half-networked Character and
+            // can poison Valheim's global Character/FixedUpdate paths (movement, fly, etc.).
+            //
+            // CustomLocation's second argument is the "fix reference" path used for cloned
+            // prefabs inside the location. Let Jotunn/Valheim own networking and persistence
+            // instead of stripping networking components from live characters.
             var npc = Object.Instantiate(npcPrefab, container.transform);
             npc.name = npcPrefab.name;
             npc.transform.localPosition = Vector3.zero;
-            var npcView = npc.GetComponent<ZNetView>();
-            if (npcView != null)
-                Object.DestroyImmediate(npcView);
 
             // Camp props belong to the generated location container so the trader never
             // spawns as an isolated character in an empty biome.
@@ -72,7 +71,7 @@ public static class TraderLocationRegistry
                 IconAlways = false
             };
 
-            ZoneManager.Instance.AddCustomLocation(new CustomLocation(container, false, config));
+            ZoneManager.Instance.AddCustomLocation(new CustomLocation(container, true, config));
         }
 
         _registered = true;
