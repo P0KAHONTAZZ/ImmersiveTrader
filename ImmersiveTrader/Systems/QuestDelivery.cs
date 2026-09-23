@@ -8,8 +8,7 @@ public static class QuestDelivery
 {
     public static bool TryDeliverAny(Player player, TraderDefinition target)
     {
-        var carried = InventoryTreasureService.GetCarried(player)
-            .FirstOrDefault(x => x.SourceTraderId != target.Id);
+        var eligible = InventoryTreasureService.GetCarried(player)\n            .Where(x => x.SourceTraderId != target.Id)\n            .ToList();\n        var carried = eligible.FirstOrDefault();
         if (carried == null) return false;
 
         if (!target.IsLegendary && !ProgressionGate.CanReceiveTier(target.BiomeTier))
@@ -30,9 +29,7 @@ public static class QuestDelivery
             return true;
         }
 
-        int amount = target.IsLegendary
-            ? reward.BaseAmount
-            : RewardScaling.GetRewardAmount(reward.BaseAmount, carried.SourceBiomeTier, target.BiomeTier);
+        int multiplier = target.IsLegendary ? 1 : RewardScaling.GetMultiplier(carried.SourceBiomeTier, target.BiomeTier);\n        int amount = target.IsLegendary\n            ? reward.BaseAmount\n            : reward.BaseAmount * multiplier;
 
         if (!player.GetInventory().CanAddItem(rewardPrefab, amount))
         {
@@ -47,7 +44,7 @@ public static class QuestDelivery
             ? $"???: Those who trade in gold count coins. Those who trade in favors count roads.\nReceived: {amount} {reward.ItemPrefab}"
             : target.LiesAboutRewards
                 ? TroldadDialogue.GetLie(reward.ItemPrefab, amount)
-                : $"{target.Name}: Deal. Your payment: {amount} {reward.ItemPrefab}.";
+                : $"{target.Name}: Deal. Route x{multiplier}. Your payment: {amount} {reward.ItemPrefab}.";
 
         player.Message(MessageHud.MessageType.Center, message);
         return true;
