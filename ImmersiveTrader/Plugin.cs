@@ -12,6 +12,7 @@ namespace ImmersiveTrader;
 public sealed class Plugin : BaseUnityPlugin
 {
     private Harmony? _harmony;
+    internal static BepInEx.Logging.ManualLogSource Log = null!;
     public const string ModGuid = "p0kahontazz.immersivetrader";
     public const string ModName = "ImmersiveTrader";
     public const string ModVersion = "0.4.1";
@@ -30,6 +31,7 @@ public sealed class Plugin : BaseUnityPlugin
 
     private void Awake()
     {
+        Log = Logger;
         TreasureWeight = Config.Bind("Treasures", "Weight", 80f, "Weight of each quest treasure.");
         MaxCarriedTreasures = Config.Bind("Treasures", "MaxCarried", 2, "Maximum number of active quest treasures.");
         MidkaHealingMeadPrice = Config.Bind("Midka", "MinorHealingMeadPrice", 50, "Coins required for one Minor Healing Mead.");
