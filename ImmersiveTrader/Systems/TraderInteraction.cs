@@ -13,7 +13,7 @@ public static class TraderInteraction
             return;
         }
 
-        if (QuestDelivery.TryDeliverAny(player, trader))
+        if (QuestDelivery.TryDeliverAny(player, trader, traderPosition))
             return;
 
         if (QuestIssuing.TryGiveTreasure(player, trader, traderPosition))
