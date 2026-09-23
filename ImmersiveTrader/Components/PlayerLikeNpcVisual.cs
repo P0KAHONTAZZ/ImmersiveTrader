@@ -27,6 +27,12 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
             return;
         }
 
+        // Hide only Hildir's renderers; keep her root, colliders, animator and
+        // interaction/network shell alive. This turns NPCLOOK into one visible body
+        // instead of Hildir + Player occupying the same position.
+        foreach (var renderer in GetComponentsInChildren<Renderer>(true))
+            renderer.enabled = false;
+
         var copy = Object.Instantiate(visual.gameObject, transform);
         copy.name = "ImmersiveTrader_PlayerVisual";
         copy.transform.localPosition = Vector3.zero;
@@ -37,5 +43,8 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
             Object.DestroyImmediate(nview);
         foreach (var player in copy.GetComponentsInChildren<Player>(true))
             Object.DestroyImmediate(player);
+
+        foreach (var renderer in copy.GetComponentsInChildren<Renderer>(true))
+            renderer.enabled = true;
     }
 }
