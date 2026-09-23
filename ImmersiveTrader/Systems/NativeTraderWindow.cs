@@ -44,7 +44,7 @@ public static class NativeTraderWindow
             trader.m_items.Add(new Trader.TradeItem
             {
                 m_prefab = itemDrop,
-                m_price = offer.Price,
+                m_price = (uint)offer.Price,
                 m_stack = offer.Stack
             });
         }
