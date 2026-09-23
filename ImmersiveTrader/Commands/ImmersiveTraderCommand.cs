@@ -13,7 +13,7 @@ namespace ImmersiveTrader.Commands;
 public sealed class ImmersiveTraderCommand : ConsoleCommand
 {
     public override string Name => "it";
-    public override string Help => "ImmersiveTrader tools: it help | list | spawn <id> | look <id> | diagnose | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId>";
+    public override string Help => "ImmersiveTrader tools: it help | list | find <id> | findall | spawn <id> | look <id> | diagnose | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId>";
 
     public override void Run(string[] args, Terminal context)
     {
@@ -21,6 +21,8 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         switch (args[0].ToLowerInvariant())
         {
             case "list": PrintTraders(context); break;
+            case "find": FindLocation(args, context); break;
+            case "findall": FindAllLocations(context); break;
             case "spawn": SpawnTrader(args, context); break;
             case "look": SpawnNpcLook(args, context); break;
             case "clearspawned": ClearSpawnedTraders(context); break;
@@ -33,7 +35,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "find", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -41,6 +43,8 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
     {
         c.AddString("ImmersiveTrader developer commands:");
         c.AddString("  it list");
+        c.AddString("  it find <traderId>  - show generated location position and add a map pin");
+        c.AddString("  it findall          - add map pins for all generated trader locations");
         c.AddString("  it spawn <traderId>");
         c.AddString("  it look <traderId>");
         c.AddString("  it diagnose");
@@ -58,6 +62,52 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
 
     private static TraderDefinition? FindTrader(string id) =>
         TraderRegistry.Traders.FirstOrDefault(t => Eq(t.Id, id));
+
+    private static void FindLocation(string[] args, Terminal c)
+    {
+        if (Player.m_localPlayer == null || ZoneSystem.instance == null) { c.AddString("Enter a world first."); return; }
+        if (args.Length < 2) { c.AddString("Usage: it find <traderId>"); return; }
+        var trader = FindTrader(args[1]);
+        if (trader == null || trader.IsLegendary) { c.AddString("Unknown regular trader."); return; }
+        AddLocationPins(c, trader.Id);
+    }
+
+    private static void FindAllLocations(Terminal c)
+    {
+        if (Player.m_localPlayer == null || ZoneSystem.instance == null) { c.AddString("Enter a world first."); return; }
+        int total = 0;
+        foreach (var trader in TraderRegistry.Traders.Where(t => !t.IsLegendary))
+            total += AddLocationPins(c, trader.Id, false);
+        c.AddString(total > 0
+            ? $"Pinned {total} generated ImmersiveTrader location(s)."
+            : "No generated ImmersiveTrader locations found in ZoneSystem.");
+    }
+
+    private static int AddLocationPins(Terminal c, string traderId, bool reportMissing = true)
+    {
+        string wanted = $"ImmersiveTrader_Location_{traderId}";
+        int count = 0;
+
+        foreach (var pair in ZoneSystem.instance.m_locationInstances)
+        {
+            var instance = pair.Value;
+            string name = instance.m_location?.m_prefabName ?? string.Empty;
+            if (!name.Equals(wanted, StringComparison.OrdinalIgnoreCase) &&
+                name.IndexOf(wanted, StringComparison.OrdinalIgnoreCase) < 0)
+                continue;
+
+            Vector3 pos = instance.m_position;
+            var trader = FindTrader(traderId);
+            string label = $"IT: {trader?.Name ?? traderId}";
+            Minimap.instance?.AddPin(pos, Minimap.PinType.Icon3, label, true, false, 0L);
+            c.AddString($"{label} at x={pos.x:0}, z={pos.z:0}, distance={Vector3.Distance(Player.m_localPlayer.transform.position, pos):0}m");
+            count++;
+        }
+
+        if (count == 0 && reportMissing)
+            c.AddString($"Location {wanted} is not present in ZoneSystem location instances.");
+        return count;
+    }
 
     private static void SpawnTrader(string[] args, Terminal c)
     {
