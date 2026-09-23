@@ -25,6 +25,10 @@ public static class TraderLocationRegistry
             npc.name = npcPrefab.name;
             npc.transform.localPosition = Vector3.zero;
 
+            // Camp props belong to the generated location container so the trader never
+            // spawns as an isolated character in an empty biome.
+            TraderCampBuilder.Build(trader.Id, container.transform);
+
             if (trader.Id == "troldad")
             {
                 var jackiePrefab = PrefabManager.Instance.GetPrefab("ImmersiveTrader_Jackie");
