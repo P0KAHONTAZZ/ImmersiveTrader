@@ -128,9 +128,10 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         switch (args[1].ToLowerInvariant())
         {
             case "offer":
-                var offer = TraderActivityService.GetOffer(trader.Id);
-                c.AddString(offer == null ? "No task configured." :
-                    $"{offer.Title}: {offer.Description} Target={offer.TargetPrefab} x{offer.RequiredAmount}, reward={offer.RewardPrefab} x{offer.RewardAmount}");
+                var offers = TraderActivityService.GetOffers(player, trader.Id);
+                if (offers.Length == 0) c.AddString("All contracts complete.");
+                else foreach (var offer in offers)
+                    c.AddString($"{offer.Title}: {offer.Description} Target={offer.TargetPrefab} x{offer.RequiredAmount}, reward=+{offer.RewardSkillLevels:0} {offer.RewardSkill}");
                 break;
             case "accept":
                 c.AddString(TraderActivityService.TryAccept(player, trader.Id) ? "Task accepted." : "Could not accept task.");
