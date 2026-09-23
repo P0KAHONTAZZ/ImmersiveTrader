@@ -29,6 +29,12 @@ public static class NpcPrefabRegistry
         ["skjold_cinderborn"] = ("Hildir", 1.00f)
     };
 
+    // Reserved human/player-style visual source. Do not clone Player directly into the
+    // live roster yet: Player carries input, inventory, camera and networking behaviour.
+    // The next visual layer can copy only its humanoid/VisEquipment presentation onto a
+    // neutral NPC shell while keeping TraderNpc and NPC networking authoritative.
+    public const string PlayerStyleVisualSource = "Player";
+
     public static void Register()
     {
         if (_registered) return;
