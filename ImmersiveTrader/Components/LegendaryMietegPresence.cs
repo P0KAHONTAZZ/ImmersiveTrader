@@ -16,6 +16,8 @@ public sealed class LegendaryMietegPresence : MonoBehaviour
     private Collider[] _colliders = System.Array.Empty<Collider>();
     private TraderNpc? _trader;
     private bool _active;
+    private bool _pinAdded;
+    private Minimap.PinData? _pin;
     private float _nextCheck;
 
     private void Awake()
@@ -49,7 +51,29 @@ public sealed class LegendaryMietegPresence : MonoBehaviour
         foreach (var renderer in _renderers) renderer.enabled = _active;
         foreach (var collider in _colliders) collider.enabled = _active;
         if (_trader != null) _trader.enabled = _active;
+        if (!_active) RemovePin();
+        else RefreshDiscoveryPin();
     }
+
+    private void RefreshDiscoveryPin()
+    {
+        if (_pinAdded || Minimap.instance == null || Player.m_localPlayer == null) return;
+        float distance = Vector3.Distance(Player.m_localPlayer.transform.position, transform.position);
+        if (distance > Plugin.MietegRevealDistance.Value) return;
+
+        _pin = Minimap.instance.AddPin(transform.position, Minimap.PinType.Icon3, "✦ Legendary Mieteg", false, false);
+        _pinAdded = _pin != null;
+    }
+
+    private void RemovePin()
+    {
+        if (!_pinAdded || _pin == null || Minimap.instance == null) return;
+        Minimap.instance.RemovePin(_pin);
+        _pin = null;
+        _pinAdded = false;
+    }
+
+    private void OnDestroy() => RemovePin();
 
     private static int StableWorldSeed()
     {
