@@ -102,9 +102,10 @@ public static class TraderActivityService
         long playerId = player.GetPlayerID();
         var active = Active.Where(x => x.Key.PlayerId == playerId && x.Value.Definition.TraderId == traderId)
             .Select(x => x.Value).ToArray();
-        int activeCount = Active.Count(x => x.Key.PlayerId == playerId && x.Value.Definition.TraderId == traderId);
+        int activeTotal = Active.Count(x => x.Key.PlayerId == playerId);
+
         if (active.Length == 0)
-            return $"No active task. Unique contracts completed: {done}/5.";
+            return $"No active contract from this trader. Active contracts overall: {activeTotal}/5.";
 
         return string.Join(" | ", active.Select(x =>
             $"{x.Definition.Title}: {x.Progress}/{x.Definition.RequiredAmount} (+{x.Definition.RewardSkillLevels:0} {x.Definition.RewardSkill})")) +
