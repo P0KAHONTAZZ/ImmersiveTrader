@@ -1,31 +1,32 @@
 using HarmonyLib;
 using ImmersiveTrader.Components;
-using UnityEngine;
 
 namespace ImmersiveTrader.Patches;
 
 /// <summary>
-/// Valheim treats creature prefabs as creatures before it evaluates normal Hoverable
-/// components. Creature-derived traders therefore get the enemy-health hover path.
-/// Redirect only our trader creatures back to the normal hover/interact path after
-/// Valheim has resolved the raycast.
+/// Current Valheim keeps Player hover targets private. Harmony field injection lets
+/// us alter those private fields without compiling against inaccessible members.
+/// Creature-derived traders then follow the same Hoverable path as native traders.
 /// </summary>
 [HarmonyPatch(typeof(Player), "UpdateHover")]
 internal static class TraderCreatureHoverPatch
 {
-    private static void Postfix(Player __instance)
+    private static void Postfix(Player __instance, ref GameObject ___m_hovering, ref Character ___m_hoveringCreature)
     {
-        if (__instance != Player.m_localPlayer || __instance.m_hovering == null)
+        if (__instance != Player.m_localPlayer || ___m_hovering == null)
             return;
 
-        var trader = __instance.m_hovering.GetComponentInParent<TraderNpc>();
+        var trader = ___m_hovering.GetComponentInParent<TraderNpc>();
         if (trader == null)
-            trader = __instance.m_hovering.GetComponentInChildren<TraderNpc>(true);
+            trader = ___m_hovering.GetComponentInChildren<TraderNpc>(true);
+
+        if (trader == null && ___m_hoveringCreature != null)
+            trader = ___m_hoveringCreature.GetComponentInParent<TraderNpc>();
 
         if (trader == null)
             return;
 
-        __instance.m_hovering = trader.gameObject;
-        __instance.m_hoveringCreature = null;
+        ___m_hovering = trader.gameObject;
+        ___m_hoveringCreature = null;
     }
 }
