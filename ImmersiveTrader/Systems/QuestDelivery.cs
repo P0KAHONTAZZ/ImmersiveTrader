@@ -11,16 +11,26 @@ public static class QuestDelivery
         var carried = InventoryTreasureService.GetCarried(player).FirstOrDefault(x => x.SourceTraderId != target.Id);
         if (carried == null) return false;
 
-        if (!target.IsLegendary && !ProgressionGate.IsRewardTierUnlocked(target.BiomeTier))
-        {
-            player.Message(MessageHud.MessageType.Center,
-                $"{target.Name}: My better stock is not available yet. Defeat the previous biome boss first.");
-            return true;
-        }
+        bool targetTierUnlocked = target.IsLegendary || ProgressionGate.IsRewardTierUnlocked(target.BiomeTier);
 
         var table = target.IsLegendary ? LegendaryRewardRegistry.Rewards : RewardRegistry.Rewards;
         var reward = table.FirstOrDefault(x => x.TraderId == target.Id && x.TreasureId == carried.TreasureId);
         if (reward == null) return false;
+
+        if (!targetTierUnlocked)
+        {
+            var sourceTrader = TraderRegistry.Traders.FirstOrDefault(x => x.Id == carried.SourceTraderId);
+            var fallbackTrader = sourceTrader != null && ProgressionGate.IsRewardTierUnlocked(sourceTrader.BiomeTier)
+                ? sourceTrader
+                : TraderRegistry.Traders.FirstOrDefault(x => !x.IsLegendary && x.BiomeTier == 0);
+
+            var fallback = fallbackTrader == null
+                ? null
+                : RewardRegistry.Rewards.FirstOrDefault(x => x.TraderId == fallbackTrader.Id && x.TreasureId == carried.TreasureId);
+
+            if (fallback != null)
+                reward = fallback;
+        }
 
         var rewardPrefab = ObjectDB.instance.GetItemPrefab(reward.ItemPrefab);
         if (rewardPrefab == null)
@@ -54,7 +64,8 @@ public static class QuestDelivery
             ? $"???: Those who trade in gold count coins. Those who trade in favors count roads. Received: {amount} {reward.ItemPrefab}"
             : target.LiesAboutRewards
                 ? TroldadDialogue.GetLie(reward.ItemPrefab, amount)
-                : $"{target.Name}: Deal. Biome x{biomeMultiplier}, distance {routeMetres:0}m x{distanceMultiplier:0.##}. Your payment: {amount} {reward.ItemPrefab}.";
+                : $"{target.Name}: Deal. Biome x{biomeMultiplier}, distance {routeMetres:0}m x{distanceMultiplier:0.##}. Your payment: {amount} {reward.ItemPrefab}."
+                + (targetTierUnlocked ? "" : " Better local stock unlocks after the previous biome boss.");
 
         player.Message(MessageHud.MessageType.Center, message);
         return true;
