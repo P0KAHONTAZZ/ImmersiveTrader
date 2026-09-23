@@ -18,11 +18,13 @@ public sealed class JackieCompanion : MonoBehaviour
     private ZNetView? _nview;
     private Vector3 _spawnHome;
     private float _nextCheck;
+    private Character? _character;
 
     private void Awake()
     {
         _ai = GetComponent<MonsterAI>();
         _nview = GetComponent<ZNetView>();
+        _character = GetComponent<Character>();
         _spawnHome = transform.position;
 
         // Jackie is scenery/companionship, not a tameable pet that can be
@@ -46,6 +48,10 @@ public sealed class JackieCompanion : MonoBehaviour
 
     private void Update()
     {
+        // Jackie is an ambient camp companion, not a combat/survival target.
+        // Camp fires and other environmental damage must never kill him.
+        if (_character != null && _character.GetHealth() < _character.GetMaxHealth())
+            _character.SetHealth(_character.GetMaxHealth());
         if (Time.time < _nextCheck) return;
         _nextCheck = Time.time + CheckInterval;
 
