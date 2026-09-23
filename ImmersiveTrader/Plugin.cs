@@ -18,7 +18,7 @@ public sealed class Plugin : BaseUnityPlugin
     internal static ConfigEntry<int> MaxCarriedTreasures = null!;
     internal static ConfigEntry<int> MidkaHealingMeadPrice = null!;
     internal static ConfigEntry<bool> ProgressionLock = null!;
-    internal static ConfigEntry<int> TraderCooldownWorldDays = null!;
+    internal static ConfigEntry<int> TraderCooldownWorldDays = null!;\n    internal static ConfigEntry<int> ReputationBonusPerDeliveryPercent = null!;
     internal static ConfigEntry<int> MietegActiveWorldDays = null!;
     internal static ConfigEntry<float> MietegRevealDistance = null!;
 
@@ -28,7 +28,7 @@ public sealed class Plugin : BaseUnityPlugin
         MaxCarriedTreasures = Config.Bind("Treasures", "MaxCarried", 2, "Maximum number of active quest treasures.");
         MidkaHealingMeadPrice = Config.Bind("Midka", "MinorHealingMeadPrice", 50, "Coins required for one Minor Healing Mead.");
         ProgressionLock = Config.Bind("Progression", "Enabled", true, "Prevent rewards from biomes not unlocked by boss progression.");
-        TraderCooldownWorldDays = Config.Bind("Quests", "TraderCooldownWorldDays", 3, "World days before the same trader can issue another shipment to a player.");
+        TraderCooldownWorldDays = Config.Bind("Quests", "TraderCooldownWorldDays", 3, "World days before the same trader can issue another shipment to a player.");\n        ReputationBonusPerDeliveryPercent = Config.Bind("Rewards", "ReputationBonusPerDeliveryPercent", 20, "Additive reward bonus gained for each completed delivery.");
         MietegActiveWorldDays = Config.Bind("LegendaryMieteg", "ActiveWorldDays", 2, "How many world days Mieteg remains active.");
         MietegRevealDistance = Config.Bind("LegendaryMieteg", "RevealDistance", 600f, "Distance in metres at which Mieteg becomes discoverable.");
 
