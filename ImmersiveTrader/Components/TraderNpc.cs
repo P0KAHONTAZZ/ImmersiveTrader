@@ -13,25 +13,20 @@ public sealed class TraderNpc : MonoBehaviour, Hoverable, Interactable
 
     public string GetHoverName() => Definition?.Name ?? "Trader";
 
-    // Valheim positions the hover label from the hovered object's transform plus this
-    // offset. Scale-aware offsets keep labels above creature-based trader models.
-    public float GetHoverOffset()
+    // Hoverable.GetHoverOffset is a UI/world-space offset, not a collider-height probe.
+    // Creature prefabs have very different collider hierarchies; using Collider.bounds
+    // made labels from Troll/Draugr/Dverger based traders jump or stack on screen.
+    // Keep the interaction anchor deterministic per visual type instead.
+    public float GetHoverOffset() => TraderId switch
     {
-        var character = GetComponent<Character>();
-        if (character != null)
-        {
-            var collider = GetComponent<Collider>();
-            if (collider != null)
-            {
-                float top = collider.bounds.max.y - transform.position.y;
-                if (top > 0.25f && top < 8f)
-                    return top + 0.35f;
-            }
-        }
-
-        float scale = Mathf.Max(0.35f, transform.lossyScale.y);
-        return 1.8f * scale;
-    }
+        "troldad" => 1.35f,
+        "hrothgar" => 1.65f,
+        "ragnar_turnipson" => 1.75f,
+        "bjarki_goldtooth" => 1.55f,
+        "encek" => 1.65f,
+        "mokra_dzika" => 1.75f,
+        _ => 1.65f
+    };
 
     public string GetHoverText()
     {
