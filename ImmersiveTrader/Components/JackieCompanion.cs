@@ -36,21 +36,12 @@ public sealed class JackieCompanion : MonoBehaviour
     {
         Home = home;
         _spawnHome = home.position;
-        ApplyPatrolAnchor();
+        // Native wolf AI remains in control of idle/wander movement.
     }
 
     private void Start()
     {
-        ApplyPatrolAnchor();
-    }
-
-    private void ApplyPatrolAnchor()
-    {
-        if (_ai == null) return;
-
-        // Let vanilla MonsterAI choose idle/wander movement around this point.
-        // We intentionally do not call Character.SetMoveDir here.
-        _ai.m_spawnPoint = Home != null ? Home.position : _spawnHome;
+        // Intentionally empty: vanilla MonsterAI owns ordinary locomotion.
     }
 
     private void Update()
@@ -66,6 +57,6 @@ public sealed class JackieCompanion : MonoBehaviour
         if (_nview != null && _nview.IsValid() && !_nview.IsOwner()) return;
 
         transform.position = home + new Vector3(1.8f, 0.2f, 1.2f);
-        ApplyPatrolAnchor();
+        // After a safety reset, native AI resumes ordinary movement.
     }
 }
