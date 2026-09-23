@@ -64,11 +64,35 @@ public static class NpcPrefabRegistry
         var npcTalk = prefab.GetComponent<NpcTalk>();
         if (npcTalk != null) Object.DestroyImmediate(npcTalk);
 
+        // Creature-derived trader prefabs must keep their native AI component.
+        // Valheim's Character/Humanoid, animation and EnemyHud paths expect a valid
+        // creature layout. Stripping MonsterAI/AnimalAI left half-creature prefabs
+        // and caused EnemyHud.UpdateHuds NullReferenceExceptions at runtime.
+        // Aggression is disabled instead of removing AI.
         var monsterAi = prefab.GetComponent<MonsterAI>();
-        if (monsterAi != null) Object.DestroyImmediate(monsterAi);
+        if (monsterAi != null)
+        {
+            monsterAi.m_viewRange = 0f;
+            monsterAi.m_viewAngle = 0f;
+            monsterAi.m_hearRange = 0f;
+            monsterAi.m_alertRange = 0f;
+            monsterAi.m_fleeIfNotAlerted = false;
+        }
 
         var animalAi = prefab.GetComponent<AnimalAI>();
-        if (animalAi != null) Object.DestroyImmediate(animalAi);
+        if (animalAi != null)
+        {
+            animalAi.m_viewRange = 0f;
+            animalAi.m_viewAngle = 0f;
+            animalAi.m_hearRange = 0f;
+        }
+
+        var character = prefab.GetComponent<Character>();
+        if (character != null)
+        {
+            character.m_faction = Character.Faction.Players;
+            character.m_name = string.Empty;
+        }
 
         var tameable = prefab.GetComponent<Tameable>();
         if (tameable != null) Object.DestroyImmediate(tameable);
