@@ -15,7 +15,7 @@ public static class TraderActivityService
     }
 
     private static readonly Dictionary<(long PlayerId, string ContractId), State> Active = new();
-    private static readonly Dictionary<(long PlayerId, string TraderId), int> LastAcceptedDay = new();
+    private static readonly Dictionary<(long PlayerId, string ContractId), int> LastAcceptedDay = new();
     private static readonly HashSet<(long PlayerId, string ContractId)> Completed = new();
 
     public static TraderActivityDefinition? GetOffer(string traderId) =>
@@ -41,21 +41,16 @@ public static class TraderActivityService
         }
 
         int today = GetWorldDay();
-        if (LastAcceptedDay.TryGetValue((playerId, traderId), out int lastDay) && today - lastDay < 7)
-        {
-            player.Message(MessageHud.MessageType.Center, $"Next contract available in {7 - (today - lastDay)} world day(s).");
-            return false;
-        }
-
         var offer = GetOffers(player, traderId)
-            .FirstOrDefault(x => !Active.ContainsKey((playerId, x.Id)));
+            .Where(x => !Active.ContainsKey((playerId, x.Id)))
+            .FirstOrDefault(x => !LastAcceptedDay.TryGetValue((playerId, x.Id), out int lastDay) || today - lastDay >= 7);
         if (offer == null)
         {
             player.Message(MessageHud.MessageType.Center, "All contracts from this trader are complete.");
             return false;
         }
         Active[(playerId, offer.Id)] = new State { Definition = offer };
-        LastAcceptedDay[(playerId, traderId)] = today;
+        LastAcceptedDay[(playerId, offer.Id)] = today;
         player.Message(MessageHud.MessageType.Center, $"Contract accepted: {offer.Title} (0/{offer.RequiredAmount}) | reward +{offer.RewardSkillLevels:0} {offer.RewardSkill}");
         return true;
     }
