@@ -2,6 +2,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using Jotunn;
 using Jotunn.Managers;
+using ImmersiveTrader.Commands;
 
 namespace ImmersiveTrader;
 
@@ -30,6 +31,8 @@ public sealed class Plugin : BaseUnityPlugin
         TraderCooldownWorldDays = Config.Bind("Quests", "TraderCooldownWorldDays", 3, "World days before the same trader can issue another shipment to a player.");
         MietegActiveWorldDays = Config.Bind("LegendaryMieteg", "ActiveWorldDays", 2, "How many world days Mieteg remains active.");
         MietegRevealDistance = Config.Bind("LegendaryMieteg", "RevealDistance", 600f, "Distance in metres at which Mieteg becomes discoverable.");
+
+        CommandManager.Instance.AddConsoleCommand(new ImmersiveTraderCommand());
 
         PrefabManager.OnVanillaPrefabsAvailable += OnVanillaPrefabsAvailable;
         ZoneManager.OnVanillaLocationsAvailable += OnVanillaLocationsAvailable;
