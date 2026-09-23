@@ -12,9 +12,17 @@ public static class TraderInteraction
             var offers = TraderShop.GetAvailableOffers(trader.Id);
             if (offers.Length > 0)
             {
-                // Temporary interaction path until the native-style shop panel is wired:
-                // alternate-use buys the first thematic offer through the same backend.
+                // Temporary direct-buy path. The backend is intentionally UI-agnostic so
+                // StoreGui/native-panel wiring can replace this without changing economy.
                 TraderShop.TryBuy(player, offers[0]);
+                return;
+            }
+
+            var activity = TraderActivityService.GetOffer(trader.Id);
+            if (activity != null)
+            {
+                player.Message(MessageHud.MessageType.Center,
+                    $"{trader.Name}: {activity.Title} - {activity.Description}");
                 return;
             }
         }
