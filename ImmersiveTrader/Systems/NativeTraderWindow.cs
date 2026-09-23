@@ -38,9 +38,9 @@ public static class NativeTraderWindow
             return false;
         }
 
-        var helper = UnityEngine.Object.Instantiate(haldor, npc.transform.position, npc.transform.rotation);
+        var helper = UnityEngine.Object.Instantiate(haldor, npc.transform.position + Vector3.down * 1000f, npc.transform.rotation);
         helper.name = $"ImmersiveTrader_Store_{definition.Id}";
-        helper.transform.SetParent(npc.transform, true);
+        helper.transform.SetParent(npc.transform, true);\n        helper.transform.localScale = Vector3.zero;
 
         // Hide the helper completely; it exists only to provide a valid vanilla Trader
         // object to StoreGui. The visible/interactable NPC remains our custom shell.
