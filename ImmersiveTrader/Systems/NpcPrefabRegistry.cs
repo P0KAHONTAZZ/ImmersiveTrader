@@ -55,10 +55,10 @@ public static class NpcPrefabRegistry
             var interaction = prefab.GetComponent<TraderNpc>() ?? prefab.AddComponent<TraderNpc>();
             interaction.TraderId = trader.Id;
 
-            // Native trader prefabs (Haldor/Hildir/BogWitch) already expose the
-            // expected NPC hover path. Creature-derived looks resolve interaction
-            // through Character hitboxes/Rigidbody instead, so bind our trader
-            // interaction to those hit objects for every creature look, not just Troll.
+            // Creature-derived visuals keep their Character/AI only for model animation.
+            // Interaction is handled by a dedicated NPC hover anchor, matching the
+            // reliable trader-style path used by Hildir/BogWitch rather than rewriting
+            // Player's private hover state.
             if (prefab.GetComponent<Character>() != null)
                 PrepareCreatureTrader(prefab, interaction);
 
@@ -113,27 +113,29 @@ public static class NpcPrefabRegistry
 
     private static void PrepareCreatureTrader(GameObject prefab, TraderNpc owner)
     {
-        // Keep proxies on both the Rigidbody owner and child hitboxes. Different
-        // interaction paths in Valheim may resolve either object.
-        var rigidbody = prefab.GetComponentInChildren<Rigidbody>(true);
-        if (rigidbody != null)
-        {
-            var proxy = rigidbody.gameObject.GetComponent<TraderInteractionProxy>() ?? rigidbody.gameObject.AddComponent<TraderInteractionProxy>();
-            proxy.Owner = owner;
-        }
+        // Do not put Interactable/Hoverable proxies on native creature hitboxes.
+        // Valheim resolves those hitboxes through Character and that competes with the
+        // normal NPC hover path. One explicit interaction volume is deterministic.
+        foreach (var proxy in prefab.GetComponentsInChildren<TraderInteractionProxy>(true))
+            Object.DestroyImmediate(proxy);
 
-        foreach (var collider in prefab.GetComponentsInChildren<Collider>(true))
-        {
-            var proxy = collider.gameObject.GetComponent<TraderInteractionProxy>() ?? collider.gameObject.AddComponent<TraderInteractionProxy>();
-            proxy.Owner = owner;
-        }
+        var anchor = new GameObject("ImmersiveTrader_NpcInteraction");
+        anchor.transform.SetParent(prefab.transform, false);
+
+        float height = owner.TraderId == "troldad" ? 1.45f : 1.15f;
+        float radius = owner.TraderId == "troldad" ? 1.05f : 0.75f;
+        anchor.transform.localPosition = new Vector3(0f, height, 0f);
+
+        var collider = anchor.AddComponent<SphereCollider>();
+        collider.radius = radius;
+        collider.isTrigger = false;
+
+        var proxy = anchor.AddComponent<TraderInteractionProxy>();
+        proxy.Owner = owner;
 
         var character = prefab.GetComponent<Character>();
         if (character != null)
             character.m_name = string.Empty;
-
-        // Character and native AI stay intact for animation stability. EnemyHud is
-        // suppressed centrally by TraderCreatureHudPatch for objects carrying TraderNpc.
     }
 
     private static void RegisterJackie()
