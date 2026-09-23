@@ -1,5 +1,5 @@
+using System.Collections.Generic;
 using ImmersiveTrader.Components;
-using Jotunn.Entities;
 using Jotunn.Managers;
 using UnityEngine;
 
@@ -9,6 +9,26 @@ public static class NpcPrefabRegistry
 {
     private static bool _registered;
 
+    // Uses only vanilla Valheim prefabs. If a source prefab is unavailable after a game
+    // update, that trader safely falls back to Haldor instead of breaking registration.
+    private static readonly Dictionary<string, (string Prefab, float Scale)> Looks = new()
+    {
+        ["midka"] = ("Hildir", 1.00f),
+        ["troldad"] = ("Troll", 0.42f),
+        ["grimvald"] = ("Haldor", 1.00f),
+        ["rudy_warg"] = ("Dverger", 1.00f),
+        ["mokra_dzika"] = ("Draugr", 0.95f),
+        ["bogdan_bones"] = ("Skeleton", 1.05f),
+        ["hrothgar"] = ("Fenring", 0.82f),
+        ["ylva_frost"] = ("DvergerMage", 0.95f),
+        ["bjarki_goldtooth"] = ("Goblin", 1.05f),
+        ["ragnar_turnipson"] = ("GoblinBrute", 0.78f),
+        ["cmok"] = ("DvergerMage", 0.90f),
+        ["grelka"] = ("Dverger", 0.95f),
+        ["spalony_zenek"] = ("Charred_Melee", 0.95f),
+        ["skjold_cinderborn"] = ("Charred_Archer", 0.95f)
+    };
+
     public static void Register()
     {
         if (_registered) return;
@@ -17,14 +37,14 @@ public static class NpcPrefabRegistry
         {
             if (trader.IsLegendary) continue;
 
-            // Haldor is used as a stable passive trader base. Custom visuals will replace
-            // individual traders in the asset-bundle stage.
-            var prefab = PrefabManager.Instance.CreateClonedPrefab($"ImmersiveTrader_NPC_{trader.Id}", "Haldor");
+            var look = Looks.TryGetValue(trader.Id, out var selected) ? selected : ("Haldor", 1f);
+            string source = PrefabManager.Instance.GetPrefab(look.Item1) != null ? look.Item1 : "Haldor";
+
+            var prefab = PrefabManager.Instance.CreateClonedPrefab($"ImmersiveTrader_NPC_{trader.Id}", source);
             if (prefab == null) continue;
 
-            var vanillaTrader = prefab.GetComponent<Trader>();
-            if (vanillaTrader != null)
-                Object.DestroyImmediate(vanillaTrader);
+            MakePassive(prefab);
+            prefab.transform.localScale = Vector3.one * look.Item2;
 
             var interaction = prefab.GetComponent<TraderNpc>() ?? prefab.AddComponent<TraderNpc>();
             interaction.TraderId = trader.Id;
@@ -32,6 +52,40 @@ public static class NpcPrefabRegistry
             PrefabManager.Instance.AddPrefab(prefab);
         }
 
+        RegisterJackie();
         _registered = true;
+    }
+
+    private static void MakePassive(GameObject prefab)
+    {
+        var vanillaTrader = prefab.GetComponent<Trader>();
+        if (vanillaTrader != null) Object.DestroyImmediate(vanillaTrader);
+
+        var monsterAi = prefab.GetComponent<MonsterAI>();
+        if (monsterAi != null) Object.DestroyImmediate(monsterAi);
+
+        var animalAi = prefab.GetComponent<AnimalAI>();
+        if (animalAi != null) Object.DestroyImmediate(animalAi);
+
+        var tameable = prefab.GetComponent<Tameable>();
+        if (tameable != null) Object.DestroyImmediate(tameable);
+    }
+
+    private static void RegisterJackie()
+    {
+        if (PrefabManager.Instance.GetPrefab("ImmersiveTrader_Jackie") != null) return;
+
+        var wolf = PrefabManager.Instance.CreateClonedPrefab("ImmersiveTrader_Jackie", "Wolf");
+        if (wolf == null) return;
+
+        var character = wolf.GetComponent<Character>();
+        if (character != null)
+        {
+            character.m_name = "Jackie";
+            character.SetTamed(true);
+        }
+
+        wolf.transform.localScale = Vector3.one * 0.9f;
+        PrefabManager.Instance.AddPrefab(wolf);
     }
 }
