@@ -39,7 +39,9 @@ public static class InventoryTreasureService
         if (!prefab.StartsWith(prefix))
             return false;
 
-        treasureId = prefab.Substring(prefix.Length).Replace("(Clone)", string.Empty);
-        return TreasureRegistry.Treasures.Any(x => x.Id == treasureId);
+        string candidate = prefab.Substring(prefix.Length).Replace("(Clone)", string.Empty);
+        bool known = TreasureRegistry.Treasures.Any(x => x.Id == candidate);
+        if (known) treasureId = candidate;
+        return known;
     }
 }
