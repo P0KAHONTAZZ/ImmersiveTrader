@@ -79,7 +79,11 @@ public static class NpcPrefabRegistry
         string shellName = $"ImmersiveTrader_NPCLOOK_{traderId}";
         if (PrefabManager.Instance.GetPrefab(shellName) != null) return;
 
-        var shell = PrefabManager.Instance.CreateClonedPrefab(shellName, "Hildir");
+        // Troldad is intentionally not human-looking. Keep the native Troll body,
+        // scaled to roughly human height, while using the same safe passive/interaction
+        // setup as the proven creature trader.
+        string shellSource = traderId == "troldad" ? "Troll" : "Hildir";
+        var shell = PrefabManager.Instance.CreateClonedPrefab(shellName, shellSource);
         if (shell == null) return;
 
         var vanillaTrader = shell.GetComponent<Trader>();
@@ -91,17 +95,23 @@ public static class NpcPrefabRegistry
         var npc = shell.GetComponent<TraderNpc>() ?? shell.AddComponent<TraderNpc>();
         npc.TraderId = traderId;
 
-        // Keep Hildir's root, colliders, Rigidbody and NPC interaction hierarchy intact.
-        // The visual source is stored on the prototype for the next step: transplanting
-        // only render/animation presentation instead of cloning Monster Character logic.
         var descriptor = shell.AddComponent<NpcLookPrototype>();
         descriptor.VisualSource = visualSource;
         descriptor.VisualScale = visualScale;
 
-        // Parallel human-looking prototype. This does not replace the live trader yet;
-        // it lets `it look <id>` validate a Player visual on the known-good NPC shell.
-        var playerLook = shell.GetComponent<PlayerLikeNpcVisual>() ?? shell.AddComponent<PlayerLikeNpcVisual>();
-        playerLook.TraderId = traderId;
+        if (traderId == "troldad")
+        {
+            shell.transform.localScale = Vector3.one * visualScale;
+            MakePassive(shell);
+            PrepareCreatureTrader(shell, npc);
+        }
+        else
+        {
+            // Human traders use the validated Hildir interaction shell with only
+            // Player's visual hierarchy mounted on top.
+            var playerLook = shell.GetComponent<PlayerLikeNpcVisual>() ?? shell.AddComponent<PlayerLikeNpcVisual>();
+            playerLook.TraderId = traderId;
+        }
 
         PrefabManager.Instance.AddPrefab(shell);
     }
