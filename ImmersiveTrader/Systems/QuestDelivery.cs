@@ -30,11 +30,7 @@ public static class QuestDelivery
         }
 
         int routeMultiplier = target.IsLegendary ? 1 : RewardScaling.GetMultiplier(carried.SourceBiomeTier, target.BiomeTier);
-        long playerId = player.GetPlayerID();
-        int completedBefore = DeliveryReputation.GetCompleted(playerId);
-        int reputationPercent = DeliveryReputation.GetBonusPercent(playerId);
-        float reputationMultiplier = DeliveryReputation.GetMultiplier(playerId);
-        int amount = Mathf.Max(1, Mathf.RoundToInt(reward.BaseAmount * routeMultiplier * reputationMultiplier));
+        int amount = Mathf.Max(1, reward.BaseAmount * routeMultiplier);
 
         if (!player.GetInventory().CanAddItem(rewardPrefab, amount))
         {
@@ -44,13 +40,12 @@ public static class QuestDelivery
 
         player.GetInventory().RemoveItem(carried.Item);
         GiveReward(player, rewardPrefab, amount);
-        DeliveryReputation.MarkCompleted(playerId);
 
         string message = target.IsLegendary
             ? $"???: Those who trade in gold count coins. Those who trade in favors count roads. Received: {amount} {reward.ItemPrefab}"
             : target.LiesAboutRewards
                 ? TroldadDialogue.GetLie(reward.ItemPrefab, amount)
-                : $"{target.Name}: Deal. Route x{routeMultiplier}, reputation +{reputationPercent}%. Your payment: {amount} {reward.ItemPrefab}.";
+                : $"{target.Name}: Deal. Route x{routeMultiplier}. Your payment: {amount} {reward.ItemPrefab}.";
 
         player.Message(MessageHud.MessageType.Center, message);
         return true;
