@@ -93,7 +93,7 @@ public static class NpcPrefabRegistry
         if (npcTalk != null) Object.DestroyImmediate(npcTalk);
 
         var view = shell.GetComponent<ZNetView>();
-        if (view != null) view.m_persistent = true;
+        if (view != null) view.m_persistent = false;
 
         var npc = shell.GetComponent<TraderNpc>() ?? shell.AddComponent<TraderNpc>();
         npc.TraderId = traderId;
