@@ -55,14 +55,12 @@ public static class NpcPrefabRegistry
             var interaction = prefab.GetComponent<TraderNpc>() ?? prefab.AddComponent<TraderNpc>();
             interaction.TraderId = trader.Id;
 
-            if (trader.Id == "troldad")
-            {
-                // Valheim resolves hover/interact through the Rigidbody owner of a hit
-                // collider. Troll uses child hitboxes but the Rigidbody lives on the
-                // creature root, so keep TraderNpc on that exact root and disable the
-                // enemy HUD flag while retaining Character + MonsterAI.
-                PrepareTroldad(prefab, interaction);
-            }
+            // Native trader prefabs (Haldor/Hildir/BogWitch) already expose the
+            // expected NPC hover path. Creature-derived looks resolve interaction
+            // through Character hitboxes/Rigidbody instead, so bind our trader
+            // interaction to those hit objects for every creature look, not just Troll.
+            if (prefab.GetComponent<Character>() != null)
+                PrepareCreatureTrader(prefab, interaction);
 
             PrefabManager.Instance.AddPrefab(prefab);
         }
@@ -113,7 +111,7 @@ public static class NpcPrefabRegistry
         if (tameable != null) Object.DestroyImmediate(tameable);
     }
 
-    private static void PrepareTroldad(GameObject prefab, TraderNpc owner)
+    private static void PrepareCreatureTrader(GameObject prefab, TraderNpc owner)
     {
         // Keep proxies on both the Rigidbody owner and child hitboxes. Different
         // interaction paths in Valheim may resolve either object.
@@ -134,8 +132,8 @@ public static class NpcPrefabRegistry
         if (character != null)
             character.m_name = string.Empty;
 
-        // EnemyHud ignores creatures without a visible name. Do not destroy Character
-        // or MonsterAI: both are required by Troll animation/AI.
+        // Character and native AI stay intact for animation stability. EnemyHud is
+        // suppressed centrally by TraderCreatureHudPatch for objects carrying TraderNpc.
     }
 
     private static void RegisterJackie()
