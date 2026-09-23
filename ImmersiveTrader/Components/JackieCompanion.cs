@@ -12,13 +12,13 @@ public sealed class JackieCompanion : MonoBehaviour
     public float SoftRadius = 5f;
     public float HardRadius = 11f;
 
-    private BaseAI? _ai;
+    private Character? _character;
     private Vector3 _spawnHome;
     private float _nextCheck;
 
     private void Awake()
     {
-        _ai = GetComponent<BaseAI>();
+        _character = GetComponent<Character>();
         _spawnHome = transform.position;
     }
 
@@ -42,7 +42,20 @@ public sealed class JackieCompanion : MonoBehaviour
             return;
         }
 
-        if (_ai != null && distance > SoftRadius)
-            _ai.MoveTo(Time.fixedDeltaTime, home, 0.6f, false);
+        if (_character != null && distance > SoftRadius)
+        {
+            Vector3 direction = home - transform.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude > 0.01f)
+            {
+                direction.Normalize();
+                _character.SetMoveDir(direction);
+                _character.SetLookDir(direction, 0f);
+            }
+        }
+        else if (_character != null)
+        {
+            _character.SetMoveDir(Vector3.zero);
+        }
     }
 }
