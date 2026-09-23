@@ -73,7 +73,16 @@ public static class NativeTraderWindow
             {
                 m_prefab = itemDrop,
                 m_price = offer.Price,
-                m_stack = offer.Stack
+                m_stack = offer.Stack,
+                m_requiredGlobalKey = string.Empty,
+                m_levelUpEffect = false,
+                m_buyPlayerEffects = new EffectList(),
+                m_icon = null,
+                m_name = itemDrop.m_itemData?.m_shared?.m_name ?? string.Empty,
+                m_tooltip = itemDrop.m_itemData?.m_shared?.m_description ?? string.Empty,
+                m_buyKey = string.Empty,
+                m_incrementKey = string.Empty,
+                m_incrementAmount = 0
             };
 
             trader.m_items.Add(tradeItem);
