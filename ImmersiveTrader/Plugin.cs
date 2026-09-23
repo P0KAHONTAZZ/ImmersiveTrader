@@ -2,7 +2,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using Jotunn;
 using Jotunn.Managers;
-using ImmersiveTrader.Commands;
+using ImmersiveTrader.Commands;\nusing HarmonyLib;
 
 namespace ImmersiveTrader;
 
@@ -40,7 +40,7 @@ public sealed class Plugin : BaseUnityPlugin
         MietegActiveWorldDays = Config.Bind("LegendaryMieteg", "ActiveWorldDays", 2, "How many world days Mieteg remains active.");
         MietegRevealDistance = Config.Bind("LegendaryMieteg", "RevealDistance", 600f, "Distance in metres at which Mieteg becomes discoverable.");
 
-        CommandManager.Instance.AddConsoleCommand(new ImmersiveTraderCommand());
+        _harmony = new Harmony(ModGuid);\n        _harmony.PatchAll();\n\n        CommandManager.Instance.AddConsoleCommand(new ImmersiveTraderCommand());
         PrefabManager.OnVanillaPrefabsAvailable += OnVanillaPrefabsAvailable;
         ZoneManager.OnVanillaLocationsAvailable += OnVanillaLocationsAvailable;
         Logger.LogInfo($"{ModName} {ModVersion} loaded.");
