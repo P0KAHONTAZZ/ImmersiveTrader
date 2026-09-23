@@ -1,10 +1,11 @@
 using ImmersiveTrader.Models;
+using UnityEngine;
 
 namespace ImmersiveTrader;
 
 public static class TraderInteraction
 {
-    public static void Handle(Player player, TraderDefinition trader, bool alternateUse)
+    public static void Handle(Player player, TraderDefinition trader, bool alternateUse, Vector3 traderPosition)
     {
         if (trader.Id == "midka" && alternateUse)
         {
@@ -15,7 +16,7 @@ public static class TraderInteraction
         if (QuestDelivery.TryDeliverAny(player, trader))
             return;
 
-        if (QuestIssuing.TryGiveTreasure(player, trader))
+        if (QuestIssuing.TryGiveTreasure(player, trader, traderPosition))
             return;
 
         if (trader.Id == "midka")
