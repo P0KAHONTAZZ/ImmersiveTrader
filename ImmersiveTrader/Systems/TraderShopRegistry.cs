@@ -22,6 +22,8 @@ public static class TraderShopRegistry
         new("bjarki_goldtooth", "Cloudberry", 25, 5, 4, "Cloudberries"),
         new("ragnar_turnipson", "Barley", 40, 5, 4, "Barley"),
         new("cmok", "MushroomJotunPuffs", 45, 5, 5, "Jotun Puffs"),
-        new("grelka", "MushroomMagecap", 45, 5, 5, "Magecap")
+        new("grelka", "MushroomMagecap", 45, 5, 5, "Magecap"),
+        new("spalony_zenek", "Grausten", 55, 5, 6, "Grausten"),
+        new("skjold_cinderborn", "Ashwood", 55, 5, 6, "Ashwood")
     };
 }
