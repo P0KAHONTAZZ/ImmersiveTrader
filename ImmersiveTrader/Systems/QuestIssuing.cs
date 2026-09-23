@@ -36,13 +36,7 @@ public static class QuestIssuing
             return true;
         }
 
-        if (!inventory.AddItem(prefab, 1)) return false;
-
-        var item = inventory.GetAllItems().LastOrDefault(x =>
-            x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith(prefabName));
-        if (item == null) return false;
-
-        TreasureMetadata.Stamp(item, source.Id, source.BiomeTier);
+        var before = inventory.GetAllItems().Where(x =>\n            x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith(prefabName)).ToList();\n\n        if (!inventory.AddItem(prefab, 1)) return false;\n\n        var item = inventory.GetAllItems().LastOrDefault(x =>\n            x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith(prefabName) && !before.Contains(x));\n        if (item == null)\n        {\n            player.Message(MessageHud.MessageType.Center, $"{source.Name}: Shipment creation failed safely.");\n            return true;\n        }\n\n        TreasureMetadata.Stamp(item, source.Id, source.BiomeTier);
         TraderCooldown.MarkIssued(playerId, source.Id);
         player.Message(MessageHud.MessageType.Center,
             $"{source.Name}: Take {def.DisplayName}. Deliver it to another trader.");
