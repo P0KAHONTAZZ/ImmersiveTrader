@@ -56,7 +56,12 @@ public static class NpcPrefabRegistry
             interaction.TraderId = trader.Id;
 
             if (trader.Id == "troldad")
-                AddInteractionProxy(prefab, interaction, 1.45f, 0.95f);
+            {
+                // Troll's native hit colliders win Valheim's hover raycast. Put the
+                // interaction implementation on every collider object as well, so the
+                // exact object hit by the player resolves Troldad's Hoverable.
+                AttachInteractionToColliders(prefab, interaction);
+            }
 
             PrefabManager.Instance.AddPrefab(prefab);
         }
@@ -107,18 +112,14 @@ public static class NpcPrefabRegistry
         if (tameable != null) Object.DestroyImmediate(tameable);
     }
 
-    private static void AddInteractionProxy(GameObject prefab, TraderNpc owner, float localY, float radius)
+    private static void AttachInteractionToColliders(GameObject prefab, TraderNpc owner)
     {
-        var anchor = new GameObject("ImmersiveTrader_Interaction");
-        anchor.transform.SetParent(prefab.transform, false);
-        anchor.transform.localPosition = new Vector3(0f, localY, 0f);
-
-        var collider = anchor.AddComponent<SphereCollider>();
-        collider.radius = radius;
-        collider.isTrigger = false;
-
-        var proxy = anchor.AddComponent<TraderInteractionProxy>();
-        proxy.Owner = owner;
+        foreach (var collider in prefab.GetComponentsInChildren<Collider>(true))
+        {
+            var hitObject = collider.gameObject;
+            var proxy = hitObject.GetComponent<TraderInteractionProxy>() ?? hitObject.AddComponent<TraderInteractionProxy>();
+            proxy.Owner = owner;
+        }
     }
 
     private static void RegisterJackie()
