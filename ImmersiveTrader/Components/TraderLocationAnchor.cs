@@ -15,6 +15,7 @@ public sealed class TraderLocationAnchor : MonoBehaviour
 {
     public string TraderId = string.Empty;
     private GameObject? _npc;
+    private GameObject? _jackie;
 
     private IEnumerator Start()
     {
@@ -85,25 +86,50 @@ public sealed class TraderLocationAnchor : MonoBehaviour
         // This instance belongs to the currently loaded location. Do not leave a ZDO
         // behind after the zone unloads; the anchor will recreate it next time.
 
+        if (string.Equals(TraderId, "troldad", StringComparison.OrdinalIgnoreCase))
+            EnsureJackie();
+
         Plugin.Log.LogInfo($"Location anchor created {TraderId} at {transform.position.x:0},{transform.position.z:0}");
+    }
+
+    private void EnsureJackie()
+    {
+        if (_jackie != null) return;
+        var prefab = PrefabManager.Instance.GetPrefab("ImmersiveTrader_Jackie");
+        if (prefab == null) { Plugin.Log.LogWarning("Location anchor: Jackie prefab missing"); return; }
+
+        bool wasActive = prefab.activeSelf;
+        prefab.SetActive(false);
+        _jackie = UnityEngine.Object.Instantiate(prefab, transform.position + transform.right * 2.2f + transform.forward * 1.2f, transform.rotation);
+        prefab.SetActive(wasActive);
+        _jackie.name = "ImmersiveTrader_LocationNpc_Jackie";
+
+        var view = _jackie.GetComponent<ZNetView>();
+        if (view != null) view.m_persistent = false;
+        _jackie.SetActive(true);
+
+        var companion = _jackie.GetComponent<JackieCompanion>() ?? _jackie.AddComponent<JackieCompanion>();
+        companion.SetHome(transform);
+        Plugin.Log.LogInfo($"Location anchor created Jackie for Troldad at {transform.position.x:0},{transform.position.z:0}");
     }
 
     private void OnDestroy()
     {
-        if (_npc == null) return;
+        DestroyOwned(_jackie);
+        _jackie = null;
+        DestroyOwned(_npc);
+        _npc = null;
+    }
 
-        var view = _npc.GetComponent<ZNetView>();
+    private static void DestroyOwned(GameObject? obj)
+    {
+        if (obj == null) return;
+        var view = obj.GetComponent<ZNetView>();
         if (view != null && view.IsValid() && ZNetScene.instance != null)
         {
-            if (!view.IsOwner())
-                view.ClaimOwnership();
-            ZNetScene.instance.Destroy(_npc);
+            if (!view.IsOwner()) view.ClaimOwnership();
+            ZNetScene.instance.Destroy(obj);
         }
-        else
-        {
-            UnityEngine.Object.Destroy(_npc);
-        }
-
-        _npc = null;
+        else UnityEngine.Object.Destroy(obj);
     }
 }
