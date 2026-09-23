@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace ImmersiveTrader;
 
-/// <summary>
-/// Shop backend shared by the future native-style trader window.
-/// Keeping purchases here means UI code never owns inventory/progression rules.
-/// </summary>
 public static class TraderShop
 {
     public static TraderOfferDefinition[] GetAvailableOffers(string traderId) =>
@@ -37,8 +33,24 @@ public static class TraderShop
             return false;
         }
 
+        // Validate capacity before taking money. AddItem can fail when inventory slots
+        // are full even if the player has enough coins.
+        if (!inventory.CanAddItem(prefab, offer.Stack))
+        {
+            player.Message(MessageHud.MessageType.Center, "Make room in your inventory first.");
+            return false;
+        }
+
         inventory.RemoveItem("Coins", offer.Price);
-        inventory.AddItem(prefab, offer.Stack);
+        if (!inventory.AddItem(prefab, offer.Stack))
+        {
+            // Defensive rollback: never eat the player's coins if Valheim rejects the item.
+            var coins = ObjectDB.instance?.GetItemPrefab("Coins");
+            if (coins != null) inventory.AddItem(coins, offer.Price);
+            player.Message(MessageHud.MessageType.Center, "Purchase failed; your coins were returned.");
+            return false;
+        }
+
         player.Message(MessageHud.MessageType.Center, $"Bought {offer.Stack}x {offer.Label}.");
         return true;
     }
