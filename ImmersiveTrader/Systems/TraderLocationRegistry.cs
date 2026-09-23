@@ -62,7 +62,7 @@ public static class TraderLocationRegistry
                 MinDistanceFromSimilar = 900f,
                 Group = $"ImmersiveTrader_{trader.Biome.Replace(" ", "")}",
                 IconPlaced = true,
-                IconAlways = false
+                IconAlways = true
             };
 
             ZoneManager.Instance.AddCustomLocation(new CustomLocation(container, false, config));
