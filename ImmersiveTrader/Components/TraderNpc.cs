@@ -32,8 +32,8 @@ public sealed class TraderNpc : MonoBehaviour, Hoverable, Interactable
     {
         if (Definition == null) return string.Empty;
         if (TraderId == "midka")
-            return $"{Definition.Name}\n[<color=yellow><b>$KEY_Use</b></color>] Talk\nWar healer & field medic";
-        return $"{Definition.Name}\n[<color=yellow><b>$KEY_Use</b></color>] Talk";
+            return $"{Definition.Name}\n[<color=yellow><b>E</b></color>] Talk\nWar healer & field medic";
+        return $"{Definition.Name}\n[<color=yellow><b>E</b></color>] Talk";
     }
 
     public bool Interact(Humanoid user, bool hold, bool alt)
