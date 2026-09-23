@@ -12,7 +12,7 @@ namespace ImmersiveTrader.Commands;
 public sealed class ImmersiveTraderCommand : ConsoleCommand
 {
     public override string Name => "it";
-    public override string Help => "ImmersiveTrader tools: it help | list | spawn <id> | look <id> | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId>";
+    public override string Help => "ImmersiveTrader tools: it help | list | spawn <id> | look <id> | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId>";
 
     public override void Run(string[] args, Terminal context)
     {
@@ -22,6 +22,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             case "list": PrintTraders(context); break;
             case "spawn": SpawnTrader(args, context); break;
             case "look": SpawnNpcLook(args, context); break;
+            case "clearspawned": ClearSpawnedTraders(context); break;
             case "items": PrintTreasures(context); break;
             case "give": GiveTreasure(args, context); break;
             case "route": PrintRoute(args, context); break;
@@ -30,7 +31,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "spawn", "look", "items", "give", "route", "task" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "spawn", "look", "clearspawned", "items", "give", "route", "task" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -40,6 +41,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it list");
         c.AddString("  it spawn <traderId>");
         c.AddString("  it look <traderId>");
+        c.AddString("  it clearspawned");
         c.AddString("  it items");
         c.AddString("  it give <treasureId> <sourceTraderId>");
         c.AddString("  it route <sourceTraderId> <targetTraderId>");
@@ -82,6 +84,50 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         var spawned = UnityEngine.Object.Instantiate(prefab, p.transform.position + p.transform.forward * 3f, Quaternion.identity);
         c.AddString(spawned != null ? $"Spawned NPC-shell prototype for {trader.Name}." : "Spawn failed.");
     }
+
+    private static void ClearSpawnedTraders(Terminal c)
+    {
+        if (Player.m_localPlayer == null) { c.AddString("Enter a world first."); return; }
+
+        int removed = 0;
+        foreach (var npc in UnityEngine.Object.FindObjectsOfType<TraderNpc>())
+        {
+            if (npc == null || npc.gameObject == null) continue;
+            string name = npc.gameObject.name;
+            if (!name.StartsWith("ImmersiveTrader_NPC_", StringComparison.Ordinal) &&
+                !name.StartsWith("ImmersiveTrader_NPCLOOK_", StringComparison.Ordinal))
+                continue;
+
+            // Developer-spawned NPCs are loose world objects. Location NPCs live under
+            // a generated location hierarchy and must never be removed by this command.
+            bool locationOwned = false;
+            for (Transform? t = npc.transform.parent; t != null; t = t.parent)
+            {
+                if (t.name.StartsWith("ImmersiveTrader_Location_", StringComparison.Ordinal) ||
+                    t.name.StartsWith("ImmersiveTrader_MietegSite_", StringComparison.Ordinal))
+                {
+                    locationOwned = true;
+                    break;
+                }
+            }
+            if (locationOwned) continue;
+
+            var nview = npc.GetComponent<ZNetView>();
+            if (nview != null && nview.IsValid())
+            {
+                if (!nview.IsOwner()) nview.ClaimOwnership();
+                ZNetScene.instance.Destroy(npc.gameObject);
+            }
+            else
+            {
+                UnityEngine.Object.Destroy(npc.gameObject);
+            }
+            removed++;
+        }
+
+        c.AddString($"Removed {removed} loose ImmersiveTrader test NPC(s).");
+    }
+
 
     private static void PrintTreasures(Terminal c)
     {
