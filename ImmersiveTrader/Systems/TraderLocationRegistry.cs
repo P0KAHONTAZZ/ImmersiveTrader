@@ -1,3 +1,4 @@
+using ImmersiveTrader.Components;
 using Jotunn.Configs;
 using Jotunn.Entities;
 using Jotunn.Managers;
@@ -22,30 +23,16 @@ public static class TraderLocationRegistry
             // Character/ZNetView lifecycle from running while the location is only a template.
             var container = ZoneManager.Instance.CreateLocationContainer($"ImmersiveTrader_Location_{trader.Id}");
 
-            var npcPrefab = PrefabManager.Instance.GetPrefab($"ImmersiveTrader_NPCLOOK_{trader.Id}");
-            if (npcPrefab == null) continue;
-
-            var npc = Object.Instantiate(npcPrefab, container.transform);
-            npc.name = npcPrefab.name;
-            npc.transform.localPosition = Vector3.zero;
+            // Never embed a persistent Character/ZNetView in a CustomLocation template.
+            // Valheim persists that character as a ZDO and then the location template
+            // creates another one on reload. A lightweight marker owns creation instead.
+            var marker = new GameObject($"ImmersiveTrader_Spawner_{trader.Id}");
+            marker.transform.SetParent(container.transform, false);
+            marker.transform.localPosition = Vector3.zero;
+            var spawner = marker.AddComponent<TraderLocationSpawner>();
+            spawner.TraderId = trader.Id;
 
             TraderCampBuilder.Build(trader.Id, container.transform);
-
-            if (trader.Id == "troldad")
-            {
-                var jackiePrefab = PrefabManager.Instance.GetPrefab("ImmersiveTrader_Jackie");
-                if (jackiePrefab != null)
-                {
-                    var jackie = Object.Instantiate(jackiePrefab, container.transform);
-                    jackie.name = "Jackie";
-                    jackie.transform.localPosition = new Vector3(2.2f, 0f, 1.2f);
-                    jackie.transform.localRotation = Quaternion.Euler(0f, 210f, 0f);
-
-                    var companion = jackie.GetComponent<ImmersiveTrader.Components.JackieCompanion>()
-                        ?? jackie.AddComponent<ImmersiveTrader.Components.JackieCompanion>();
-                    companion.SetHome(npc.transform);
-                }
-            }
 
             var range = GetDistanceRange(trader.Biome);
             var config = new LocationConfig
