@@ -39,6 +39,11 @@ public sealed class TraderNpc : MonoBehaviour, Hoverable, Interactable
     public bool Interact(Humanoid user, bool hold, bool alt)
     {
         if (hold || user is not Player player || Definition == null) return false;
+        // Primary use is the familiar Valheim shop. Alternate use keeps the
+        // courier/task interaction path available while the combined tabbed UI is built.
+        if (!alt && NativeTraderWindow.TryOpen(player, Definition, gameObject))
+            return true;
+
         TraderInteraction.Handle(player, Definition, alt, transform.position);
         return true;
     }
