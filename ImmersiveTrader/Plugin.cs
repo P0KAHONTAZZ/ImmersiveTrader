@@ -14,7 +14,7 @@ public sealed class Plugin : BaseUnityPlugin
     private Harmony? _harmony;
     public const string ModGuid = "p0kahontazz.immersivetrader";
     public const string ModName = "ImmersiveTrader";
-    public const string ModVersion = "0.4.0";
+    public const string ModVersion = "0.4.1";
 
     internal static ConfigEntry<float> TreasureWeight = null!;
     internal static ConfigEntry<int> MaxCarriedTreasures = null!;
