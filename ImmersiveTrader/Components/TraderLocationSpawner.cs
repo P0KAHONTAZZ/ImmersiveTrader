@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Jotunn.Managers;
 using UnityEngine;
 
@@ -32,12 +31,26 @@ public sealed class TraderLocationSpawner : MonoBehaviour
         Vector3 camp = transform.position;
         const float radius = 12f;
 
-        // Persisted ZDOs are recreated by ZNetScene before/while a zone loads. If that
-        // trader already exists around this camp, never instantiate another copy.
+        // Check the ZDO database, not only currently-instantiated GameObjects. On reload
+        // the persisted trader ZDO can exist before ZNetScene has materialized its GameObject;
+        // a scene-only scan therefore created one additional trader on every restart.
+        if (ZDOMan.instance != null)
+        {
+            foreach (var zdo in ZDOMan.instance.m_objectsByID.Values)
+            {
+                if (zdo == null) continue;
+                string prefabName = ZNetScene.instance.GetPrefab(zdo.GetPrefab())?.name ?? string.Empty;
+                if (!prefabName.Equals($"ImmersiveTrader_NPCLOOK_{TraderId}", StringComparison.OrdinalIgnoreCase)) continue;
+                if (Vector3.Distance(zdo.GetPosition(), camp) <= radius) return;
+            }
+        }
+
+        // Also cover the first live load where the object may already be instantiated.
         foreach (var npc in UnityEngine.Object.FindObjectsOfType<TraderNpc>())
         {
-            if (npc == null || !string.Equals(npc.TraderId, TraderId, StringComparison.OrdinalIgnoreCase)) continue;
-            if (Vector3.Distance(npc.transform.position, camp) <= radius) return;
+            if (npc != null && string.Equals(npc.TraderId, TraderId, StringComparison.OrdinalIgnoreCase) &&
+                Vector3.Distance(npc.transform.position, camp) <= radius)
+                return;
         }
 
         string prefabName = $"ImmersiveTrader_NPCLOOK_{TraderId}";
