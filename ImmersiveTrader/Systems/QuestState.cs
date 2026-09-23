@@ -8,8 +8,11 @@ public static class QuestState
 
     private static readonly Dictionary<long, List<ActiveTreasure>> ActiveByPlayer = new();
 
+    public static IReadOnlyList<ActiveTreasure> GetActive(long playerId)
+        => ActiveByPlayer.TryGetValue(playerId, out var list) ? list : System.Array.Empty<ActiveTreasure>();
+
     public static bool CanTake(long playerId)
-        => !ActiveByPlayer.TryGetValue(playerId, out var list) || list.Count < Plugin.MaxCarriedTreasures.Value;
+        => GetActive(playerId).Count < Plugin.MaxCarriedTreasures.Value;
 
     public static void Add(long playerId, ActiveTreasure treasure)
     {
@@ -29,8 +32,7 @@ public static class QuestState
             return false;
 
         int index = list.FindIndex(x => x.TreasureId == treasureId);
-        if (index < 0)
-            return false;
+        if (index < 0) return false;
 
         removed = list[index];
         list.RemoveAt(index);
