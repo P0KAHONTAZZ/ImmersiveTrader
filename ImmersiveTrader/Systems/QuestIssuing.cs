@@ -8,8 +8,7 @@ public static class QuestIssuing
 {
     public static bool TryGiveTreasure(Player player, TraderDefinition source)
     {
-        long playerId = player.GetPlayerID();
-        if (!QuestState.CanTake(playerId))
+        if (InventoryTreasureService.Count(player) >= Plugin.MaxCarriedTreasures.Value)
             return false;
 
         var options = TreasureRegistry.Treasures.ToArray();
@@ -18,11 +17,7 @@ public static class QuestIssuing
         var def = options[Random.Range(0, options.Length)];
         string prefabName = $"ImmersiveTrader_{def.Id}";
         var prefab = ObjectDB.instance.GetItemPrefab(prefabName);
-        if (prefab == null)
-        {
-            player.Message(MessageHud.MessageType.Center, $"{source.Name}: My shipment is not ready.");
-            return false;
-        }
+        if (prefab == null) return false;
 
         var inventory = player.GetInventory();
         if (!inventory.CanAddItem(prefab, 1))
@@ -34,7 +29,7 @@ public static class QuestIssuing
         var item = inventory.AddItem(prefab, 1);
         if (item == null) return false;
 
-        QuestState.Add(playerId, new QuestState.ActiveTreasure(def.Id, source.Id, source.BiomeTier));
+        TreasureMetadata.Stamp(item, source.Id, source.BiomeTier);
         player.Message(MessageHud.MessageType.Center,
             $"{source.Name}: Take {def.DisplayName}. Deliver it to another trader.");
         return true;
