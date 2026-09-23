@@ -36,7 +36,10 @@ public static class QuestIssuing
             return true;
         }
 
-        var item = inventory.AddItem(prefab, 1);
+        if (!inventory.AddItem(prefab, 1)) return false;
+
+        var item = inventory.GetAllItems().LastOrDefault(x =>
+            x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith(prefabName));
         if (item == null) return false;
 
         TreasureMetadata.Stamp(item, source.Id, source.BiomeTier);
