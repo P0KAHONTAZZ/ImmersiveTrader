@@ -36,12 +36,10 @@ public static class TraderCampBuilder
 
     private static void MakeDecoration(GameObject instance)
     {
-        // These objects are baked into the generated trader location. Strip networking
-        // and player interaction from the copied props so a chest/workbench/log remains
-        // scenery instead of creating duplicate ZDO ownership or usable camp equipment.
-        foreach (var nview in instance.GetComponentsInChildren<ZNetView>(true))
-            Object.DestroyImmediate(nview);
-
+        // These objects are baked into the generated trader location. Keep their
+        // networking components intact: many vanilla components resolve ZNetView during
+        // Awake/Start. We only remove gameplay interaction components below. Jotunn fixes
+        // prefab references when the CustomLocation is registered.
         foreach (var container in instance.GetComponentsInChildren<Container>(true))
             Object.DestroyImmediate(container);
 
