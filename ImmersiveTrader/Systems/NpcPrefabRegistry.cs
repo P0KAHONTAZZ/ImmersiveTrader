@@ -130,8 +130,8 @@ public static class NpcPrefabRegistry
         collider.radius = radius;
         collider.isTrigger = false;
 
-        var proxy = anchor.AddComponent<TraderInteractionProxy>();
-        proxy.Owner = owner;
+        var interactionProxy = anchor.AddComponent<TraderInteractionProxy>();
+        interactionProxy.Owner = owner;
 
         var character = prefab.GetComponent<Character>();
         if (character != null)
