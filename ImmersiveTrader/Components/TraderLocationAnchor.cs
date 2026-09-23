@@ -73,6 +73,15 @@ public sealed class TraderLocationAnchor : MonoBehaviour
             view.m_persistent = false;
         _npc.SetActive(true);
 
+        // Troldad keeps the current human-sized Troll scale, but uses the visual/state
+        // of a two-star Troll. Valheim levels are 1-based: level 3 renders two stars.
+        if (string.Equals(TraderId, "troldad", StringComparison.OrdinalIgnoreCase))
+        {
+            var character = _npc.GetComponent<Character>();
+            if (character != null)
+                character.SetLevel(3);
+        }
+
         // This instance belongs to the currently loaded location. Do not leave a ZDO
         // behind after the zone unloads; the anchor will recreate it next time.
 
