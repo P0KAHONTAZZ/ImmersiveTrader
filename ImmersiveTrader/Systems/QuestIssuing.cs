@@ -10,11 +10,10 @@ public static class QuestIssuing
     {
         if (source.IsLegendary) return false;
 
-        long playerId = player.GetPlayerID();
         if (InventoryTreasureService.Count(player) >= Plugin.MaxCarriedTreasures.Value)
             return false;
 
-        if (!TraderCooldown.CanIssue(playerId, source.Id, out int remaining))
+        if (!TraderCooldown.CanIssue(player, source.Id, out int remaining))
         {
             player.Message(MessageHud.MessageType.Center,
                 $"{source.Name}: Come back in {remaining} world day(s).");
@@ -54,7 +53,7 @@ public static class QuestIssuing
         }
 
         TreasureMetadata.Stamp(item, source.Id, source.BiomeTier, sourcePosition.x, sourcePosition.z);
-        TraderCooldown.MarkIssued(playerId, source.Id);
+        TraderCooldown.MarkIssued(player, source.Id);
         player.Message(MessageHud.MessageType.Center,
             $"{source.Name}: Take {def.DisplayName}. Deliver it to another trader.");
         return true;
