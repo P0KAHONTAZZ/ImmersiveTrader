@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Jotunn.Configs;
 using Jotunn.Entities;
 using Jotunn.Managers;
@@ -26,15 +25,22 @@ public static class TraderLocationRegistry
             npc.name = npcPrefab.name;
             npc.transform.localPosition = Vector3.zero;
 
+            var range = GetDistanceRange(trader.Biome);
             var config = new LocationConfig
             {
                 Biome = ToBiome(trader.Biome),
                 Quantity = 1,
+                Unique = true,
                 Priotized = true,
                 CenterFirst = false,
                 ClearArea = true,
-                ExteriorRadius = 8f,
-                MinDistanceFromSimilar = 1000f
+                ExteriorRadius = 10f,
+                MinDistance = range.min,
+                MaxDistance = range.max,
+                MinDistanceFromSimilar = 900f,
+                Group = $"ImmersiveTrader_{trader.Biome.Replace(" ", "")}",
+                IconPlaced = true,
+                IconAlways = false
             };
 
             ZoneManager.Instance.AddCustomLocation(new CustomLocation(container, false, config));
@@ -42,6 +48,18 @@ public static class TraderLocationRegistry
 
         _registered = true;
     }
+
+    private static (float min, float max) GetDistanceRange(string biome) => biome switch
+    {
+        "Meadows" => (500f, 2000f),
+        "Black Forest" => (1000f, 3000f),
+        "Swamp" => (2000f, 4500f),
+        "Mountains" => (3000f, 6000f),
+        "Plains" => (4000f, 7000f),
+        "Mistlands" => (5000f, 8500f),
+        "Ashlands" => (7000f, 10000f),
+        _ => (500f, 10000f)
+    };
 
     private static Heightmap.Biome ToBiome(string biome) => biome switch
     {
