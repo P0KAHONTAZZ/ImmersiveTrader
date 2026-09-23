@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace ImmersiveTrader;
 
-/// <summary>
-/// Builds decorative camp props defensively. Missing/renamed vanilla prefabs are skipped
-/// instead of preventing the trader location from spawning.
-/// </summary>
 public static class TraderCampBuilder
 {
     public static void Build(string traderId, Transform parent)
@@ -18,13 +14,22 @@ public static class TraderCampBuilder
         foreach (var prop in camp.Props)
         {
             var source = PrefabManager.Instance.GetPrefab(prop.Prefab);
-            if (source == null) continue;
+            if (source == null)
+            {
+                // Camps are atmosphere, never a hard dependency for trader generation.
+                continue;
+            }
 
             var instance = Object.Instantiate(source, parent);
             instance.name = $"ImmersiveTrader_Camp_{traderId}_{prop.Prefab}";
             instance.transform.localPosition = prop.Position;
             instance.transform.localRotation = Quaternion.Euler(prop.Rotation);
             instance.transform.localScale = source.transform.localScale * prop.Scale;
+
+            // Location containers are authored prefabs. Runtime-spawn networking on copied
+            // decorative pieces is unnecessary and can create duplicate ownership/ZDO state.
+            var nview = instance.GetComponent<ZNetView>();
+            if (nview != null) Object.DestroyImmediate(nview);
         }
     }
 }
