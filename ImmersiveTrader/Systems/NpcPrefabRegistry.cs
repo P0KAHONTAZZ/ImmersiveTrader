@@ -154,12 +154,17 @@ public static class NpcPrefabRegistry
         var anchor = new GameObject("ImmersiveTrader_NpcInteraction");
         anchor.transform.SetParent(prefab.transform, false);
 
-        float height = owner.TraderId == "troldad" ? 1.45f : 1.15f;
-        float radius = owner.TraderId == "troldad" ? 1.05f : 0.75f;
-        anchor.transform.localPosition = new Vector3(0f, height, 0f);
+        // The anchor is a child of the already-scaled creature root. Troldad's Troll
+        // root is only 0.42 scale, so a "normal" local collider became tiny in world
+        // space and the raycast kept hitting the Troll Character instead. Compensate
+        // for root scale so the interaction surface is roughly NPC-sized in world space.
+        float rootScale = Mathf.Max(0.01f, prefab.transform.localScale.x);
+        float worldHeight = owner.TraderId == "troldad" ? 1.45f : 1.15f;
+        float worldRadius = owner.TraderId == "troldad" ? 1.10f : 0.75f;
+        anchor.transform.localPosition = new Vector3(0f, worldHeight / rootScale, 0f);
 
         var collider = anchor.AddComponent<SphereCollider>();
-        collider.radius = radius;
+        collider.radius = worldRadius / rootScale;
         collider.isTrigger = false;
 
         var interactionProxy = anchor.AddComponent<TraderInteractionProxy>();
