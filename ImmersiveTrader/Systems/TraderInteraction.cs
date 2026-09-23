@@ -7,10 +7,16 @@ public static class TraderInteraction
 {
     public static void Handle(Player player, TraderDefinition trader, bool alternateUse, Vector3 traderPosition)
     {
-        if (trader.Id == "midka" && alternateUse)
+        if (alternateUse)
         {
-            MidkaShop.TryBuyMinorHealingMead(player);
-            return;
+            var offers = TraderShop.GetAvailableOffers(trader.Id);
+            if (offers.Length > 0)
+            {
+                // Temporary interaction path until the native-style shop panel is wired:
+                // alternate-use buys the first thematic offer through the same backend.
+                TraderShop.TryBuy(player, offers[0]);
+                return;
+            }
         }
 
         if (QuestDelivery.TryDeliverAny(player, trader, traderPosition))
@@ -19,10 +25,12 @@ public static class TraderInteraction
         if (QuestIssuing.TryGiveTreasure(player, trader, traderPosition))
             return;
 
-        if (trader.Id == "midka")
+        var stock = TraderShop.GetAvailableOffers(trader.Id);
+        if (stock.Length > 0)
         {
+            var offer = stock[0];
             player.Message(MessageHud.MessageType.Center,
-                $"Midka: I can sell you Minor Healing Mead for {Plugin.MidkaHealingMeadPrice.Value} coins. Use alternate interact to buy.");
+                $"{trader.Name}: {offer.Label} - {offer.Price} coins. Use alternate interact to buy.");
             return;
         }
 
