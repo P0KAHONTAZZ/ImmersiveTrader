@@ -2,8 +2,7 @@ namespace ImmersiveTrader.Models;
 
 public enum TraderActivityType
 {
-    Hunt,
-    Gather
+    Hunt
 }
 
 public sealed record TraderActivityDefinition(
@@ -13,7 +12,7 @@ public sealed record TraderActivityDefinition(
     TraderActivityType Type,
     string TargetPrefab,
     int RequiredAmount,
-    string RewardPrefab,
-    int RewardAmount,
+    Skills.SkillType RewardSkill,
+    float RewardSkillLevels,
     string Description
 );
