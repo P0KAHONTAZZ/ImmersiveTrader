@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ImmersiveTrader.Models;
+using ImmersiveTrader.Components;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using UnityEngine;
