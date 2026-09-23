@@ -1,4 +1,3 @@
-using ImmersiveTrader.Components;
 using Jotunn.Configs;
 using Jotunn.Entities;
 using Jotunn.Managers;
@@ -23,14 +22,22 @@ public static class TraderLocationRegistry
             // Character/ZNetView lifecycle from running while the location is only a template.
             var container = ZoneManager.Instance.CreateLocationContainer($"ImmersiveTrader_Location_{trader.Id}");
 
-            // Never embed a persistent Character/ZNetView in a CustomLocation template.
-            // Valheim persists that character as a ZDO and then the location template
-            // creates another one on reload. A lightweight marker owns creation instead.
-            var marker = new GameObject($"ImmersiveTrader_Spawner_{trader.Id}");
-            marker.transform.SetParent(container.transform, false);
-            marker.transform.localPosition = Vector3.zero;
-            var spawner = marker.AddComponent<TraderLocationSpawner>();
-            spawner.TraderId = trader.Id;
+            // The trader belongs to the location itself. It is deliberately non-persistent:
+            // the generated location is the source of truth and recreates exactly one NPC
+            // whenever its zone is loaded. This avoids a second, independent ZDO lifetime
+            // that previously accumulated one extra trader across restarts.
+            var npcPrefab = PrefabManager.Instance.GetPrefab($"ImmersiveTrader_NPCLOOK_{trader.Id}");
+            if (npcPrefab != null)
+            {
+                var npc = Object.Instantiate(npcPrefab, container.transform);
+                npc.name = $"ImmersiveTrader_LocationNpc_{trader.Id}";
+                npc.transform.localPosition = Vector3.zero;
+                npc.transform.localRotation = Quaternion.identity;
+            }
+            else
+            {
+                Plugin.Log.LogWarning($"Location trader prefab missing: {trader.Id}");
+            }
 
             TraderCampBuilder.Build(trader.Id, container.transform);
 
