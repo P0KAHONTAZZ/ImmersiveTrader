@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Jotunn.Managers;
 using UnityEngine;
 
@@ -15,8 +14,9 @@ public sealed class TraderLocationSpawner : MonoBehaviour
     public string TraderId = string.Empty;
     private bool _attempted;
 
-    private void Start()
+    private System.Collections.IEnumerator Start()
     {
+        yield return null;
         TryEnsureTrader();
     }
 
@@ -32,28 +32,10 @@ public sealed class TraderLocationSpawner : MonoBehaviour
         Vector3 camp = transform.position;
         const float radius = 12f;
 
-        // Query the world's ZDO sectors around this camp before looking at live objects.
-        // Valheim 1.0 exposes FindObjects for this purpose; a persisted trader can exist
-        // in the ZDO database before ZNetScene has materialized its GameObject.
-        if (ZDOMan.instance != null)
-        {
-            var sector = ZoneSystem.GetZone(camp);
-            var zdos = new List<ZDO>();
-            var visited = new HashSet<ZDOID>();
-            ZDOMan.instance.FindObjects(sector, zdos, visited);
-
-            foreach (var zdo in zdos)
-            {
-                if (zdo == null || !zdo.IsValid()) continue;
-                var zdoPrefab = ZNetScene.instance.GetPrefab(zdo.GetPrefab());
-                string zdoPrefabName = zdoPrefab?.name ?? string.Empty;
-                if (!zdoPrefabName.Equals($"ImmersiveTrader_NPCLOOK_{TraderId}", StringComparison.OrdinalIgnoreCase))
-                    continue;
-                if (Vector3.Distance(zdo.GetPosition(), camp) <= radius)
-                    return;
-            }
-        }
-
+        // Valheim 1.0.15 changed the public ZDOMan surface; avoid version-fragile
+        // direct ZDO enumeration here. We wait one frame before spawning so persisted
+        // ZNetScene instances get a chance to materialize, then deduplicate against
+        // the actual live trader objects in this camp.
         // Also cover the first live load where the object may already be instantiated.
         foreach (var npc in UnityEngine.Object.FindObjectsOfType<TraderNpc>())
         {
