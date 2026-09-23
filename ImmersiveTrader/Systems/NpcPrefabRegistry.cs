@@ -17,16 +17,16 @@ public static class NpcPrefabRegistry
         ["troldad"] = ("Troll", 0.42f),
         ["grimvald"] = ("Haldor", 1.00f),
         ["rudy_warg"] = ("Dverger", 1.00f),
-        ["mokra_dzika"] = ("Draugr", 0.95f),
-        ["bogdan_bones"] = ("Skeleton", 1.05f),
+        ["mokra_dzika"] = ("BogWitch", 1.00f),
+        ["bogdan_bones"] = ("Draugr", 0.95f),
         ["hrothgar"] = ("Fenring", 0.82f),
         ["ylva_frost"] = ("DvergerMage", 0.95f),
         ["bjarki_goldtooth"] = ("Goblin", 1.05f),
         ["ragnar_turnipson"] = ("GoblinBrute", 0.78f),
         ["cmok"] = ("DvergerMage", 0.90f),
         ["grelka"] = ("Dverger", 0.95f),
-        ["spalony_zenek"] = ("Charred_Melee", 0.95f),
-        ["skjold_cinderborn"] = ("Charred_Archer", 0.95f)
+        ["spalony_zenek"] = ("Haldor", 1.00f),
+        ["skjold_cinderborn"] = ("Hildir", 1.00f)
     };
 
     public static void Register()
