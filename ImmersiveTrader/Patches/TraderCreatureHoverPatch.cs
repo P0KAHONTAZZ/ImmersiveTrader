@@ -1,5 +1,6 @@
 using HarmonyLib;
 using ImmersiveTrader.Components;
+using UnityEngine;
 
 namespace ImmersiveTrader.Patches;
 
