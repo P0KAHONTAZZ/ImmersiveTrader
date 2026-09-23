@@ -34,6 +34,10 @@ public static class TraderLocationRegistry
                     jackie.name = "Jackie";
                     jackie.transform.localPosition = new Vector3(2.2f, 0f, 1.2f);
                     jackie.transform.localRotation = Quaternion.Euler(0f, 210f, 0f);
+
+                    var companion = jackie.GetComponent<ImmersiveTrader.Components.JackieCompanion>()
+                        ?? jackie.AddComponent<ImmersiveTrader.Components.JackieCompanion>();
+                    companion.SetHome(npc.transform);
                 }
             }
 
