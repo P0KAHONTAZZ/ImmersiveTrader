@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Jotunn.Managers;
 using UnityEngine;
 
@@ -31,9 +32,28 @@ public sealed class TraderLocationSpawner : MonoBehaviour
         Vector3 camp = transform.position;
         const float radius = 12f;
 
-        // Runtime safety: if the persisted trader has already materialized in this camp,
-        // do not create another copy. ZDOMan internals are intentionally not accessed here
-        // because Valheim 1.0 no longer exposes the old m_objectsByID field.
+        // Query the world's ZDO sectors around this camp before looking at live objects.
+        // Valheim 1.0 exposes FindObjects for this purpose; a persisted trader can exist
+        // in the ZDO database before ZNetScene has materialized its GameObject.
+        if (ZDOMan.instance != null)
+        {
+            var sector = ZoneSystem.GetZone(camp);
+            var zdos = new List<ZDO>();
+            var visited = new HashSet<ZDOID>();
+            ZDOMan.instance.FindObjects(sector, zdos, visited);
+
+            foreach (var zdo in zdos)
+            {
+                if (zdo == null || !zdo.IsValid()) continue;
+                var zdoPrefab = ZNetScene.instance.GetPrefab(zdo.GetPrefab());
+                string zdoPrefabName = zdoPrefab?.name ?? string.Empty;
+                if (!zdoPrefabName.Equals($"ImmersiveTrader_NPCLOOK_{TraderId}", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (Vector3.Distance(zdo.GetPosition(), camp) <= radius)
+                    return;
+            }
+        }
+
         // Also cover the first live load where the object may already be instantiated.
         foreach (var npc in UnityEngine.Object.FindObjectsOfType<TraderNpc>())
         {
