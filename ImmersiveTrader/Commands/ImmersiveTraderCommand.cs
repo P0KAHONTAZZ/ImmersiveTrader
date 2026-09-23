@@ -4,7 +4,7 @@ using System.Linq;
 using ImmersiveTrader.Models;
 using Jotunn.Entities;
 using Jotunn.Managers;
-using UnityEngine;
+using UnityEngine;\nusing BepInEx.Logging;
 
 namespace ImmersiveTrader.Commands;
 
@@ -22,12 +22,12 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             case "spawn": SpawnTrader(args, context); break;
             case "items": PrintTreasures(context); break;
             case "give": GiveTreasure(args, context); break;
-            case "route": PrintRoute(args, context); break;
+            case "route": PrintRoute(args, context); break;\n            case "selftest": RunSelfTest(context); break;
             default: context.AddString($"Unknown ImmersiveTrader command: {args[0]}"); PrintHelp(context); break;
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "spawn", "items", "give", "route" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "spawn", "items", "give", "route", "selftest" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -38,7 +38,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it spawn <traderId>");
         c.AddString("  it items");
         c.AddString("  it give <treasureId> <sourceTraderId>");
-        c.AddString("  it route <sourceTraderId> <targetTraderId>");
+        c.AddString("  it route <sourceTraderId> <targetTraderId>");\n        c.AddString("  it selftest");
     }
 
     private static void PrintTraders(Terminal c)
