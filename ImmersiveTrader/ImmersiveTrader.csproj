@@ -12,6 +12,7 @@
     <BepInExPlugins>$(VALHEIM_INSTALL)\BepInEx\plugins</BepInExPlugins>
     <JotunnDll Condition="Exists('$(BepInExPlugins)\Jotunn.dll')">$(BepInExPlugins)\Jotunn.dll</JotunnDll>
     <JotunnDll Condition="'$(JotunnDll)' == '' and Exists('$(BepInExPlugins)\Jotunn\Jotunn.dll')">$(BepInExPlugins)\Jotunn\Jotunn.dll</JotunnDll>
+    <JotunnDll Condition="'$(JotunnDll)' == '' and Exists('$(BepInExPlugins)\Jotun\plugins\Jotunn.dll')">$(BepInExPlugins)\Jotun\plugins\Jotunn.dll</JotunnDll>
   </PropertyGroup>
 
   <Target Name="ValidateValheimPath" BeforeTargets="ResolveReferences">
