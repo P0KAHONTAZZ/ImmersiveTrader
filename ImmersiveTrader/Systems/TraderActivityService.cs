@@ -52,18 +52,34 @@ public static class TraderActivityService
             return true;
         }
 
-        if (state.Definition.Type == TraderActivityType.Gather)
-            player.GetInventory().RemoveItem(state.Definition.TargetPrefab, state.Definition.RequiredAmount);
-
         var reward = ObjectDB.instance?.GetItemPrefab(state.Definition.RewardPrefab);
-        if (reward == null) return true;
+        if (reward == null)
+        {
+            player.Message(MessageHud.MessageType.Center, "This task reward is unavailable.");
+            return true;
+        }
         if (!player.GetInventory().CanAddItem(reward, state.Definition.RewardAmount))
         {
             player.Message(MessageHud.MessageType.Center, "Make room for the task reward first.");
             return true;
         }
 
-        player.GetInventory().AddItem(reward, state.Definition.RewardAmount);
+        if (state.Definition.Type == TraderActivityType.Gather)
+            player.GetInventory().RemoveItem(state.Definition.TargetPrefab, state.Definition.RequiredAmount);
+
+        if (!player.GetInventory().AddItem(reward, state.Definition.RewardAmount))
+        {
+            // Gather materials were removed only after capacity validation. In the very
+            // unlikely event AddItem still fails, restore them when their prefab exists.
+            if (state.Definition.Type == TraderActivityType.Gather)
+            {
+                var target = ObjectDB.instance?.GetItemPrefab(state.Definition.TargetPrefab);
+                if (target != null) player.GetInventory().AddItem(target, state.Definition.RequiredAmount);
+            }
+            player.Message(MessageHud.MessageType.Center, "Task reward failed; gathered items were restored.");
+            return true;
+        }
+
         player.Message(MessageHud.MessageType.Center,
             $"Task complete: {state.Definition.RewardAmount}x {state.Definition.RewardPrefab}");
         Active.Remove(key);
