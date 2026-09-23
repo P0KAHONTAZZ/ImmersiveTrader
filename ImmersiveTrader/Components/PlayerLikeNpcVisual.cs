@@ -33,11 +33,20 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         foreach (var renderer in GetComponentsInChildren<Renderer>(true))
             renderer.enabled = false;
 
+        // CharacterAnimEvent expects a complete Character/Humanoid owner during Awake.
+        // It is unsafe on a detached visual hierarchy, so disable/remove those event
+        // components on a temporary inactive template before instantiation.
+        bool sourceActive = visual.gameObject.activeSelf;
+        visual.gameObject.SetActive(false);
         var copy = Object.Instantiate(visual.gameObject, transform);
+        visual.gameObject.SetActive(sourceActive);
         copy.name = "ImmersiveTrader_PlayerVisual";
         copy.transform.localPosition = Vector3.zero;
         copy.transform.localRotation = Quaternion.identity;
         copy.transform.localScale = Vector3.one;
+
+        foreach (var animEvent in copy.GetComponentsInChildren<CharacterAnimEvent>(true))
+            Object.DestroyImmediate(animEvent);
 
         foreach (var nview in copy.GetComponentsInChildren<ZNetView>(true))
             Object.DestroyImmediate(nview);
@@ -46,5 +55,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
 
         foreach (var renderer in copy.GetComponentsInChildren<Renderer>(true))
             renderer.enabled = true;
+
+        copy.SetActive(true);
     }
 }
