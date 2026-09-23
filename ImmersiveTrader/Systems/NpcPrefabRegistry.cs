@@ -98,6 +98,11 @@ public static class NpcPrefabRegistry
         descriptor.VisualSource = visualSource;
         descriptor.VisualScale = visualScale;
 
+        // Parallel human-looking prototype. This does not replace the live trader yet;
+        // it lets `it look <id>` validate a Player visual on the known-good NPC shell.
+        var playerLook = shell.GetComponent<PlayerLikeNpcVisual>() ?? shell.AddComponent<PlayerLikeNpcVisual>();
+        playerLook.TraderId = traderId;
+
         PrefabManager.Instance.AddPrefab(shell);
     }
 
