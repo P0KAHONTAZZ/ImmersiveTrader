@@ -2,7 +2,8 @@ using BepInEx;
 using BepInEx.Configuration;
 using Jotunn;
 using Jotunn.Managers;
-using ImmersiveTrader.Commands;\nusing HarmonyLib;
+using ImmersiveTrader.Commands;
+using HarmonyLib;
 
 namespace ImmersiveTrader;
 
@@ -10,6 +11,7 @@ namespace ImmersiveTrader;
 [BepInDependency(Jotunn.Main.ModGuid)]
 public sealed class Plugin : BaseUnityPlugin
 {
+    private Harmony? _harmony;
     public const string ModGuid = "p0kahontazz.immersivetrader";
     public const string ModName = "ImmersiveTrader";
     public const string ModVersion = "0.4.0";
@@ -40,7 +42,10 @@ public sealed class Plugin : BaseUnityPlugin
         MietegActiveWorldDays = Config.Bind("LegendaryMieteg", "ActiveWorldDays", 2, "How many world days Mieteg remains active.");
         MietegRevealDistance = Config.Bind("LegendaryMieteg", "RevealDistance", 600f, "Distance in metres at which Mieteg becomes discoverable.");
 
-        _harmony = new Harmony(ModGuid);\n        _harmony.PatchAll();\n\n        CommandManager.Instance.AddConsoleCommand(new ImmersiveTraderCommand());
+        _harmony = new Harmony(ModGuid);
+        _harmony.PatchAll();
+
+        CommandManager.Instance.AddConsoleCommand(new ImmersiveTraderCommand());
         PrefabManager.OnVanillaPrefabsAvailable += OnVanillaPrefabsAvailable;
         ZoneManager.OnVanillaLocationsAvailable += OnVanillaLocationsAvailable;
         Logger.LogInfo($"{ModName} {ModVersion} loaded.");
@@ -50,6 +55,7 @@ public sealed class Plugin : BaseUnityPlugin
     {
         PrefabManager.OnVanillaPrefabsAvailable -= OnVanillaPrefabsAvailable;
         ZoneManager.OnVanillaLocationsAvailable -= OnVanillaLocationsAvailable;
+        _harmony?.UnpatchSelf();
     }
 
     private void OnVanillaPrefabsAvailable()
