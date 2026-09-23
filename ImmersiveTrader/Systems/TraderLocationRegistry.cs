@@ -17,32 +17,31 @@ public static class TraderLocationRegistry
         {
             if (trader.IsLegendary) continue;
 
-            var container = ZoneManager.Instance.CreateLocationContainer($"ImmersiveTrader_Location_{trader.Id}");
             var npcPrefab = PrefabManager.Instance.GetPrefab($"ImmersiveTrader_NPCLOOK_{trader.Id}");
             if (npcPrefab == null) continue;
 
-            // Keep the trader prefab structurally intact. Character/Humanoid, AI,
-            // ZSyncTransform and ZSyncAnimation all require their ZNetView during Awake.
-            // Removing it from a location template creates a half-networked Character and
-            // can poison Valheim's global Character/FixedUpdate paths (movement, fly, etc.).
-            //
-            // CustomLocation's second argument is the "fix reference" path used for cloned
-            // prefabs inside the location. Let Jotunn/Valheim own networking and persistence
-            // instead of stripping networking components from live characters.
-            var npc = Object.Instantiate(npcPrefab, container.transform);
+            // Build a real location prefab first, then hand that prefab to Jotunn's
+            // CreateLocationContainer(GameObject) path. This mirrors the proven MWL
+            // architecture: prefab -> location container -> CustomLocation(fixReference:true).
+            // It is important that the networked NPC is part of the source location prefab
+            // before Jotunn resolves references, instead of being appended to an already
+            // created empty location container.
+            var locationPrefab = new GameObject($"ImmersiveTrader_LocationPrefab_{trader.Id}");
+
+            var npc = Object.Instantiate(npcPrefab, locationPrefab.transform);
             npc.name = npcPrefab.name;
             npc.transform.localPosition = Vector3.zero;
 
             // Camp props belong to the generated location container so the trader never
             // spawns as an isolated character in an empty biome.
-            TraderCampBuilder.Build(trader.Id, container.transform);
+            TraderCampBuilder.Build(trader.Id, locationPrefab.transform);
 
             if (trader.Id == "troldad")
             {
                 var jackiePrefab = PrefabManager.Instance.GetPrefab("ImmersiveTrader_Jackie");
                 if (jackiePrefab != null)
                 {
-                    var jackie = Object.Instantiate(jackiePrefab, container.transform);
+                    var jackie = Object.Instantiate(jackiePrefab, locationPrefab.transform);
                     jackie.name = "Jackie";
                     jackie.transform.localPosition = new Vector3(2.2f, 0f, 1.2f);
                     jackie.transform.localRotation = Quaternion.Euler(0f, 210f, 0f);
@@ -52,6 +51,9 @@ public static class TraderLocationRegistry
                     companion.SetHome(npc.transform);
                 }
             }
+
+            var container = ZoneManager.Instance.CreateLocationContainer(locationPrefab);
+            Object.DestroyImmediate(locationPrefab);
 
             var range = GetDistanceRange(trader.Biome);
             var config = new LocationConfig
