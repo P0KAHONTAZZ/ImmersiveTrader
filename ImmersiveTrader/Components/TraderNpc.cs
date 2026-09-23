@@ -25,7 +25,7 @@ public sealed class TraderNpc : MonoBehaviour, Hoverable, Interactable
     public bool Interact(Humanoid user, bool hold, bool alt)
     {
         if (hold || user is not Player player || Definition == null) return false;
-        TraderInteraction.Handle(player, Definition, alt);
+        TraderInteraction.Handle(player, Definition, alt, transform.position);
         return true;
     }
 
