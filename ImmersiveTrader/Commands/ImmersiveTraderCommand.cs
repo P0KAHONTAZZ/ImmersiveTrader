@@ -99,22 +99,12 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
                 !name.StartsWith("ImmersiveTrader_NPCLOOK_", StringComparison.Ordinal))
                 continue;
 
-            // Developer-spawned NPCs are loose world objects. Location NPCs live under
-            // a generated location hierarchy and must never be removed by this command.
-            bool locationOwned = false;
-            for (Transform? t = npc.transform.parent; t != null; t = t.parent)
-            {
-                if (t.name.StartsWith("ImmersiveTrader_Location_", StringComparison.Ordinal) ||
-                    t.name.StartsWith("ImmersiveTrader_MietegSite_", StringComparison.Ordinal))
-                {
-                    locationOwned = true;
-                    break;
-                }
-            }
-            if (locationOwned) continue;
-
+            // Cleanup is intentionally exhaustive now. Old builds persisted both loose
+            // test NPCs and networked copies embedded in generated locations. Keeping
+            // one of those legacy copies is exactly what made the duplicate return after
+            // a reload. Current location templates recreate their single canonical NPC.
             var nview = npc.GetComponent<ZNetView>();
-            if (nview != null && nview.IsValid())
+            if (nview != null && nview.IsValid() && ZNetScene.instance != null)
             {
                 if (!nview.IsOwner()) nview.ClaimOwnership();
                 ZNetScene.instance.Destroy(npc.gameObject);
@@ -126,7 +116,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             removed++;
         }
 
-        c.AddString($"Removed {removed} loose ImmersiveTrader test NPC(s).");
+        c.AddString($"Removed {removed} ImmersiveTrader NPC instance(s). Reload the world once.");
     }
 
 
