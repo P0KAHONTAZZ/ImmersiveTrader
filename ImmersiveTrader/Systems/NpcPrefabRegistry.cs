@@ -49,6 +49,9 @@ public static class NpcPrefabRegistry
             var interaction = prefab.GetComponent<TraderNpc>() ?? prefab.AddComponent<TraderNpc>();
             interaction.TraderId = trader.Id;
 
+            if (trader.Id == "troldad")
+                AddInteractionProxy(prefab, interaction, 1.45f, 0.95f);
+
             PrefabManager.Instance.AddPrefab(prefab);
         }
 
@@ -96,6 +99,20 @@ public static class NpcPrefabRegistry
 
         var tameable = prefab.GetComponent<Tameable>();
         if (tameable != null) Object.DestroyImmediate(tameable);
+    }
+
+    private static void AddInteractionProxy(GameObject prefab, TraderNpc owner, float localY, float radius)
+    {
+        var anchor = new GameObject("ImmersiveTrader_Interaction");
+        anchor.transform.SetParent(prefab.transform, false);
+        anchor.transform.localPosition = new Vector3(0f, localY, 0f);
+
+        var collider = anchor.AddComponent<SphereCollider>();
+        collider.radius = radius;
+        collider.isTrigger = false;
+
+        var proxy = anchor.AddComponent<TraderInteractionProxy>();
+        proxy.Owner = owner;
     }
 
     private static void RegisterJackie()
