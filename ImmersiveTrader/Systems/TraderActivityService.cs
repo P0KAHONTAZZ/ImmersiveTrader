@@ -148,17 +148,18 @@ public static class TraderActivityService
 
     public static string GetStatus(Player player, string traderId)
     {
-        long playerId = player.GetPlayerID();
-        var active = Active.Where(x => x.Key.PlayerId == playerId && x.Value.Definition.TraderId == traderId)
-            .Select(x => x.Value).ToArray();
-        int activeTotal = Active.Count(x => x.Key.PlayerId == playerId);
+        var physical = player.GetInventory().GetAllItems()
+            .Select(item =>
+            {
+                if (!ContractMetadata.TryRead(item, out string contractId, out string issuer, out int progress) || issuer != traderId)
+                    return null;
+                var definition = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == contractId);
+                return definition == null ? null : $"{definition.Title}: {progress}/{definition.RequiredAmount}";
+            })
+            .Where(x => x != null)
+            .ToArray();
 
-        if (active.Length == 0)
-            return $"No active contract from this trader. Active contracts overall: {activeTotal}/5.";
-
-        return string.Join(" | ", active.Select(x =>
-            $"{x.Definition.Title}: {x.Progress}/{x.Definition.RequiredAmount} (+{x.Definition.RewardSkillLevels:0} {x.Definition.RewardSkill})")) +
-            $" | active overall {activeTotal}/5";
+        return physical.Length == 0 ? "No active task." : string.Join(" | ", physical);
     }
 
     public static int GetWorldDayPublic() => GetWorldDay();
