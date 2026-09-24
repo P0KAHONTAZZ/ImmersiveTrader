@@ -27,7 +27,7 @@ public static class TraderActivityService
             player.GetInventory().RemoveItem(item);
             player.RaiseSkill(definition.RewardSkill, definition.RewardSkillLevels);
             player.Message(MessageHud.MessageType.Center,
-                $"Contract complete: +{definition.RewardSkillLevels:0} {definition.RewardSkill}");
+                $"Contract complete: {definition.RewardSkillLevels:0} EXP ({definition.RewardSkill})");
             return true;
         }
 
