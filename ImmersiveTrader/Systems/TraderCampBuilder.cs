@@ -26,9 +26,8 @@ public static class TraderCampBuilder
 
             var instance = Object.Instantiate(source, root.transform);
             instance.name = $"{prop.Prefab}_decor";
-            // Decorations stay outside the door and never block the trader inside.
-            instance.transform.localPosition = prop.Position +
-                (prop.Position.x < 0f ? Vector3.left : Vector3.right) * 5.5f;
+            // Preserve the compact vanilla-style camp layout around the trader.
+            instance.transform.localPosition = prop.Position;
             instance.transform.localRotation = Quaternion.Euler(prop.Rotation);
             instance.transform.localScale = source.transform.localScale * prop.Scale;
 
