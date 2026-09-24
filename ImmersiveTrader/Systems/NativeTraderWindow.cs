@@ -135,7 +135,7 @@ public static class NativeTraderWindow
                 m_requiredGlobalKey = string.Empty, m_levelUpEffect = false,
                 m_buyPlayerEffects = new EffectList(), m_icon = null,
                 m_name = cargoDrop.m_itemData?.m_shared?.m_name ?? cargoDef.DisplayName,
-                m_tooltip = "Towar transportowy - 10 monet. Dostarcz dowolnemu innemu handlarzowi.",
+                m_tooltip = $"Ładunek handlowy. Dostarcz go innemu handlarzowi.\nPochodzenie: <color=yellow>{definition.Name}</color>\nCena: <color=yellow>10 monet</color>",
                 m_buyKey = string.Empty, m_incrementKey = string.Empty, m_incrementAmount = 0
             };
             trader.m_items.Add(cargoItem);
@@ -163,7 +163,7 @@ public static class NativeTraderWindow
                     m_requiredGlobalKey = string.Empty, m_levelUpEffect = false,
                     m_buyPlayerEffects = new EffectList(), m_icon = icon ?? contractPrefab.m_itemData.m_shared.m_icons[0],
                     m_name = contract.Title,
-                    m_tooltip = $"{contract.Description} Normal: {contract.RequiredAmount} x {contract.TargetPrefab}; Rare: {contract.RequiredAmount / 2} x. Nagroda: {contract.RewardSkillLevels:0} EXP ({contract.RewardSkill}).",
+                    m_tooltip = $"Kontrakt łowiecki. Noś zwój podczas polowania i oddaj go wystawcy.\nCel: <color=yellow>{contract.RequiredAmount} x {contract.TargetPrefab}</color>\nNagroda: <color=yellow>{contract.RewardSkillLevels:0} EXP ({contract.RewardSkill})</color>\nWystawca: <color=yellow>{definition.Name}</color>",
                     m_buyKey = string.Empty, m_incrementKey = string.Empty, m_incrementAmount = 0
                 };
                 trader.m_items.Add(contractItem);
