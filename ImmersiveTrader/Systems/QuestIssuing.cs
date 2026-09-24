@@ -65,6 +65,17 @@ public static class QuestIssuing
         var def = TreasureRegistry.Treasures.FirstOrDefault(x => x.Id == treasureId);
         if (def == null) return false;
 
+        // Cargo capacity is per issuer, not global: the player may carry at most
+        // two active shipments originating from this specific trader.
+        int activeFromSource = InventoryTreasureService.GetCarried(player)
+            .Count(x => x.SourceTraderId == source.Id);
+        if (activeFromSource >= 2)
+        {
+            player.Message(MessageHud.MessageType.Center,
+                $"{source.Name}: Finish one of my two active shipments first.");
+            return true;
+        }
+
         string prefabName = $"ImmersiveTrader_{def.Id}";
         var prefab = ObjectDB.instance.GetItemPrefab(prefabName);
         var coins = ObjectDB.instance.GetItemPrefab("Coins");
