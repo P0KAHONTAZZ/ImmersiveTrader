@@ -30,11 +30,16 @@ public static class TraderLocationRegistry
             anchor.transform.SetParent(container.transform, false);
             // An open, level camp places the trader at its center.
             anchor.transform.localPosition = Vector3.zero;
-            anchor.AddComponent<TraderSanctuary>();
+            bool vanillaCamp = HaldorCampBuilder.Build(container.transform, anchor.transform);
             var traderAnchor = anchor.AddComponent<TraderLocationAnchor>();
             traderAnchor.TraderId = trader.Id;
 
-            TraderCampBuilder.Build(trader.Id, container.transform);
+            if (!vanillaCamp)
+            {
+                // Keep the trader usable if a game update removes the source location.
+                TraderCampBuilder.Build(trader.Id, container.transform);
+                anchor.AddComponent<TraderSanctuary>();
+            }
 
             var range = GetDistanceRange(trader.Biome);
             var config = new LocationConfig
