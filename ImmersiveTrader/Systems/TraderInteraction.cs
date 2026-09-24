@@ -30,10 +30,7 @@ public static class TraderInteraction
         var offers = TraderShop.GetAvailableOffers(trader.Id);
         if (offers.Length == 0)
         {
-            var activity = TraderActivityService.GetOffer(trader.Id);
-            player.Message(MessageHud.MessageType.Center, activity == null
-                ? $"{trader.Name}: Nothing for sale right now."
-                : $"{trader.Name}: {activity.Title} - {activity.Description}");
+            player.Message(MessageHud.MessageType.Center, $"{trader.Name}: Nothing for sale right now.");
             return;
         }
 
@@ -48,14 +45,6 @@ public static class TraderInteraction
             var offer = stock[0];
             player.Message(MessageHud.MessageType.Center,
                 $"{trader.Name}: {offer.Label} - {offer.Price} coins. Use alternate interact to buy.");
-            return;
-        }
-
-        var activity = TraderActivityService.GetOffer(trader.Id);
-        if (activity != null)
-        {
-            player.Message(MessageHud.MessageType.Center,
-                $"{trader.Name}: {activity.Title} - {activity.Description}");
             return;
         }
 
