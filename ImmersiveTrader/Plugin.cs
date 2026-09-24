@@ -64,6 +64,8 @@ public sealed class Plugin : BaseUnityPlugin
     {
         TreasureRegistry.Register();
         TraderRegistry.Initialize();
+        RewardRegistry.Initialize();
+        RewardRegistry.Validate();
         NpcPrefabRegistry.Register();
         LegendaryMietegRegistry.RegisterPrefab();
         PrefabManager.OnVanillaPrefabsAvailable -= OnVanillaPrefabsAvailable;
