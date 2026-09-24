@@ -7,61 +7,6 @@ namespace ImmersiveTrader;
 
 public static class TraderActivityService
 {
-    private sealed class State
-    {
-        public TraderActivityDefinition Definition = null!;
-        public int Progress;
-        public bool Completed => Progress >= Definition.RequiredAmount;
-    }
-
-    private static readonly Dictionary<(long PlayerId, string ContractId), State> Active = new();
-    private static readonly Dictionary<(long PlayerId, string ContractId), int> LastAcceptedDay = new();
-    private static readonly HashSet<(long PlayerId, string ContractId)> CompletedOnce = new();
-
-    public static TraderActivityDefinition? GetOffer(string traderId) =>
-        TraderActivityRegistry.Activities.FirstOrDefault(x => x.TraderId == traderId);
-
-    public static TraderActivityDefinition[] GetOffers(Player player, string traderId)
-    {
-        long id = player.GetPlayerID();
-        return TraderActivityRegistry.Activities
-            .Where(x => x.TraderId == traderId)
-            .ToArray();
-    }
-
-    public static bool TryAccept(Player player, string traderId)
-    {
-        long playerId = player.GetPlayerID();
-        int activeTotal = Active.Count(x => x.Key.PlayerId == playerId);
-        if (activeTotal >= 5)
-        {
-            player.Message(MessageHud.MessageType.Center, "You already have 5 active contracts in total.");
-            return false;
-        }
-
-        int activeForTrader = Active.Count(x => x.Key.PlayerId == playerId && x.Value.Definition.TraderId == traderId);
-        if (activeForTrader >= 2)
-        {
-            player.Message(MessageHud.MessageType.Center, "You already have 2 active contracts from this trader.");
-            return false;
-        }
-
-        int today = GetWorldDay();
-        var offer = GetOffers(player, traderId)
-            .Where(x => !Active.ContainsKey((playerId, x.Id)))
-            .FirstOrDefault(x => !LastAcceptedDay.TryGetValue((playerId, x.Id), out int lastDay) || today - lastDay >= 7);
-        if (offer == null)
-        {
-            player.Message(MessageHud.MessageType.Center, "No contract is currently available; active contracts or weekly cooldowns are blocking the remaining offers.");
-            return false;
-        }
-        Active[(playerId, offer.Id)] = new State { Definition = offer };
-        LastAcceptedDay[(playerId, offer.Id)] = today;
-        player.Message(MessageHud.MessageType.Center, $"Contract accepted: {offer.Title} (0/{offer.RequiredAmount}) | reward +{offer.RewardSkillLevels:0} {offer.RewardSkill}");
-        return true;
-    }
-
-
     public static bool TryTurnInPhysical(Player player, string traderId)
     {
         foreach (var item in player.GetInventory().GetAllItems().ToArray())
@@ -132,17 +77,6 @@ public static class TraderActivityService
             progress = Mathf.Min(progress + 1, definition.RequiredAmount);
             ContractMetadata.SetProgress(item, progress);
             player.Message(MessageHud.MessageType.TopLeft, $"{definition.Title}: {progress}/{definition.RequiredAmount}");
-        }
-    }
-
-    public static void RegisterKill(Player player, string prefabName)
-    {
-        long playerId = player.GetPlayerID();
-        foreach (var state in Active.Where(x => x.Key.PlayerId == playerId).Select(x => x.Value))
-        {
-            if (state.Completed || !PrefabMatches(prefabName, state.Definition.TargetPrefab)) continue;
-            state.Progress = Mathf.Min(state.Progress + 1, state.Definition.RequiredAmount);
-            player.Message(MessageHud.MessageType.TopLeft, $"{state.Definition.Title}: {state.Progress}/{state.Definition.RequiredAmount}");
         }
     }
 
