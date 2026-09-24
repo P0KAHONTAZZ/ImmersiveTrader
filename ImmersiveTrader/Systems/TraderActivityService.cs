@@ -8,6 +8,10 @@ public static class TraderActivityService
 {
     public static bool TryTurnInPhysical(Player player, string traderId)
     {
+        ItemDrop.ItemData? incomplete = null;
+        TraderActivityDefinition? incompleteDefinition = null;
+        int incompleteProgress = 0;
+
         foreach (var item in player.GetInventory().GetAllItems().ToArray())
         {
             if (!ContractMetadata.TryRead(item, out string contractId, out string issuer, out int progress) || issuer != traderId)
@@ -22,14 +26,23 @@ public static class TraderActivityService
             }
             if (progress < definition.RequiredAmount)
             {
-                player.Message(MessageHud.MessageType.Center, $"{definition.Title}: {progress}/{definition.RequiredAmount}");
-                return true;
+                incomplete ??= item;
+                incompleteDefinition ??= definition;
+                incompleteProgress = progress;
+                continue;
             }
 
             player.GetInventory().RemoveItem(item);
             player.RaiseSkill(definition.RewardSkill, definition.RewardSkillLevels);
             player.Message(MessageHud.MessageType.Center,
                 $"Contract complete: +{definition.RewardSkillLevels:0} {definition.RewardSkill}");
+            return true;
+        }
+
+        if (incompleteDefinition != null)
+        {
+            player.Message(MessageHud.MessageType.Center,
+                $"{incompleteDefinition.Title}: {incompleteProgress}/{incompleteDefinition.RequiredAmount}");
             return true;
         }
         return false;
