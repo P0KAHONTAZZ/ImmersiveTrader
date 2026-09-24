@@ -85,12 +85,12 @@ public static class TraderShopRegistry
         new("grelka","YggdrasilWood",45,10,5,"Yggdrasil Wood"),
 
         new("spalony_zenek","Grausten",55,10,6,"Grausten"),
-        new("spalony_zenek","Ashwood",55,10,6,"Ashwood"),
+        new("spalony_zenek","Blackwood",55,10,6,"Blackwood"),
         new("spalony_zenek","FlametalOre",90,3,6,"Flametal Ore"),
         new("spalony_zenek","ProustitePowder",65,3,6,"Proustite Powder"),
         new("spalony_zenek","CelestialFeather",70,3,6,"Celestial Feathers"),
 
-        new("skjold_cinderborn","Ashwood",55,10,6,"Ashwood"),
+        new("skjold_cinderborn","Blackwood",55,10,6,"Blackwood"),
         new("skjold_cinderborn","Grausten",55,10,6,"Grausten"),
         new("skjold_cinderborn","FlametalOre",90,3,6,"Flametal Ore"),
         new("skjold_cinderborn","CelestialFeather",70,3,6,"Celestial Feathers"),
