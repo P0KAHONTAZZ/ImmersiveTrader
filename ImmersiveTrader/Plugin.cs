@@ -4,6 +4,7 @@ using Jotunn;
 using Jotunn.Managers;
 using ImmersiveTrader.Commands;
 using HarmonyLib;
+using UnityEngine;
 
 namespace ImmersiveTrader;
 
@@ -12,6 +13,7 @@ namespace ImmersiveTrader;
 public sealed class Plugin : BaseUnityPlugin
 {
     private Harmony? _harmony;
+    private bool _rewardValidationPending;
     internal static BepInEx.Logging.ManualLogSource Log = null!;
     public const string ModGuid = "p0kahontazz.immersivetrader";
     public const string ModName = "ImmersiveTrader";
@@ -65,10 +67,25 @@ public sealed class Plugin : BaseUnityPlugin
         TreasureRegistry.Register();
         TraderRegistry.Initialize();
         RewardRegistry.Initialize();
-        RewardRegistry.Validate();
+        _rewardValidationPending = true;
         NpcPrefabRegistry.Register();
         LegendaryMietegRegistry.RegisterPrefab();
         PrefabManager.OnVanillaPrefabsAvailable -= OnVanillaPrefabsAvailable;
+    }
+
+    private void Update()
+    {
+        if (!_rewardValidationPending || ObjectDB.instance == null)
+            return;
+
+        // PrefabManager's vanilla-prefab event fires before ObjectDB's runtime item
+        // lookup is guaranteed to be populated. Wait until a known vanilla item resolves
+        // before validating all 910 reward routes, otherwise every reward is a false miss.
+        if (ObjectDB.instance.GetItemPrefab("Coins") == null)
+            return;
+
+        RewardRegistry.Validate();
+        _rewardValidationPending = false;
     }
 
     private void OnVanillaLocationsAvailable()
