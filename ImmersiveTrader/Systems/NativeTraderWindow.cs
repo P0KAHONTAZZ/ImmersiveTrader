@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using HarmonyLib;
 using ImmersiveTrader.Models;
 using UnityEngine;
 
@@ -11,8 +12,22 @@ namespace ImmersiveTrader;
 /// </summary>
 public static class NativeTraderWindow
 {
+    private static GameObject? activeHelper;
+
+    public static void Close()
+    {
+        NativeCargoBridge.Clear();
+        NativeContractBridge.Clear();
+        if (activeHelper != null)
+            UnityEngine.Object.Destroy(activeHelper);
+        activeHelper = null;
+    }
+
     public static bool TryOpen(Player player, TraderDefinition definition, GameObject npc)
     {
+        // StoreGui may have been closed by another UI path; remove stale helpers before
+        // registering rows for the new window.
+        Close();
         var gui = StoreGui.instance;
         if (gui == null)
         {
@@ -42,9 +57,16 @@ public static class NativeTraderWindow
         // ZNetView.Awake can create a persistent vanilla Haldor ZDO before we hide it,
         // which then reappears as a real Haldor after the next world load.
         bool haldorWasActive = haldor.activeSelf;
-        haldor.SetActive(false);
-        var helper = UnityEngine.Object.Instantiate(haldor, npc.transform.position + Vector3.down * 1000f, npc.transform.rotation);
-        haldor.SetActive(haldorWasActive);
+        GameObject helper;
+        try
+        {
+            haldor.SetActive(false);
+            helper = UnityEngine.Object.Instantiate(haldor, npc.transform.position + Vector3.down * 1000f, npc.transform.rotation);
+        }
+        finally
+        {
+            haldor.SetActive(haldorWasActive);
+        }
 
         helper.name = $"ImmersiveTrader_Store_{definition.Id}";
         helper.transform.SetParent(npc.transform, true);
@@ -151,6 +173,8 @@ public static class NativeTraderWindow
         if (trader.m_items.Count == 0)
         {
             UnityEngine.Object.Destroy(helper);
+            NativeCargoBridge.Clear();
+            NativeContractBridge.Clear();
             return false;
         }
 
@@ -158,7 +182,22 @@ public static class NativeTraderWindow
         int contractRows = trader.m_items.Count(x => NativeContractBridge.IsContract(x));
         Plugin.Log.LogInfo($"Native shop {definition.Id}: {offers.Length} ordinary configured, {cargoRows} cargo rows, {contractRows} contract rows, {trader.m_items.Count} total rows.");
 
-        gui.Show(trader);
+        activeHelper = helper;
+        try
+        {
+            gui.Show(trader);
+        }
+        catch
+        {
+            Close();
+            throw;
+        }
         return true;
     }
+}
+
+[HarmonyPatch(typeof(StoreGui), "Hide")]
+internal static class NativeTraderWindowHidePatch
+{
+    private static void Postfix() => NativeTraderWindow.Close();
 }
