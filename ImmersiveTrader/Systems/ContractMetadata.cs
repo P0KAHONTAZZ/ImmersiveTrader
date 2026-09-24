@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 
 namespace ImmersiveTrader;
 
@@ -29,4 +30,12 @@ public static class ContractMetadata
 
     public static void SetProgress(ItemDrop.ItemData item, int progress)
         => item.m_customData[ProgressKey] = progress.ToString(CultureInfo.InvariantCulture);
+
+    public static string GetProgressText(ItemDrop.ItemData item)
+    {
+        if (!TryRead(item, out string contractId, out _, out int progress))
+            return string.Empty;
+        var definition = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == contractId);
+        return definition == null ? string.Empty : $"{definition.Title}: {progress}/{definition.RequiredAmount}";
+    }
 }
