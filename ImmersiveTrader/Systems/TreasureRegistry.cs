@@ -12,17 +12,17 @@ public static class TreasureRegistry
     public static readonly IReadOnlyList<TreasureDefinition> Treasures = new List<TreasureDefinition>
     {
         // Meadows - Midka
-        new("midka_field_medicine","Skrzynia leków polowych","MeadHealthMinor",45f),
-        new("midka_healing_honey","Beczka miodu leczniczego","Honey",55f),
-        new("midka_bandages","Paczka bandaży","LeatherScraps",40f),
-        new("midka_dried_herbs","Suszone jagody i zioła","Raspberry",50f),
-        new("midka_medical_resin","Skrzynia żywicy medycznej","Resin",60f),
+        new("midka_field_medicine","Skrzynia leków polowych","BarleyWineBase",45f),
+        new("midka_healing_honey","Beczka miodu leczniczego","BarleyWineBase",55f),
+        new("midka_bandages","Paczka bandaży","YmirRemains",40f),
+        new("midka_dried_herbs","Suszone jagody i zioła","YmirRemains",50f),
+        new("midka_medical_resin","Skrzynia żywicy medycznej","YmirRemains",60f),
         // Meadows - Troldad
-        new("troldad_corewood","Paczka drewna rdzeniowego","RoundLog",70f),
-        new("troldad_troll_hides","Skrzynia skór trolla","TrollHide",65f),
-        new("troldad_meat","Beczka mięsa","DeerMeat",60f),
-        new("troldad_wood","Wiązka drewna","Wood",80f),
-        new("troldad_amber","Skrzynia bursztynu","Amber",45f),
+        new("troldad_corewood","Paczka drewna rdzeniowego","YmirRemains",70f),
+        new("troldad_troll_hides","Skrzynia skór trolla","YmirRemains",65f),
+        new("troldad_meat","Beczka mięsa","BarleyWineBase",60f),
+        new("troldad_wood","Wiązka drewna","YmirRemains",80f),
+        new("troldad_amber","Skrzynia bursztynu","YmirRemains",45f),
         // Black Forest
         new("grimvald_copper","Skrzynia miedzi","Copper",80f),
         new("grimvald_tin","Skrzynia cyny","Tin",70f),
@@ -98,7 +98,7 @@ public static class TreasureRegistry
             var custom = new CustomItem($"ImmersiveTrader_{def.Id}", def.BasePrefabName);
             var shared = custom.ItemDrop.m_itemData.m_shared;
             shared.m_name = def.DisplayName;
-            shared.m_description = "Towar transportowy. Dostarcz go innemu handlarzowi. Nie przechodzi przez portale.";
+            shared.m_description = $"Zapieczętowany ładunek: {def.DisplayName}. Towar transportowy, nie pojedynczy surowiec. Dostarcz go innemu handlarzowi. Nie przechodzi przez portale.";
             shared.m_weight = def.Weight;
             shared.m_teleportable = false;
             shared.m_maxStackSize = 1;
