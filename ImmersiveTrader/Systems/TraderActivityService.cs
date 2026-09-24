@@ -61,6 +61,31 @@ public static class TraderActivityService
         return true;
     }
 
+
+    public static bool TryTurnInPhysical(Player player, string traderId)
+    {
+        foreach (var item in player.GetInventory().GetAllItems().ToArray())
+        {
+            if (!ContractMetadata.TryRead(item, out string contractId, out string issuer, out int progress) || issuer != traderId)
+                continue;
+
+            var definition = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == contractId && x.TraderId == traderId);
+            if (definition == null) continue;
+            if (progress < definition.RequiredAmount)
+            {
+                player.Message(MessageHud.MessageType.Center, $"{definition.Title}: {progress}/{definition.RequiredAmount}");
+                return true;
+            }
+
+            player.GetInventory().RemoveItem(item);
+            player.RaiseSkill(definition.RewardSkill, definition.RewardSkillLevels);
+            player.Message(MessageHud.MessageType.Center,
+                $"Contract complete: +{definition.RewardSkillLevels:0} {definition.RewardSkill}");
+            return true;
+        }
+        return false;
+    }
+
     public static bool TryTurnIn(Player player, string traderId)
     {
         long playerId = player.GetPlayerID();
