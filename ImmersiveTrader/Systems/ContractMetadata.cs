@@ -22,10 +22,20 @@ public static class ContractMetadata
     public static bool TryRead(ItemDrop.ItemData item, out string contractId, out string traderId, out int progress)
     {
         contractId = string.Empty; traderId = string.Empty; progress = 0;
+        // Metadata on another item must never turn it into a contract. This also
+        // excludes unstamped generic scrolls from progress and turn-in handling.
+        if (item.m_dropPrefab == null ||
+            !string.Equals(item.m_dropPrefab.name.Replace("(Clone)", string.Empty),
+                ContractRegistry.PrefabName, StringComparison.Ordinal))
+            return false;
+
         return item.m_customData.TryGetValue(ContractIdKey, out contractId)
             && item.m_customData.TryGetValue(TraderIdKey, out traderId)
             && item.m_customData.TryGetValue(ProgressKey, out var raw)
-            && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out progress);
+            && !string.IsNullOrEmpty(contractId)
+            && !string.IsNullOrEmpty(traderId)
+            && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out progress)
+            && progress >= 0;
     }
 
     public static void SetProgress(ItemDrop.ItemData item, int progress)
@@ -33,9 +43,9 @@ public static class ContractMetadata
 
     public static string GetProgressText(ItemDrop.ItemData item)
     {
-        if (!TryRead(item, out string contractId, out _, out int progress))
+        if (!TryRead(item, out string contractId, out string issuer, out int progress))
             return string.Empty;
-        var definition = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == contractId);
+        var definition = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == contractId && x.TraderId == issuer);
         return definition == null ? string.Empty : $"{definition.Title}: {progress}/{definition.RequiredAmount}";
     }
 }
