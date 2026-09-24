@@ -80,9 +80,24 @@ public static class TraderReputation
             int next = Math.Min(Maximum, current + amount);
             if (next == current) return next;
             Directory.CreateDirectory(Paths.ConfigPath);
-            File.AppendAllText(FilePath, key + "\\t" + next.ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
+            File.AppendAllText(FilePath, key + "\t" + next.ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
             Points[key] = next;
             return next;
+        }
+    }
+
+    public static int Reset(Player player, string trader)
+    {
+        lock (Sync)
+        {
+            Load();
+            string key = Key(player, trader);
+            int current = Points.TryGetValue(key, out int value) ? value : 0;
+            if (current == 0) return 0;
+            Directory.CreateDirectory(Paths.ConfigPath);
+            File.AppendAllText(FilePath, key + "\t0" + Environment.NewLine);
+            Points[key] = 0;
+            return current;
         }
     }
 
