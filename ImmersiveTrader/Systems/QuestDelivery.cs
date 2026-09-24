@@ -63,7 +63,7 @@ public static class QuestDelivery
             return true;
         }
 
-        int biomeMultiplier = target.IsLegendary ? 1 : RewardScaling.GetBiomeMultiplier(carried.SourceBiomeTier, target.BiomeTier);
+        float biomeMultiplier = target.IsLegendary ? 1f : RewardScaling.GetBiomeMultiplier(carried.SourceBiomeTier, target.BiomeTier);
         float routeMetres = 0f;
         if (!target.IsLegendary && TreasureMetadata.TryGetSourcePosition(carried.Item, out float sourceX, out float sourceZ))
         {
@@ -106,7 +106,7 @@ public static class QuestDelivery
             ? $"???: Those who trade in gold count coins. Those who trade in favors count roads. Received: {amount} {reward.ItemPrefab}"
             : target.LiesAboutRewards
                 ? TroldadDialogue.GetLie(reward.ItemPrefab, amount)
-                : $"{target.Name}: Deal. Biome x{biomeMultiplier}, distance {routeMetres:0}m x{distanceMultiplier:0.##}. Your payment: {amount} {reward.ItemPrefab}."
+                : $"{target.Name}: Deal. Biome x{biomeMultiplier:0.##}, distance {routeMetres:0}m x{distanceMultiplier:0.##}. Your payment: {amount} {reward.ItemPrefab}."
                 + (targetTierUnlocked ? "" : " Better local stock unlocks after the previous biome boss.");
 
         player.Message(MessageHud.MessageType.Center, message);
