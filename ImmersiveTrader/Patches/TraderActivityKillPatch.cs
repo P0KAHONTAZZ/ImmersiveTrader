@@ -29,10 +29,14 @@ internal static class TraderActivityKillPatch
         var local = Player.m_localPlayer;
         if (local == null || __instance == null || __instance.IsPlayer()) return;
 
-        if (!LastPlayerHit.TryGetValue(__instance, out long playerId) || playerId != local.GetPlayerID())
+        if (!LastPlayerHit.TryGetValue(__instance, out long playerId))
             return;
 
+        // Always discard attribution when the character dies; otherwise long sessions
+        // retain dead Character references indefinitely.
         LastPlayerHit.Remove(__instance);
+        if (playerId != local.GetPlayerID())
+            return;
         string prefabName = Utils.GetPrefabName(__instance.gameObject);
         TraderActivityService.RegisterKillOnPhysicalContracts(local, prefabName);
     }
