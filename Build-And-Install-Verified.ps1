@@ -12,6 +12,38 @@ $target = Join-Path $plugins 'ImmersiveTrader.dll'
 
 if (-not (Test-Path -LiteralPath $project)) { throw "Brak projektu: $project" }
 if (-not (Test-Path -LiteralPath (Join-Path $GamePath 'valheim.exe'))) { throw "Nie znaleziono Valheim: $GamePath" }
+if (Get-Process -Name 'valheim' -ErrorAction SilentlyContinue) {
+    throw 'Zamknij Valheim przed instalacja nowej DLL.'
+}
+
+# An older local copy can compile successfully even if the art and world-drop
+# changes were only partially restored from GitHub. Fail before touching plugins.
+$requiredFiles = @(
+    'Assets\contract-scroll-simple.png',
+    'Assets\cargo-packages.png',
+    'ImmersiveTrader\Systems\ContractIconRegistry.cs',
+    'ImmersiveTrader\Systems\ContractWorldModel.cs',
+    'ImmersiveTrader\Systems\CargoPresentation.cs'
+)
+foreach ($relative in $requiredFiles) {
+    $file = Join-Path $PSScriptRoot $relative
+    if (-not (Test-Path -LiteralPath $file)) { throw "Niepelny zestaw plikow moda: $relative. Pobierz cala aktualizacje z GitHub." }
+}
+$projectText = Get-Content -LiteralPath $project -Raw
+if (-not $projectText.Contains('ImmersiveTrader.Assets.ContractScroll.png') -or
+    -not $projectText.Contains('ImmersiveTrader.Assets.CargoPackages.png')) {
+    throw 'Projekt nie zawiera obu grafik. Pobierz aktualny ImmersiveTrader.csproj z GitHub.'
+}
+$contractRegistry = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'ImmersiveTrader\Systems\ContractRegistry.cs') -Raw
+$cargoRegistry = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'ImmersiveTrader\Systems\TreasureRegistry.cs') -Raw
+if (-not $contractRegistry.Contains('ContractWorldModel.Attach') -or
+    -not $cargoRegistry.Contains('CargoPresentation.AttachWorldCrate')) {
+    throw 'Wykryto stare pliki rejestracji kontraktow lub towarow. Pobierz cala aktualizacje z GitHub.'
+}
+$rewardRegistry = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'ImmersiveTrader\Systems\RewardRegistry.cs') -Raw
+if ($rewardRegistry.Contains('"Ashwood"')) {
+    throw 'Wykryto stara tabele nagrod z brakujacym prefabem Ashwood. Pobierz aktualny RewardRegistry.cs z GitHub.'
+}
 
 dotnet build $project -c $Configuration -p:VALHEIM_INSTALL="$GamePath"
 if ($LASTEXITCODE -ne 0) { throw "Kompilacja nie powiodla sie. DLL nie zostala skopiowana." }
