@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Jotunn.Managers;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace ImmersiveTrader.Components;
 
