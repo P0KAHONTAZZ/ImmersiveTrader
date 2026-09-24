@@ -11,7 +11,8 @@ Valheim mod: sieć immersyjnych traderów i questów transportowych.
 - 70 fizycznych kontraktów łowieckich. Postęp jest zapisany na zwoju i pozostaje po wyrzuceniu oraz podniesieniu.
 - Nagrody skalują się wg odległości tierów biomów: x1 / x2 / x4 / x6, z twardym capem x6.
 - Bone Fragments są wykluczone z nagród.
-- Midka jest doświadczonym wojennym healerem i dodatkowo sprzedaje Minor Healing Mead za Coins.
+- Midka jest doświadczonym wojennym healerem i jako jedyna ma zwykły towar w sklepie: Minor Healing Mead za 70 Coins.
+- Pozostali handlarze oferują tylko towary transportowe i kontrakty łowieckie.
 - Troldad jest drwalem, myśliwym i alkoholikiem; zapowiada inną nagrodę niż faktycznie daje.
 
 ## Stack

@@ -35,11 +35,6 @@ public static class NativeTraderWindow
         }
 
         var offers = TraderShop.GetAvailableOffers(definition.Id);
-        if (offers.Length == 0)
-        {
-            player.Message(MessageHud.MessageType.Center, $"{definition.Name}: Nothing for sale right now.");
-            return false;
-        }
 
         // Never AddComponent<Trader>() to our NPC: Trader.Awake/Update expects a fully
         // authored vanilla trader hierarchy (talk points, dialogue lists, effects, etc.).

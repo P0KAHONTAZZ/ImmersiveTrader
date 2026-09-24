@@ -37,7 +37,7 @@ public sealed class Plugin : BaseUnityPlugin
         Log = Logger;
         TreasureWeight = Config.Bind("Treasures", "Weight", 80f, "Weight of each quest treasure.");
         MaxCarriedTreasures = Config.Bind("Treasures", "MaxCarried", 2, "Maximum number of active quest treasures.");
-        MidkaHealingMeadPrice = Config.Bind("Midka", "MinorHealingMeadPrice", 50, "Coins required for one Minor Healing Mead.");
+        MidkaHealingMeadPrice = Config.Bind("Midka", "MinorHealingMeadPrice", 70, "Legacy configuration value. Midka's native shop always sells Minor Healing Mead for 70 coins.");
         ProgressionLock = Config.Bind("Progression", "Enabled", true, "Prevent rewards from biomes not unlocked by boss progression.");
         TraderCooldownWorldDays = Config.Bind("Quests", "TraderCooldownWorldDays", 3, "World days before the same trader can issue another shipment to a player.");
         DistanceTier1Metres = Config.Bind("Rewards", "DistanceTier1Metres", 1500f, "Route distance where the physical distance bonus increases to x1.25.");

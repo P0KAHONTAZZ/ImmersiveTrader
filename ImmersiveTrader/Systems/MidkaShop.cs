@@ -8,7 +8,7 @@ public static class MidkaShop
 
     public static bool TryBuyMinorHealingMead(Player player)
     {
-        int price = Plugin.MidkaHealingMeadPrice.Value;
+        const int price = 70;
         var inventory = player.GetInventory();
 
         if (inventory.CountItems("Coins") < price)
