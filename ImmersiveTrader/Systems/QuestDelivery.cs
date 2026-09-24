@@ -35,17 +35,25 @@ public static class QuestDelivery
 
         if (!targetTierUnlocked)
         {
-            var sourceTrader = TraderRegistry.Traders.FirstOrDefault(x => x.Id == carried.SourceTraderId);
-            var fallbackTrader = sourceTrader != null && ProgressionGate.IsRewardTierUnlocked(sourceTrader.BiomeTier)
-                ? sourceTrader
-                : TraderRegistry.Traders.FirstOrDefault(x => !x.IsLegendary && x.BiomeTier == 0);
+            // There is intentionally no issuer -> issuer route. Pick the highest unlocked
+            // regular destination that has a real route for this cargo instead.
+            var fallback = TraderRegistry.Traders
+                .Where(x => !x.IsLegendary &&
+                            x.Id != carried.SourceTraderId &&
+                            ProgressionGate.IsRewardTierUnlocked(x.BiomeTier))
+                .OrderByDescending(x => x.BiomeTier)
+                .ThenBy(x => x.Id)
+                .Select(x => RewardRegistry.Rewards.FirstOrDefault(r =>
+                    r.TraderId == x.Id && r.TreasureId == carried.TreasureId))
+                .FirstOrDefault(x => x != null);
 
-            var fallback = fallbackTrader == null
-                ? null
-                : RewardRegistry.Rewards.FirstOrDefault(x => x.TraderId == fallbackTrader.Id && x.TreasureId == carried.TreasureId);
+            if (fallback == null)
+            {
+                player.Message(MessageHud.MessageType.Center, $"{target.Name}: Your progression does not unlock a safe payment for this shipment yet.");
+                return true;
+            }
 
-            if (fallback != null)
-                reward = fallback;
+            reward = fallback;
         }
 
         var rewardPrefab = ObjectDB.instance.GetItemPrefab(reward.ItemPrefab);
