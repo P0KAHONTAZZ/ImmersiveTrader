@@ -102,6 +102,7 @@ internal static class ContractItemIconPatch
     {
         if (!ContractMetadata.TryRead(__instance, out string id, out string issuer, out _)) return;
         var contract = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == id && x.TraderId == issuer);
-        if (contract != null) __result = ContractIconRegistry.ForSkill(contract.RewardSkill) ?? __result;
+        if (contract != null)
+            __result = ContractIconRegistry.ForSkill(ContractMetadata.GetRewardSkill(__instance, id, contract.RewardSkill)) ?? __result;
     }
 }

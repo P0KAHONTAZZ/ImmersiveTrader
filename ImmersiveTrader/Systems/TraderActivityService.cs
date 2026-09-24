@@ -24,10 +24,11 @@ public static class TraderActivityService
             if (progress < required)
                 continue;
 
+            var rewardSkill = ContractMetadata.GetRewardSkill(item, contractId, definition.RewardSkill);
             player.GetInventory().RemoveItem(item);
-            player.RaiseSkill(definition.RewardSkill, definition.RewardSkillLevels);
+            player.RaiseSkill(rewardSkill, definition.RewardSkillLevels);
             player.Message(MessageHud.MessageType.Center,
-                $"Contract complete: {definition.RewardSkillLevels:0} EXP ({definition.RewardSkill})");
+                $"Contract complete: {definition.RewardSkillLevels:0} EXP ({rewardSkill})");
             return true;
         }
 

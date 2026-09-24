@@ -79,7 +79,7 @@ public static class NativeContractBridge
 
         bool rare = UnityEngine.Random.value < UnityEngine.Mathf.Clamp01(Plugin.RareContractChance.Value);
         int required = rare ? (sale.Contract.RequiredAmount + 1) / 2 : sale.Contract.RequiredAmount;
-        ContractMetadata.Stamp(created, sale.Contract.Id, sale.Source.Id, TraderActivityService.GetWorldDayPublic(), required, rare);
+        ContractMetadata.Stamp(created, sale.Contract.Id, sale.Source.Id, TraderActivityService.GetWorldDayPublic(), required, rare, sale.Contract.RewardSkill);
         created.m_crafterName = sale.Contract.Title;
         Plugin.Log.LogInfo($"Contract scroll issued: {sale.Contract.Id}, issuer={sale.Source.Id}, " +
             $"inventoryItems={player.GetInventory().GetAllItems().Count}, " +
