@@ -160,7 +160,7 @@ public static class NativeTraderWindow
                 {
                     m_prefab = contractPrefab, m_price = 0, m_stack = 1,
                     m_requiredGlobalKey = string.Empty, m_levelUpEffect = false,
-                    m_buyPlayerEffects = new EffectList(), m_icon = contractPrefab.m_itemData.m_shared.m_icons[0],
+                    m_buyPlayerEffects = new EffectList(), m_icon = ContractIconRegistry.ForSkill(contract.RewardSkill) ?? contractPrefab.m_itemData.m_shared.m_icons[0],
                     m_name = contract.Title,
                     m_tooltip = $"{contract.Description} Normal: {contract.RequiredAmount} x {contract.TargetPrefab}; Rare: {contract.RequiredAmount / 2} x. Nagroda: {contract.RewardSkillLevels:0} EXP ({contract.RewardSkill}).",
                     m_buyKey = string.Empty, m_incrementKey = string.Empty, m_incrementAmount = 0
