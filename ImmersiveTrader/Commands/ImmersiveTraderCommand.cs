@@ -13,7 +13,7 @@ namespace ImmersiveTrader.Commands;
 public sealed class ImmersiveTraderCommand : ConsoleCommand
 {
     public override string Name => "it";
-    public override string Help => "ImmersiveTrader tools: it help | list | find <id> | findall | spawn <id> | look <id> | diagnose | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId> | rep <traderId> [add <points>|reset]";
+    public override string Help => "ImmersiveTrader tools: it help | list | find <id> | goto <id> | findall | spawn <id> | look <id> | diagnose | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId> | rep <traderId> [add <points>|reset]";
 
     public override void Run(string[] args, Terminal context)
     {
@@ -22,6 +22,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         {
             case "list": PrintTraders(context); break;
             case "find": FindLocation(args, context); break;
+            case "goto": GotoLocation(args, context); break;
             case "findall": FindAllLocations(context); break;
             case "spawn": SpawnTrader(args, context); break;
             case "look": SpawnNpcLook(args, context); break;
@@ -36,7 +37,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "find", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -45,6 +46,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("ImmersiveTrader developer commands:");
         c.AddString("  it list");
         c.AddString("  it find <traderId>  - show generated location position and add a map pin");
+        c.AddString("  it goto <traderId>  - teleport to a generated trader location");
         c.AddString("  it findall          - add map pins for all generated trader locations");
         c.AddString("  it spawn <traderId>");
         c.AddString("  it look <traderId>");
@@ -108,6 +110,31 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         var trader = FindTrader(args[1]);
         if (trader == null || trader.IsLegendary) { c.AddString("Unknown regular trader."); return; }
         AddLocationPins(c, trader.Id);
+    }
+
+    private static void GotoLocation(string[] args, Terminal c)
+    {
+        var player = Player.m_localPlayer;
+        if (player == null || ZoneSystem.instance == null) { c.AddString("Enter a world first."); return; }
+        if (args.Length != 2) { c.AddString("Usage: it goto <traderId>"); return; }
+        var trader = FindTrader(args[1]);
+        if (trader == null || trader.IsLegendary) { c.AddString("Unknown regular trader. Use 'it list'."); return; }
+
+        string wanted = $"ImmersiveTrader_Location_{trader.Id}";
+        foreach (var instance in ZoneSystem.instance.m_locationInstances.Values)
+        {
+            string name = instance.m_location?.m_prefabName ?? string.Empty;
+            if (!name.Equals(wanted, StringComparison.OrdinalIgnoreCase) &&
+                name.IndexOf(wanted, StringComparison.OrdinalIgnoreCase) < 0)
+                continue;
+
+            var destination = instance.m_position + new Vector3(0f, 2f, 3f);
+            player.TeleportTo(destination, player.transform.rotation, true);
+            c.AddString($"Teleporting to {trader.Name} at x={destination.x:0}, z={destination.z:0}.");
+            return;
+        }
+
+        c.AddString($"No generated location for {trader.Name} is visible in this world. Try 'it find {trader.Id}'.");
     }
 
     private static void FindAllLocations(Terminal c)
