@@ -46,6 +46,9 @@ public sealed class TraderNpc : MonoBehaviour, Hoverable, Interactable
         if (!alt && QuestDelivery.TryDeliverAny(player, Definition, transform.position))
             return true;
 
+        if (!alt && TraderActivityService.TryTurnInPhysical(player, Definition.Id))
+            return true;
+
         // With no deliverable cargo, primary E remains the familiar native Valheim shop.
         if (!alt && NativeTraderWindow.TryOpen(player, Definition, gameObject))
             return true;
