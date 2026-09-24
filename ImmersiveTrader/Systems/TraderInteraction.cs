@@ -19,17 +19,7 @@ public static class TraderInteraction
         if (QuestDelivery.TryDeliverAny(player, trader, traderPosition))
             return;
 
-        string taskStatus = TraderActivityService.GetStatus(player, trader.Id);
-        if (taskStatus != "No active task.")
-        {
-            TraderActivityService.TryTurnIn(player, trader.Id);
-            return;
-        }
-
-        if (QuestIssuing.TryGiveTreasure(player, trader, traderPosition))
-            return;
-
-        if (TraderActivityService.TryAccept(player, trader.Id))
+        if (TraderActivityService.TryTurnInPhysical(player, trader.Id))
             return;
 
         ShowStock(player, trader);
