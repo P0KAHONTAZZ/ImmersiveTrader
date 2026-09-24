@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using HarmonyLib;
 using ImmersiveTrader.Models;
 using UnityEngine;
 
@@ -194,10 +193,4 @@ public static class NativeTraderWindow
         }
         return true;
     }
-}
-
-[HarmonyPatch(typeof(StoreGui), "Hide")]
-internal static class NativeTraderWindowHidePatch
-{
-    private static void Postfix() => NativeTraderWindow.Close();
 }
