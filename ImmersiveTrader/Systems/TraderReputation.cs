@@ -11,9 +11,10 @@ namespace ImmersiveTrader;
 /// <summary>Reputation belongs to the character and world, separately for each issuing trader.</summary>
 public static class TraderReputation
 {
-    // Five distinct cargo offers and two active contracts per trader renew every seven days.
-    // Typical pace: three routes one biome apart and two contracts = 16 points per week.
-    // All five cargo routes plus two contracts = 24 points per week.
+    // Five cargo offers and five contracts can be completed per trader in each seven-day purchase cycle.
+    // Carrying two shipments at a time does not limit the number of deliveries or reputation awards.
+    // Typical pace: three routes one biome apart and two contracts = 16 points per cycle.
+    // Five routes one biome apart and five contracts = 30 points per cycle.
     public const int ContractPoints = 2;
     public const int Maximum = 64;
 
@@ -22,7 +23,6 @@ public static class TraderReputation
 
     private static readonly object Sync = new();
     private static readonly Dictionary<string, int> Points = new();
-    private static readonly Dictionary<string, List<double>> Events = new();
     private static bool loaded;
     private static string FilePath => Path.Combine(Paths.ConfigPath, "ImmersiveTrader-reputation.txt");
 
@@ -53,16 +53,6 @@ public static class TraderReputation
             {
                 int tab = line.IndexOf('\t');
                 if (tab <= 0) continue;
-                if (line.StartsWith("EVENT:", StringComparison.Ordinal))
-                {
-                    if (double.TryParse(line.Substring(tab + 1), NumberStyles.Float, CultureInfo.InvariantCulture, out double stamp))
-                    {
-                        string eventKey = line.Substring(6, tab - 6);
-                        if (!Events.TryGetValue(eventKey, out var list)) Events[eventKey] = list = new List<double>();
-                        list.Add(stamp);
-                    }
-                    continue;
-                }
                 if (!int.TryParse(line.Substring(tab + 1), NumberStyles.Integer,
                         CultureInfo.InvariantCulture, out int value)) continue;
                 Points[line.Substring(0, tab)] = Math.Clamp(value, 0, Maximum);
@@ -79,7 +69,7 @@ public static class TraderReputation
         }
     }
 
-    public static int Add(Player player, string trader, int amount, bool cargo = false)
+    public static int Add(Player player, string trader, int amount)
     {
         if (amount <= 0) return Get(player, trader);
         lock (Sync)
@@ -87,20 +77,10 @@ public static class TraderReputation
             Load();
             string key = Key(player, trader);
             int current = Points.TryGetValue(key, out int value) ? value : 0;
-            string eventKey = key + "|" + (cargo ? "cargo" : "contract");
-            double now = ZNet.instance.GetTimeSeconds();
-            int quota = cargo ? 5 : 2;
-            if (quota == 0) return current;
-            if (!Events.TryGetValue(eventKey, out var history)) Events[eventKey] = history = new List<double>();
-            history.RemoveAll(stamp => stamp > now || now - stamp >= 7d * 1800d);
-            if (history.Count >= quota) return current;
             int next = Math.Min(Maximum, current + amount);
             if (next == current) return next;
             Directory.CreateDirectory(Paths.ConfigPath);
-            File.AppendAllText(FilePath,
-                "EVENT:" + eventKey + "\t" + now.ToString("R", CultureInfo.InvariantCulture) + Environment.NewLine +
-                key + "\t" + next.ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
-            history.Add(now);
+            File.AppendAllText(FilePath, key + "\\t" + next.ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
             Points[key] = next;
             return next;
         }
