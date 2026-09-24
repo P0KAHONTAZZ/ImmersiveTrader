@@ -92,8 +92,8 @@ public static class NativeContractBridge
             return true;
         }
 
-        bool rare = UnityEngine.Random.value < UnityEngine.Mathf.Clamp01(Plugin.RareContractChance.Value);
-        int required = rare ? (sale.Contract.RequiredAmount + 1) / 2 : sale.Contract.RequiredAmount;
+        bool rare = false;
+        int required = sale.Contract.RequiredAmount;
         ContractMetadata.Stamp(created, sale.Contract.Id, sale.Source.Id, TraderActivityService.GetWorldDayPublic(), required, rare, sale.Contract.RewardSkill);
         try { ItemPurchaseCooldown.MarkBought(player, sale.Source.Id, "contract", sale.Contract.Id); }
         catch (System.Exception ex)
@@ -108,7 +108,7 @@ public static class NativeContractBridge
             $"inventoryItems={player.GetInventory().GetAllItems().Count}, " +
             $"validScrolls={TraderActivityService.CountPhysicalContracts(player, sale.Source.Id)}");
         player.Message(MessageHud.MessageType.Center,
-            $"Kontrakt w plecaku: {sale.Contract.Title} ({(rare ? "Rare" : "Normal")}). Cel: {required} x {sale.Contract.TargetPrefab}. Nagroda: {sale.Contract.RewardSkillLevels:0} EXP ({sale.Contract.RewardSkill}).");
+            $"Kontrakt w plecaku: {sale.Contract.Title}. Cel: {required} x {sale.Contract.TargetPrefab}. Nagroda: {sale.Contract.RewardSkillLevels:0} EXP ({sale.Contract.RewardSkill}).");
         return true;
     }
 }
