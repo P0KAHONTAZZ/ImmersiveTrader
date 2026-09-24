@@ -22,7 +22,7 @@ public static class RewardRegistry
         Add("cmok", "midka_field_medicine", "RoyalJelly", 6);
         Add("grelka", "midka_field_medicine", "Sap", 8);
         Add("spalony_zenek", "midka_field_medicine", "Grausten", 12);
-        Add("skjold_cinderborn", "midka_field_medicine", "Ashwood", 10);
+        Add("skjold_cinderborn", "midka_field_medicine", "Blackwood", 10);
         Add("troldad", "midka_healing_honey", "GreydwarfEye", 12);
         Add("grimvald", "midka_healing_honey", "Feathers", 12);
         Add("rudy_warg", "midka_healing_honey", "RoundLog", 12);
@@ -60,7 +60,7 @@ public static class RewardRegistry
         Add("ragnar_turnipson", "midka_dried_herbs", "Feathers", 15);
         Add("cmok", "midka_dried_herbs", "Sap", 8);
         Add("grelka", "midka_dried_herbs", "YggdrasilWood", 10);
-        Add("spalony_zenek", "midka_dried_herbs", "Ashwood", 10);
+        Add("spalony_zenek", "midka_dried_herbs", "Blackwood", 10);
         Add("skjold_cinderborn", "midka_dried_herbs", "CelestialFeather", 5);
         Add("troldad", "midka_medical_resin", "DeerHide", 8);
         Add("grimvald", "midka_medical_resin", "RoundLog", 12);
@@ -87,7 +87,7 @@ public static class RewardRegistry
         Add("cmok", "troldad_corewood", "RoyalJelly", 6);
         Add("grelka", "troldad_corewood", "Sap", 8);
         Add("spalony_zenek", "troldad_corewood", "Grausten", 12);
-        Add("skjold_cinderborn", "troldad_corewood", "Ashwood", 10);
+        Add("skjold_cinderborn", "troldad_corewood", "Blackwood", 10);
         Add("midka", "troldad_troll_hides", "GreydwarfEye", 12);
         Add("grimvald", "troldad_troll_hides", "Feathers", 12);
         Add("rudy_warg", "troldad_troll_hides", "RoundLog", 12);
@@ -125,7 +125,7 @@ public static class RewardRegistry
         Add("ragnar_turnipson", "troldad_wood", "Feathers", 15);
         Add("cmok", "troldad_wood", "Sap", 8);
         Add("grelka", "troldad_wood", "YggdrasilWood", 10);
-        Add("spalony_zenek", "troldad_wood", "Ashwood", 10);
+        Add("spalony_zenek", "troldad_wood", "Blackwood", 10);
         Add("skjold_cinderborn", "troldad_wood", "CelestialFeather", 5);
         Add("midka", "troldad_amber", "DeerHide", 8);
         Add("grimvald", "troldad_amber", "RoundLog", 12);
@@ -152,7 +152,7 @@ public static class RewardRegistry
         Add("cmok", "grimvald_copper", "RoyalJelly", 6);
         Add("grelka", "grimvald_copper", "Sap", 8);
         Add("spalony_zenek", "grimvald_copper", "Grausten", 12);
-        Add("skjold_cinderborn", "grimvald_copper", "Ashwood", 10);
+        Add("skjold_cinderborn", "grimvald_copper", "Blackwood", 10);
         Add("midka", "grimvald_tin", "Feathers", 10);
         Add("troldad", "grimvald_tin", "Resin", 15);
         Add("rudy_warg", "grimvald_tin", "GreydwarfEye", 15);
@@ -190,7 +190,7 @@ public static class RewardRegistry
         Add("ragnar_turnipson", "grimvald_cores", "Feathers", 15);
         Add("cmok", "grimvald_cores", "Sap", 8);
         Add("grelka", "grimvald_cores", "YggdrasilWood", 10);
-        Add("spalony_zenek", "grimvald_cores", "Ashwood", 10);
+        Add("spalony_zenek", "grimvald_cores", "Blackwood", 10);
         Add("skjold_cinderborn", "grimvald_cores", "CelestialFeather", 5);
         Add("midka", "grimvald_resin", "Resin", 15);
         Add("troldad", "grimvald_resin", "DeerHide", 8);
@@ -217,7 +217,7 @@ public static class RewardRegistry
         Add("cmok", "rudy_arrows", "RoyalJelly", 6);
         Add("grelka", "rudy_arrows", "Sap", 8);
         Add("spalony_zenek", "rudy_arrows", "Grausten", 12);
-        Add("skjold_cinderborn", "rudy_arrows", "Ashwood", 10);
+        Add("skjold_cinderborn", "rudy_arrows", "Blackwood", 10);
         Add("midka", "rudy_deer_hides", "Feathers", 10);
         Add("troldad", "rudy_deer_hides", "Resin", 15);
         Add("grimvald", "rudy_deer_hides", "GreydwarfEye", 15);
@@ -255,7 +255,7 @@ public static class RewardRegistry
         Add("ragnar_turnipson", "rudy_corewood", "Feathers", 15);
         Add("cmok", "rudy_corewood", "Sap", 8);
         Add("grelka", "rudy_corewood", "YggdrasilWood", 10);
-        Add("spalony_zenek", "rudy_corewood", "Ashwood", 10);
+        Add("spalony_zenek", "rudy_corewood", "Blackwood", 10);
         Add("skjold_cinderborn", "rudy_corewood", "CelestialFeather", 5);
         Add("midka", "rudy_rubies", "Resin", 15);
         Add("troldad", "rudy_rubies", "DeerHide", 8);
@@ -282,7 +282,7 @@ public static class RewardRegistry
         Add("cmok", "mokra_thistle", "RoyalJelly", 6);
         Add("grelka", "mokra_thistle", "Sap", 8);
         Add("spalony_zenek", "mokra_thistle", "Grausten", 12);
-        Add("skjold_cinderborn", "mokra_thistle", "Ashwood", 10);
+        Add("skjold_cinderborn", "mokra_thistle", "Blackwood", 10);
         Add("midka", "mokra_entrails", "Feathers", 10);
         Add("troldad", "mokra_entrails", "Resin", 15);
         Add("grimvald", "mokra_entrails", "Feathers", 12);
@@ -320,7 +320,7 @@ public static class RewardRegistry
         Add("ragnar_turnipson", "mokra_roots", "Feathers", 15);
         Add("cmok", "mokra_roots", "Sap", 8);
         Add("grelka", "mokra_roots", "YggdrasilWood", 10);
-        Add("spalony_zenek", "mokra_roots", "Ashwood", 10);
+        Add("spalony_zenek", "mokra_roots", "Blackwood", 10);
         Add("skjold_cinderborn", "mokra_roots", "CelestialFeather", 5);
         Add("midka", "mokra_bloodbags", "Resin", 15);
         Add("troldad", "mokra_bloodbags", "DeerHide", 8);
@@ -347,7 +347,7 @@ public static class RewardRegistry
         Add("cmok", "encek_iron", "RoyalJelly", 6);
         Add("grelka", "encek_iron", "Sap", 8);
         Add("spalony_zenek", "encek_iron", "Grausten", 12);
-        Add("skjold_cinderborn", "encek_iron", "Ashwood", 10);
+        Add("skjold_cinderborn", "encek_iron", "Blackwood", 10);
         Add("midka", "encek_guck", "Feathers", 10);
         Add("troldad", "encek_guck", "Resin", 15);
         Add("grimvald", "encek_guck", "Feathers", 12);
@@ -385,7 +385,7 @@ public static class RewardRegistry
         Add("ragnar_turnipson", "encek_sausages", "Feathers", 15);
         Add("cmok", "encek_sausages", "Sap", 8);
         Add("grelka", "encek_sausages", "YggdrasilWood", 10);
-        Add("spalony_zenek", "encek_sausages", "Ashwood", 10);
+        Add("spalony_zenek", "encek_sausages", "Blackwood", 10);
         Add("skjold_cinderborn", "encek_sausages", "CelestialFeather", 5);
         Add("midka", "encek_bark", "Resin", 15);
         Add("troldad", "encek_bark", "DeerHide", 8);
@@ -412,7 +412,7 @@ public static class RewardRegistry
         Add("cmok", "hrothgar_obsidian", "RoyalJelly", 6);
         Add("grelka", "hrothgar_obsidian", "Sap", 8);
         Add("spalony_zenek", "hrothgar_obsidian", "Grausten", 12);
-        Add("skjold_cinderborn", "hrothgar_obsidian", "Ashwood", 10);
+        Add("skjold_cinderborn", "hrothgar_obsidian", "Blackwood", 10);
         Add("midka", "hrothgar_silver", "Feathers", 10);
         Add("troldad", "hrothgar_silver", "Resin", 15);
         Add("grimvald", "hrothgar_silver", "Feathers", 12);
@@ -450,7 +450,7 @@ public static class RewardRegistry
         Add("ragnar_turnipson", "hrothgar_crystal", "Feathers", 15);
         Add("cmok", "hrothgar_crystal", "Sap", 8);
         Add("grelka", "hrothgar_crystal", "YggdrasilWood", 10);
-        Add("spalony_zenek", "hrothgar_crystal", "Ashwood", 10);
+        Add("spalony_zenek", "hrothgar_crystal", "Blackwood", 10);
         Add("skjold_cinderborn", "hrothgar_crystal", "CelestialFeather", 5);
         Add("midka", "hrothgar_wolf_pelts", "Resin", 15);
         Add("troldad", "hrothgar_wolf_pelts", "DeerHide", 8);
@@ -477,7 +477,7 @@ public static class RewardRegistry
         Add("cmok", "ylva_onions", "RoyalJelly", 6);
         Add("grelka", "ylva_onions", "Sap", 8);
         Add("spalony_zenek", "ylva_onions", "Grausten", 12);
-        Add("skjold_cinderborn", "ylva_onions", "Ashwood", 10);
+        Add("skjold_cinderborn", "ylva_onions", "Blackwood", 10);
         Add("midka", "ylva_onion_seeds", "Feathers", 10);
         Add("troldad", "ylva_onion_seeds", "Resin", 15);
         Add("grimvald", "ylva_onion_seeds", "Feathers", 12);
@@ -515,7 +515,7 @@ public static class RewardRegistry
         Add("ragnar_turnipson", "ylva_silver", "Feathers", 15);
         Add("cmok", "ylva_silver", "Sap", 8);
         Add("grelka", "ylva_silver", "YggdrasilWood", 10);
-        Add("spalony_zenek", "ylva_silver", "Ashwood", 10);
+        Add("spalony_zenek", "ylva_silver", "Blackwood", 10);
         Add("skjold_cinderborn", "ylva_silver", "CelestialFeather", 5);
         Add("midka", "ylva_crystal", "Resin", 15);
         Add("troldad", "ylva_crystal", "DeerHide", 8);
@@ -542,7 +542,7 @@ public static class RewardRegistry
         Add("cmok", "bjarki_barley", "RoyalJelly", 6);
         Add("grelka", "bjarki_barley", "Sap", 8);
         Add("spalony_zenek", "bjarki_barley", "Grausten", 12);
-        Add("skjold_cinderborn", "bjarki_barley", "Ashwood", 10);
+        Add("skjold_cinderborn", "bjarki_barley", "Blackwood", 10);
         Add("midka", "bjarki_flax", "Feathers", 10);
         Add("troldad", "bjarki_flax", "Resin", 15);
         Add("grimvald", "bjarki_flax", "Feathers", 12);
@@ -580,7 +580,7 @@ public static class RewardRegistry
         Add("ragnar_turnipson", "bjarki_blackmetal", "Cloudberry", 12);
         Add("cmok", "bjarki_blackmetal", "Sap", 8);
         Add("grelka", "bjarki_blackmetal", "YggdrasilWood", 10);
-        Add("spalony_zenek", "bjarki_blackmetal", "Ashwood", 10);
+        Add("spalony_zenek", "bjarki_blackmetal", "Blackwood", 10);
         Add("skjold_cinderborn", "bjarki_blackmetal", "CelestialFeather", 5);
         Add("midka", "bjarki_coins", "Resin", 15);
         Add("troldad", "bjarki_coins", "DeerHide", 8);
@@ -607,7 +607,7 @@ public static class RewardRegistry
         Add("cmok", "ragnar_barley", "RoyalJelly", 6);
         Add("grelka", "ragnar_barley", "Sap", 8);
         Add("spalony_zenek", "ragnar_barley", "Grausten", 12);
-        Add("skjold_cinderborn", "ragnar_barley", "Ashwood", 10);
+        Add("skjold_cinderborn", "ragnar_barley", "Blackwood", 10);
         Add("midka", "ragnar_flour", "Feathers", 10);
         Add("troldad", "ragnar_flour", "Resin", 15);
         Add("grimvald", "ragnar_flour", "Feathers", 12);
@@ -645,7 +645,7 @@ public static class RewardRegistry
         Add("bjarki_goldtooth", "ragnar_blackmetal", "Cloudberry", 12);
         Add("cmok", "ragnar_blackmetal", "Sap", 8);
         Add("grelka", "ragnar_blackmetal", "YggdrasilWood", 10);
-        Add("spalony_zenek", "ragnar_blackmetal", "Ashwood", 10);
+        Add("spalony_zenek", "ragnar_blackmetal", "Blackwood", 10);
         Add("skjold_cinderborn", "ragnar_blackmetal", "CelestialFeather", 5);
         Add("midka", "ragnar_lox_meat", "Resin", 15);
         Add("troldad", "ragnar_lox_meat", "DeerHide", 8);
@@ -672,7 +672,7 @@ public static class RewardRegistry
         Add("ragnar_turnipson", "cmok_puffs", "LoxPelt", 6);
         Add("grelka", "cmok_puffs", "RoyalJelly", 6);
         Add("spalony_zenek", "cmok_puffs", "Grausten", 12);
-        Add("skjold_cinderborn", "cmok_puffs", "Ashwood", 10);
+        Add("skjold_cinderborn", "cmok_puffs", "Blackwood", 10);
         Add("midka", "cmok_softtissue", "Feathers", 10);
         Add("troldad", "cmok_softtissue", "Resin", 15);
         Add("grimvald", "cmok_softtissue", "Feathers", 12);
@@ -710,7 +710,7 @@ public static class RewardRegistry
         Add("bjarki_goldtooth", "cmok_marble", "LoxPelt", 6);
         Add("ragnar_turnipson", "cmok_marble", "Feathers", 15);
         Add("grelka", "cmok_marble", "BlackMarble", 10);
-        Add("spalony_zenek", "cmok_marble", "Ashwood", 10);
+        Add("spalony_zenek", "cmok_marble", "Blackwood", 10);
         Add("skjold_cinderborn", "cmok_marble", "CelestialFeather", 5);
         Add("midka", "cmok_sap", "Resin", 15);
         Add("troldad", "cmok_sap", "DeerHide", 8);
@@ -737,7 +737,7 @@ public static class RewardRegistry
         Add("ragnar_turnipson", "grelka_magecaps", "LoxPelt", 6);
         Add("cmok", "grelka_magecaps", "RoyalJelly", 6);
         Add("spalony_zenek", "grelka_magecaps", "Grausten", 12);
-        Add("skjold_cinderborn", "grelka_magecaps", "Ashwood", 10);
+        Add("skjold_cinderborn", "grelka_magecaps", "Blackwood", 10);
         Add("midka", "grelka_eitr", "Feathers", 10);
         Add("troldad", "grelka_eitr", "Resin", 15);
         Add("grimvald", "grelka_eitr", "Feathers", 12);
@@ -775,7 +775,7 @@ public static class RewardRegistry
         Add("bjarki_goldtooth", "grelka_sap", "LoxPelt", 6);
         Add("ragnar_turnipson", "grelka_sap", "Feathers", 15);
         Add("cmok", "grelka_sap", "BlackMarble", 10);
-        Add("spalony_zenek", "grelka_sap", "Ashwood", 10);
+        Add("spalony_zenek", "grelka_sap", "Blackwood", 10);
         Add("skjold_cinderborn", "grelka_sap", "CelestialFeather", 5);
         Add("midka", "grelka_jelly", "Resin", 15);
         Add("troldad", "grelka_jelly", "DeerHide", 8);
@@ -815,7 +815,7 @@ public static class RewardRegistry
         Add("ragnar_turnipson", "zenek_ashwood", "Cloudberry", 12);
         Add("cmok", "zenek_ashwood", "YggdrasilWood", 10);
         Add("grelka", "zenek_ashwood", "BlackMarble", 10);
-        Add("skjold_cinderborn", "zenek_ashwood", "Ashwood", 10);
+        Add("skjold_cinderborn", "zenek_ashwood", "Blackwood", 10);
         Add("midka", "zenek_flametal", "DeerHide", 8);
         Add("troldad", "zenek_flametal", "MeadHealthMinor", 2);
         Add("grimvald", "zenek_flametal", "Resin", 20);
@@ -880,7 +880,7 @@ public static class RewardRegistry
         Add("ragnar_turnipson", "skjold_ashwood", "Cloudberry", 12);
         Add("cmok", "skjold_ashwood", "YggdrasilWood", 10);
         Add("grelka", "skjold_ashwood", "BlackMarble", 10);
-        Add("spalony_zenek", "skjold_ashwood", "Ashwood", 10);
+        Add("spalony_zenek", "skjold_ashwood", "Blackwood", 10);
         Add("midka", "skjold_grausten", "DeerHide", 8);
         Add("troldad", "skjold_grausten", "MeadHealthMinor", 2);
         Add("grimvald", "skjold_grausten", "Resin", 20);
