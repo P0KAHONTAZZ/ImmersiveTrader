@@ -93,7 +93,8 @@ public static class TraderHouseBuilder
         mesh.vertices = new[] { a, b, c, d, a, b, c, d };
         float length = Vector3.Distance(a, b) / 2f;
         float depth = Vector3.Distance(a, d) / 2f;
-        mesh.uv = new[] { Vector2.zero, new Vector2(length, 0), new Vector2(length, depth), new Vector2(0, depth),\n            Vector2.zero, new Vector2(length, 0), new Vector2(length, depth), new Vector2(0, depth) };
+        mesh.uv = new[] { Vector2.zero, new Vector2(length, 0), new Vector2(length, depth), new Vector2(0, depth),
+            Vector2.zero, new Vector2(length, 0), new Vector2(length, depth), new Vector2(0, depth) };
         mesh.triangles = new[] { 0, 2, 1, 0, 3, 2, 5, 6, 4, 6, 7, 4 };
         mesh.RecalculateNormals();
         go.AddComponent<MeshFilter>().sharedMesh = mesh;
@@ -110,9 +111,12 @@ public static class TraderHouseBuilder
         mesh.vertices = new[]
         {
             new Vector3(-halfWidth, eave, z), new Vector3(halfWidth, eave, z),
+            new Vector3(0, ridge, z),
+            new Vector3(-halfWidth, eave, z), new Vector3(halfWidth, eave, z),
             new Vector3(0, ridge, z)
         };
-        mesh.uv = new[] { Vector2.zero, new Vector2(halfWidth * 2, 0), new Vector2(halfWidth, ridge - eave),\n            Vector2.zero, new Vector2(halfWidth * 2, 0), new Vector2(halfWidth, ridge - eave) };
+        mesh.uv = new[] { Vector2.zero, new Vector2(halfWidth * 2, 0), new Vector2(halfWidth, ridge - eave),
+            Vector2.zero, new Vector2(halfWidth * 2, 0), new Vector2(halfWidth, ridge - eave) };
         mesh.triangles = new[] { 0, 2, 1, 4, 5, 3 };
         mesh.RecalculateNormals();
         go.AddComponent<MeshFilter>().sharedMesh = mesh;
