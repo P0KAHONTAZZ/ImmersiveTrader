@@ -103,35 +103,37 @@ public static class NativeTraderWindow
             Plugin.Log.LogInfo($"Native shop {definition.Id}: {offer.ItemPrefab}, configured={offer.Price}, native={tradeItem.m_price}, stack={tradeItem.m_stack}");
         }
 
-        // Route-specific cargo: Meadows pair and Black Forest pair.
+        // Five physical cargo goods belonging to this trader. Every one can later be
+        // delivered to any of the other 13 regular traders; destination is not baked
+        // into the item, only issuer + origin are stamped at purchase time.
         NativeCargoBridge.Clear();
-        string cargoId = definition.Id switch
+        foreach (var cargoDef in TreasureRegistry.Treasures.Where(x => x.Id.StartsWith(definition.Id switch
         {
-            "midka" => "ancient_parcel",
-            "troldad" => "sealed_mead_cask",
-            "grimvald" => "runic_ledger",
-            "rudy_warg" => "carved_idol",
-            _ => string.Empty
-        };
-        if (!string.IsNullOrEmpty(cargoId))
+            "rudy_warg" => "rudy_",
+            "mokra_dzika" => "mokra_",
+            "ylva_frost" => "ylva_",
+            "bjarki_goldtooth" => "bjarki_",
+            "ragnar_turnipson" => "ragnar_",
+            "spalony_zenek" => "zenek_",
+            "skjold_cinderborn" => "skjold_",
+            _ => definition.Id + "_"
+        })))
         {
-            var cargoDef = TreasureRegistry.Treasures.FirstOrDefault(x => x.Id == cargoId);
-            var cargoPrefab = ObjectDB.instance?.GetItemPrefab($"ImmersiveTrader_{cargoId}");
+            var cargoPrefab = ObjectDB.instance?.GetItemPrefab($"ImmersiveTrader_{cargoDef.Id}");
             var cargoDrop = cargoPrefab?.GetComponent<ItemDrop>();
-            if (cargoDef != null && cargoDrop != null)
+            if (cargoDrop == null) continue;
+
+            var cargoItem = new Trader.TradeItem
             {
-                var cargoItem = new Trader.TradeItem
-                {
-                    m_prefab = cargoDrop, m_price = 10, m_stack = 1,
-                    m_requiredGlobalKey = string.Empty, m_levelUpEffect = false,
-                    m_buyPlayerEffects = new EffectList(), m_icon = null,
-                    m_name = cargoDrop.m_itemData?.m_shared?.m_name ?? cargoDef.DisplayName,
-                    m_tooltip = "Transport cargo - 10 coins. Deliver it to the other trader in this biome.",
-                    m_buyKey = string.Empty, m_incrementKey = string.Empty, m_incrementAmount = 0
-                };
-                trader.m_items.Add(cargoItem);
-                NativeCargoBridge.Register(cargoItem, definition, npc.transform.position, cargoId);
-            }
+                m_prefab = cargoDrop, m_price = 10, m_stack = 1,
+                m_requiredGlobalKey = string.Empty, m_levelUpEffect = false,
+                m_buyPlayerEffects = new EffectList(), m_icon = null,
+                m_name = cargoDrop.m_itemData?.m_shared?.m_name ?? cargoDef.DisplayName,
+                m_tooltip = "Towar transportowy - 10 monet. Dostarcz dowolnemu innemu handlarzowi.",
+                m_buyKey = string.Empty, m_incrementKey = string.Empty, m_incrementAmount = 0
+            };
+            trader.m_items.Add(cargoItem);
+            NativeCargoBridge.Register(cargoItem, definition, npc.transform.position, cargoDef.Id);
         }
 
         if (trader.m_items.Count == 0)
