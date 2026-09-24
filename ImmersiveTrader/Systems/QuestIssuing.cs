@@ -93,13 +93,34 @@ public static class QuestIssuing
             return true;
         }
 
-        inventory.RemoveItem(coins.GetComponent<ItemDrop>().m_itemData.m_shared.m_name, price);
+        string coinName = coins.GetComponent<ItemDrop>().m_itemData.m_shared.m_name;
         var before = inventory.GetAllItems().ToList();
-        if (!inventory.AddItem(prefab, 1)) return true;
-        var item = inventory.GetAllItems().LastOrDefault(x => x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith(prefabName) && !before.Contains(x));
-        if (item == null) return true;
+
+        // Add and stamp the shipment before charging the player. If we cannot identify
+        // the exact newly-created stack, remove the untracked cargo and leave coins alone.
+        if (!inventory.AddItem(prefab, 1))
+            return true;
+
+        var item = inventory.GetAllItems().LastOrDefault(x =>
+            x.m_dropPrefab != null &&
+            x.m_dropPrefab.name.StartsWith(prefabName) &&
+            !before.Contains(x));
+
+        if (item == null)
+        {
+            var untracked = inventory.GetAllItems().LastOrDefault(x =>
+                x.m_dropPrefab != null &&
+                x.m_dropPrefab.name.StartsWith(prefabName) &&
+                !TreasureMetadata.TryRead(x, out _, out _));
+            if (untracked != null)
+                inventory.RemoveItem(untracked);
+
+            player.Message(MessageHud.MessageType.Center, $"{source.Name}: Shipment creation failed. No coins were charged.");
+            return true;
+        }
 
         TreasureMetadata.Stamp(item, source.Id, source.BiomeTier, sourcePosition.x, sourcePosition.z);
+        inventory.RemoveItem(coinName, price);
         player.Message(MessageHud.MessageType.Center, $"{source.Name}: Deliver {def.DisplayName} to the other trader.");
         return true;
     }
