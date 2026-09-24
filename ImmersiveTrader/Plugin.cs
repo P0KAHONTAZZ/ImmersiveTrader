@@ -65,6 +65,7 @@ public sealed class Plugin : BaseUnityPlugin
     private void OnVanillaPrefabsAvailable()
     {
         TreasureRegistry.Register();
+        ContractRegistry.Register();
         TraderRegistry.Initialize();
         RewardRegistry.Initialize();
         _rewardValidationPending = true;
