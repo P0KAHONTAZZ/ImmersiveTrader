@@ -86,6 +86,30 @@ public static class TraderActivityService
         return true;
     }
 
+
+    public static int CountPhysicalContracts(Player player, string traderId)
+    {
+        return player.GetInventory().GetAllItems().Count(item =>
+            ContractMetadata.TryRead(item, out _, out string issuer, out _) && issuer == traderId);
+    }
+
+    public static void RegisterKillOnPhysicalContracts(Player player, string prefabName)
+    {
+        foreach (var item in player.GetInventory().GetAllItems())
+        {
+            if (!ContractMetadata.TryRead(item, out string contractId, out _, out int progress))
+                continue;
+
+            var definition = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == contractId);
+            if (definition == null || progress >= definition.RequiredAmount || !PrefabMatches(prefabName, definition.TargetPrefab))
+                continue;
+
+            progress = Mathf.Min(progress + 1, definition.RequiredAmount);
+            ContractMetadata.SetProgress(item, progress);
+            player.Message(MessageHud.MessageType.TopLeft, $"{definition.Title}: {progress}/{definition.RequiredAmount}");
+        }
+    }
+
     public static void RegisterKill(Player player, string prefabName)
     {
         long playerId = player.GetPlayerID();
