@@ -53,11 +53,11 @@ public static class TraderReputation
             {
                 int tab = line.IndexOf('\t');
                 if (tab <= 0) continue;
-                if (line[0] == 'E')
+                if (line.StartsWith("EVENT:", StringComparison.Ordinal))
                 {
                     if (double.TryParse(line.Substring(tab + 1), NumberStyles.Float, CultureInfo.InvariantCulture, out double stamp))
                     {
-                        string eventKey = line.Substring(1, tab - 1);
+                        string eventKey = line.Substring(6, tab - 6);
                         if (!Events.TryGetValue(eventKey, out var list)) Events[eventKey] = list = new List<double>();
                         list.Add(stamp);
                     }
@@ -98,7 +98,7 @@ public static class TraderReputation
             if (next == current) return next;
             Directory.CreateDirectory(Paths.ConfigPath);
             File.AppendAllText(FilePath,
-                "E" + eventKey + "\t" + now.ToString("R", CultureInfo.InvariantCulture) + Environment.NewLine +
+                "EVENT:" + eventKey + "\t" + now.ToString("R", CultureInfo.InvariantCulture) + Environment.NewLine +
                 key + "\t" + next.ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
             history.Add(now);
             Points[key] = next;
