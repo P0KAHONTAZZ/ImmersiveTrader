@@ -145,8 +145,40 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         helmet.transform.localScale = attachment.localScale;
         foreach (var part in helmet.GetComponentsInChildren<Transform>(true))
             part.gameObject.SetActive(true);
-        foreach (var renderer in helmet.GetComponentsInChildren<Renderer>(true))
+        var renderers = helmet.GetComponentsInChildren<Renderer>(true)
+            .Where(renderer => renderer is MeshRenderer || renderer is SkinnedMeshRenderer)
+            .ToArray();
+        foreach (var renderer in renderers)
             renderer.enabled = true;
+        if (renderers.Length == 0)
+        {
+            Object.Destroy(helmet);
+            Plugin.Log.LogWarning($"Test helmet has no wearable mesh: {name}");
+            return false;
+        }
+
+        // An item prefab's attachment can inherit a large scale from the drop
+        // hierarchy. Measure its rendered world size on the live NPC and normalize
+        // against an actual head-sized target instead of guessing an item scale.
+        Bounds bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++)
+            bounds.Encapsulate(renderers[i].bounds);
+        float diameter = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+        if (diameter <= 0.001f)
+        {
+            Object.Destroy(helmet);
+            Plugin.Log.LogWarning($"Test helmet has empty bounds: {name}");
+            return false;
+        }
+        const float targetDiameter = 0.34f;
+        if (diameter > targetDiameter)
+            helmet.transform.localScale *= targetDiameter / diameter;
+
+        bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++)
+            bounds.Encapsulate(renderers[i].bounds);
+        helmet.transform.position += head.position + Vector3.up * 0.06f - bounds.center;
+        Plugin.Log.LogInfo($"Test helmet {traderId}: {name}, size {diameter:0.00}m -> {Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z):0.00}m.");
         return true;
     }
 
