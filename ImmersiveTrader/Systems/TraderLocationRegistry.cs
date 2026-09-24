@@ -28,10 +28,9 @@ public static class TraderLocationRegistry
             // removes it with the location, so no trader ZDO survives independently.
             var anchor = new GameObject($"ImmersiveTrader_Anchor_{trader.Id}");
             anchor.transform.SetParent(container.transform, false);
-            // The NPC belongs inside the original sealed house; fall back to the
-            // old central camp when a vanilla material is unavailable.
-            bool hasHouse = TraderHouseBuilder.Build(trader.Id, trader.Biome, container.transform);
-            anchor.transform.localPosition = hasHouse ? new Vector3(0f, 0.15f, 4f) : Vector3.zero;
+            // An open, level camp places the trader at its center.
+            anchor.transform.localPosition = Vector3.zero;
+            anchor.AddComponent<TraderSanctuary>();
             var traderAnchor = anchor.AddComponent<TraderLocationAnchor>();
             traderAnchor.TraderId = trader.Id;
 
