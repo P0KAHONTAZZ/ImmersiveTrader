@@ -21,6 +21,6 @@ internal static class ContractTooltipPatch
     {
         string progress = ContractMetadata.GetProgressText(__instance);
         if (string.IsNullOrEmpty(progress)) return;
-        __result += $"\n\n<color=orange>{progress}</color>";
+        __result += $"\n\n{progress}";
     }
 }
