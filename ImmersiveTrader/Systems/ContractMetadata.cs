@@ -151,7 +151,7 @@ public static class ContractMetadata
         string variant = item.m_customData.TryGetValue(VariantKey, out var stored) && stored == "Rare" ? " (Rare)" : string.Empty;
         return $"Cel: <color=yellow>{required} x {definition.TargetPrefab}</color>{variant}" +
             $"\nPostęp: <color=yellow>{progress}/{required}</color>" +
-            $"\nNagroda: <color=yellow>{definition.RewardSkillLevels:0} EXP ({rewardSkill})</color>" +
+            $"\nNagroda: <color=yellow>+{definition.RewardSkillLevels:0} poziomy ({rewardSkill})</color>" +
             $"\nWystawca: <color=yellow>{trader?.Name ?? issuer}</color>";
     }
 }
