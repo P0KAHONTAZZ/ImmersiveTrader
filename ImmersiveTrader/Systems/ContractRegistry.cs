@@ -47,7 +47,7 @@ public static class ContractRegistry
             Plugin.Log.LogWarning("Contract scroll uses temporary Coins icon until dedicated art is available.");
         }
         shared.m_name = title;
-        shared.m_description = "Hunting contract. Its title is written by the issuing trader. Carry it while hunting; progress is stored on this scroll and survives world reloads. Return it to the issuer when complete.";
+        shared.m_description = "Kontrakt łowiecki. Noś zwój podczas polowania i oddaj go wystawcy po wykonaniu zadania.";
         shared.m_weight = 0.1f;
         shared.m_maxStackSize = 1;
         shared.m_teleportable = true;
