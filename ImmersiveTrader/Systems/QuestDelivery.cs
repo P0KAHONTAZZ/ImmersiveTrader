@@ -82,6 +82,7 @@ public static class QuestDelivery
 
         // Reward capacity and prefab were verified above. Remove exactly the stamped
         // shipment selected for this delivery, then grant the route reward.
+        var shipmentSnapshot = TreasureMetadata.Capture(carried.Item);
         player.GetInventory().RemoveItem(carried.Item);
         if (!GiveReward(player, rewardPrefab, amount))
         {
@@ -94,7 +95,7 @@ public static class QuestDelivery
                     !TreasureMetadata.TryRead(x, out _, out _));
                 if (restored != null)
                 {
-                    TreasureMetadata.Stamp(restored, carried.SourceTraderId, carried.SourceBiomeTier);
+                    TreasureMetadata.Restore(restored, shipmentSnapshot);
                 }
             }
             player.Message(MessageHud.MessageType.Center, $"{target.Name}: Payment failed; shipment was returned.");
