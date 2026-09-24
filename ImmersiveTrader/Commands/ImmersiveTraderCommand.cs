@@ -251,19 +251,19 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         switch (args[1].ToLowerInvariant())
         {
             case "offer":
-                var offers = TraderActivityService.GetOffers(player, trader.Id);
-                if (offers.Length == 0) c.AddString("All contracts complete.");
+                var offers = TraderActivityRegistry.Activities.Where(x => x.TraderId == trader.Id).ToArray();
+                if (offers.Length == 0) c.AddString("No contracts offered by this trader.");
                 else foreach (var offer in offers)
                     c.AddString($"{offer.Title}: {offer.Description} Target={offer.TargetPrefab} x{offer.RequiredAmount}, reward=+{offer.RewardSkillLevels:0} {offer.RewardSkill}");
                 break;
             case "accept":
-                c.AddString(TraderActivityService.TryAccept(player, trader.Id) ? "Task accepted." : "Could not accept task.");
+                c.AddString("Take a physical contract scroll from this trader's shop to accept a task.");
                 break;
             case "status":
                 c.AddString(TraderActivityService.GetStatus(player, trader.Id));
                 break;
             case "turnin":
-                c.AddString(TraderActivityService.TryTurnIn(player, trader.Id) ? "Task interaction handled." : "No active task.");
+                c.AddString(TraderActivityService.TryTurnInPhysical(player, trader.Id) ? "Task interaction handled." : "No active task.");
                 break;
             default:
                 c.AddString("Usage: it task <offer|accept|status|turnin> <traderId>");
