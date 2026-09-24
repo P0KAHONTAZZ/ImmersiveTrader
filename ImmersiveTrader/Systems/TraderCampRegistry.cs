@@ -90,6 +90,23 @@ public static class TraderCampRegistry
             pieces.Add(P3("stone_floor_2x2", 0f, -0.25f, 5f));
             pieces.Add(P3("stone_floor_2x2", 2f, -0.25f, 5f));
         }
+        // A few props give each trader a recognisable trade without blocking the counter.
+        switch (id)
+        {
+            case "troldad": pieces.Add(P("wood_stack", 4f, -3f)); break;
+            case "grimvald": pieces.Add(P("wood_core_stack", 4f, -3f)); break;
+            case "rudy_warg": pieces.Add(P("bone_stack", 4f, -3f)); break;
+            case "mokra_dzika": pieces.Add(P("piece_chest_barrel", 4f, -3f)); break;
+            case "encek": pieces.Add(P("bone_stack", -4f, -3f)); break;
+            case "hrothgar": pieces.Add(P("stone_pile", 4f, -3f)); break;
+            case "ylva_frost": pieces.Add(P("piece_groundtorch_green", 4f, -3f)); break;
+            case "bjarki_goldtooth": pieces.Add(P("piece_chest_barrel", -4f, -3f)); break;
+            case "ragnar_turnipson": pieces.Add(P("piece_preptable", 4f, -3f)); break;
+            case "cmok": pieces.Add(P("piece_groundtorch_green", 4f, -3f)); break;
+            case "grelka": pieces.Add(P("stone_pile", -4f, -3f)); break;
+            case "spalony_zenek": pieces.Add(P("bone_stack", 4f, -3f)); break;
+            case "skjold_cinderborn": pieces.Add(P("stone_pile", 4f, -3f)); break;
+        }
         pieces.AddRange(details);
         return new TraderCampDefinition(id, pieces.ToArray());
     }
