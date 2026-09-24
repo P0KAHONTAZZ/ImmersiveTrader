@@ -137,7 +137,13 @@ public static class NativeTraderWindow
         }
 
         if (trader.m_items.Count == 0)
+        {
+            UnityEngine.Object.Destroy(helper);
             return false;
+        }
+
+        int cargoRows = trader.m_items.Count(x => NativeCargoBridge.IsCargo(x));
+        Plugin.Log.LogInfo($"Native shop {definition.Id}: {offers.Length} ordinary configured, {cargoRows} cargo rows, {trader.m_items.Count} total rows.");
 
         gui.Show(trader);
         return true;
