@@ -19,6 +19,13 @@ public static class NativeContractBridge
     {
         if (!Sales.TryGetValue(item, out var sale)) return false;
 
+        if (sale.Contract.TraderId != sale.Source.Id)
+        {
+            Plugin.Log.LogWarning($"Rejected contract sale with mismatched issuer: {sale.Contract.Id}, contract={sale.Contract.TraderId}, shop={sale.Source.Id}");
+            player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: This contract is not mine to issue.");
+            return true;
+        }
+
         if (TraderActivityService.CountPhysicalContracts(player, sale.Source.Id) >= 2)
         {
             player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: Finish one of my two contracts first.");
