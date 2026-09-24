@@ -11,12 +11,14 @@ namespace ImmersiveTrader;
 /// <summary>Reputation belongs to the character and world, separately for each issuing trader.</summary>
 public static class TraderReputation
 {
-    // Three delivered shipments earn as much reputation as one finished contract.
-    // Three shipments and two contracts per seven-day cycle yield nine points;
-    // four cycles reach the 36-point cap.
-    public const int CargoPoints = 1;
-    public const int ContractPoints = 3;
-    public const int Maximum = 36;
+    // Five distinct cargo offers and two active contracts per trader renew every seven days.
+    // Typical pace: three routes one biome apart and two contracts = 16 points per week.
+    // All five cargo routes plus two contracts = 24 points per week.
+    public const int ContractPoints = 2;
+    public const int Maximum = 64;
+
+    public static int CargoPoints(int sourceBiomeTier, int targetBiomeTier)
+        => 2 * (Math.Min(4, Math.Abs(sourceBiomeTier - targetBiomeTier)) + 1);
 
     private static readonly object Sync = new();
     private static readonly Dictionary<string, int> Points = new();
@@ -77,7 +79,7 @@ public static class TraderReputation
         }
     }
 
-    public static int Add(Player player, string trader, int amount)
+    public static int Add(Player player, string trader, int amount, bool cargo = false)
     {
         if (amount <= 0) return Get(player, trader);
         lock (Sync)
@@ -85,9 +87,9 @@ public static class TraderReputation
             Load();
             string key = Key(player, trader);
             int current = Points.TryGetValue(key, out int value) ? value : 0;
-            string eventKey = key + "|" + amount;
+            string eventKey = key + "|" + (cargo ? "cargo" : "contract");
             double now = ZNet.instance.GetTimeSeconds();
-            int quota = amount == CargoPoints ? 3 : amount == ContractPoints ? 2 : 0;
+            int quota = cargo ? 5 : 2;
             if (quota == 0) return current;
             if (!Events.TryGetValue(eventKey, out var history)) Events[eventKey] = history = new List<double>();
             history.RemoveAll(stamp => stamp > now || now - stamp >= 7d * 1800d);
@@ -107,7 +109,15 @@ public static class TraderReputation
     public static string Describe(Player player, string trader)
     {
         int points = Get(player, trader);
-        int level = Math.Min(4, points / 9);
-        return $"{points}/{Maximum} (poziom {level}/4)";
+        int level = points >= 64 ? 5 : points >= 44 ? 4 : points >= 28 ? 3 : points >= 12 ? 2 : 1;
+        string name = level switch
+        {
+            1 => "Sceptyczny",
+            2 => "Neutralny",
+            3 => "Życzliwy",
+            4 => "Przyjacielski",
+            _ => "Zaufany"
+        };
+        return $"{points}/{Maximum} (poziom {level}/5: {name})";
     }
 }
