@@ -75,6 +75,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
     private static void FindAllLocations(Terminal c)
     {
         if (Player.m_localPlayer == null || ZoneSystem.instance == null) { c.AddString("Enter a world first."); return; }
+        c.AddString($"ZoneSystem location instances visible here: {ZoneSystem.instance.m_locationInstances.Count}; server={ZNet.instance?.IsServer()}.");
         var traders = TraderRegistry.Traders.Where(t => !t.IsLegendary).ToList();
         int placed = 0;
         int total = 0;
@@ -94,7 +95,16 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         }
         c.AddString($"ImmersiveTrader locations: {placed}/{traders.Count} traders placed; {total} locations pinned.");
         if (missing.Count > 0)
+        {
             c.AddString($"Missing trader IDs: {string.Join(", ", missing)}");
+            foreach (var sample in ZoneSystem.instance.m_locationInstances.Values
+                         .Where(x => x.m_location != null)
+                         .Select(x => x.m_location.m_prefabName)
+                         .Where(x => x != null && x.IndexOf("ImmersiveTrader", StringComparison.OrdinalIgnoreCase) >= 0)
+                         .Distinct().Take(8))
+                c.AddString($"Found location name: {sample}");
+            c.AddString("If this is a multiplayer client, this local list may be incomplete; check the host log before concluding locations are missing.");
+        }
     }
 
     private static int AddLocationPins(Terminal c, string traderId, bool reportMissing = true)
