@@ -16,7 +16,12 @@ public static class QuestDelivery
 
         var table = target.IsLegendary ? LegendaryRewardRegistry.Rewards : RewardRegistry.Rewards;
         var reward = table.FirstOrDefault(x => x.TraderId == target.Id && x.TreasureId == carried.TreasureId);
-        if (reward == null) return false;
+        if (reward == null)
+        {
+            Plugin.Log.LogWarning($"No cargo route: {carried.TreasureId} ({carried.SourceTraderId}) -> {target.Id}");
+            player.Message(MessageHud.MessageType.Center, $"{target.Name}: I have no contract for this shipment.");
+            return true;
+        }
 
         if (!targetTierUnlocked)
         {
@@ -57,8 +62,26 @@ public static class QuestDelivery
             return true;
         }
 
+        // Reward capacity and prefab were verified above. Remove exactly the stamped
+        // shipment selected for this delivery, then grant the route reward.
         player.GetInventory().RemoveItem(carried.Item);
-        GiveReward(player, rewardPrefab, amount);
+        if (!GiveReward(player, rewardPrefab, amount))
+        {
+            // Defensive rollback: this should be unreachable after CanAddItem, but never
+            // consume a shipment if the inventory API unexpectedly rejects the payment.
+            if (player.GetInventory().AddItem(carried.Item.m_dropPrefab, 1))
+            {
+                var restored = player.GetInventory().GetAllItems().LastOrDefault(x =>
+                    x.m_dropPrefab == carried.Item.m_dropPrefab &&
+                    !TreasureMetadata.TryRead(x, out _, out _));
+                if (restored != null)
+                {
+                    TreasureMetadata.Stamp(restored, carried.SourceTraderId, carried.SourceBiomeTier);
+                }
+            }
+            player.Message(MessageHud.MessageType.Center, $"{target.Name}: Payment failed; shipment was returned.");
+            return true;
+        }
 
         string message = target.IsLegendary
             ? $"???: Those who trade in gold count coins. Those who trade in favors count roads. Received: {amount} {reward.ItemPrefab}"
@@ -71,15 +94,17 @@ public static class QuestDelivery
         return true;
     }
 
-    private static void GiveReward(Player player, GameObject prefab, int amount)
+    private static bool GiveReward(Player player, GameObject prefab, int amount)
     {
         int left = amount;
         int stack = Mathf.Max(1, prefab.GetComponent<ItemDrop>().m_itemData.m_shared.m_maxStackSize);
         while (left > 0)
         {
             int give = Mathf.Min(stack, left);
-            player.GetInventory().AddItem(prefab, give);
+            if (!player.GetInventory().AddItem(prefab, give))
+                return false;
             left -= give;
         }
+        return true;
     }
 }
