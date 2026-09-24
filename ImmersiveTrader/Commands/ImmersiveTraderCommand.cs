@@ -278,7 +278,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
                 var offers = TraderActivityRegistry.Activities.Where(x => x.TraderId == trader.Id).ToArray();
                 if (offers.Length == 0) c.AddString("No contracts offered by this trader.");
                 else foreach (var offer in offers)
-                    c.AddString($"{offer.Title}: {offer.Description} Target={offer.TargetPrefab} x{offer.RequiredAmount}, reward=+{offer.RewardSkillLevels:0} {offer.RewardSkill}");
+                    c.AddString($"{offer.Title}: {offer.Description} Target={offer.TargetPrefab} x{offer.RequiredAmount}, reward=+{offer.RewardSkillLevels:0} levels {offer.RewardSkill}");
                 break;
             case "accept":
                 c.AddString("Take a physical contract scroll from this trader's shop to accept a task.");
