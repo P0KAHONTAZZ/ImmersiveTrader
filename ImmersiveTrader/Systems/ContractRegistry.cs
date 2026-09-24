@@ -1,4 +1,3 @@
-using System.Linq;
 using Jotunn.Entities;
 using Jotunn.Managers;
 
@@ -14,7 +13,7 @@ public static class ContractRegistry
         var custom = new CustomItem(PrefabName, source);
         var shared = custom.ItemDrop.m_itemData.m_shared;
         shared.m_name = "Hunting Contract";
-        shared.m_description = "A sealed hunting contract. Carry it while hunting and return it to the issuing trader when complete.";
+        shared.m_description = "Hunting contract. Its title is written by the issuing trader. Carry it while hunting; progress is stored on this scroll and survives world reloads. Return it to the issuer when complete.";
         shared.m_weight = 0.1f;
         shared.m_maxStackSize = 1;
         shared.m_teleportable = true;
