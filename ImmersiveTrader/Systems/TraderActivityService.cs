@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using ImmersiveTrader.Models;
 using UnityEngine;
@@ -30,32 +29,6 @@ public static class TraderActivityService
         }
         return false;
     }
-
-    public static bool TryTurnIn(Player player, string traderId)
-    {
-        long playerId = player.GetPlayerID();
-        var entry = Active.FirstOrDefault(x => x.Key.PlayerId == playerId &&
-            x.Value.Definition.TraderId == traderId && x.Value.Completed);
-        if (entry.Value == null)
-        {
-            var running = Active.FirstOrDefault(x => x.Key.PlayerId == playerId && x.Value.Definition.TraderId == traderId);
-            if (running.Value == null) return false;
-            player.Message(MessageHud.MessageType.Center,
-                $"{running.Value.Definition.Title}: {running.Value.Progress}/{running.Value.Definition.RequiredAmount}");
-            return true;
-        }
-
-        var state = entry.Value;
-        player.RaiseSkill(state.Definition.RewardSkill, state.Definition.RewardSkillLevels);
-        CompletedOnce.Add((playerId, state.Definition.Id));
-        Active.Remove(entry.Key);
-
-        int activeTotal = Active.Count(x => x.Key.PlayerId == playerId);
-        player.Message(MessageHud.MessageType.Center,
-            $"Contract complete: +{state.Definition.RewardSkillLevels:0} {state.Definition.RewardSkill} | active contracts {activeTotal}/5");
-        return true;
-    }
-
 
     public static int CountPhysicalContracts(Player player, string traderId)
     {
