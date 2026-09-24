@@ -77,13 +77,15 @@ public static class NativeContractBridge
             return true;
         }
 
-        ContractMetadata.Stamp(created, sale.Contract.Id, sale.Source.Id, TraderActivityService.GetWorldDayPublic());
+        bool rare = UnityEngine.Random.value < UnityEngine.Mathf.Clamp01(Plugin.RareContractChance.Value);
+        int required = rare ? (sale.Contract.RequiredAmount + 1) / 2 : sale.Contract.RequiredAmount;
+        ContractMetadata.Stamp(created, sale.Contract.Id, sale.Source.Id, TraderActivityService.GetWorldDayPublic(), required, rare);
         created.m_crafterName = sale.Contract.Title;
         Plugin.Log.LogInfo($"Contract scroll issued: {sale.Contract.Id}, issuer={sale.Source.Id}, " +
             $"inventoryItems={player.GetInventory().GetAllItems().Count}, " +
             $"validScrolls={TraderActivityService.CountPhysicalContracts(player, sale.Source.Id)}");
         player.Message(MessageHud.MessageType.Center,
-            $"Kontrakt w plecaku: {sale.Contract.Title}. Cel: {sale.Contract.RequiredAmount} x {sale.Contract.TargetPrefab}. Nagroda: {sale.Contract.RewardSkillLevels:0} EXP ({sale.Contract.RewardSkill}).");
+            $"Kontrakt w plecaku: {sale.Contract.Title} ({(rare ? "Rare" : "Normal")}). Cel: {required} x {sale.Contract.TargetPrefab}. Nagroda: {sale.Contract.RewardSkillLevels:0} EXP ({sale.Contract.RewardSkill}).");
         return true;
     }
 }
