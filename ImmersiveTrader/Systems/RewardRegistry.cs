@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using ImmersiveTrader.Models;
 
+// ObjectDB is available when TraderRegistry.Initialize runs.
+
 namespace ImmersiveTrader;
 
 /// <summary>910 cargo routes: 70 goods x every other regular trader. Base amounts mirror the balance sheet.</summary>
@@ -920,6 +922,19 @@ public static class RewardRegistry
         Add("cmok", "skjold_fire_medicine", "BlackMarble", 10);
         Add("grelka", "skjold_fire_medicine", "SoftTissue", 4);
         Add("spalony_zenek", "skjold_fire_medicine", "LoxPelt", 8);
+    }
+
+    public static void Validate()
+    {
+        int missing = 0;
+        foreach (var reward in Rewards)
+        {
+            if (ObjectDB.instance?.GetItemPrefab(reward.ItemPrefab) != null) continue;
+            missing++;
+            Plugin.Log.LogWarning($"Cargo reward prefab missing: {reward.ItemPrefab} ({reward.TreasureId} -> {reward.TraderId})");
+        }
+
+        Plugin.Log.LogInfo($"Cargo routes ready: {Rewards.Count}; missing reward prefabs: {missing}");
     }
 
     private static void Add(string traderId, string treasureId, string itemPrefab, int baseAmount)
