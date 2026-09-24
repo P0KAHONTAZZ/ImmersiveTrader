@@ -103,7 +103,8 @@ public static class QuestDelivery
         }
 
         int previousReputation = TraderReputation.Get(player, carried.SourceTraderId);
-        int reputation = TraderReputation.Add(player, carried.SourceTraderId, TraderReputation.CargoPoints);
+        int reputation = TraderReputation.Add(player, carried.SourceTraderId,
+            TraderReputation.CargoPoints(carried.SourceBiomeTier, target.BiomeTier), cargo: true);
 
         string message = target.IsLegendary
             ? $"???: Those who trade in gold count coins. Those who trade in favors count roads. Received: {amount} {reward.ItemPrefab}"
