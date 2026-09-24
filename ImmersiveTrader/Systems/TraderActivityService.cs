@@ -8,7 +8,6 @@ public static class TraderActivityService
 {
     public static bool TryTurnInPhysical(Player player, string traderId)
     {
-        ItemDrop.ItemData? incomplete = null;
         TraderActivityDefinition? incompleteDefinition = null;
         int incompleteProgress = 0;
 
@@ -26,7 +25,6 @@ public static class TraderActivityService
             }
             if (progress < definition.RequiredAmount)
             {
-                incomplete ??= item;
                 incompleteDefinition ??= definition;
                 incompleteProgress = progress;
                 continue;
@@ -79,7 +77,7 @@ public static class TraderActivityService
             {
                 if (!ContractMetadata.TryRead(item, out string contractId, out string issuer, out int progress) || issuer != traderId)
                     return null;
-                var definition = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == contractId);
+                var definition = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == contractId && x.TraderId == issuer);
                 return definition == null ? null : $"{definition.Title}: {progress}/{definition.RequiredAmount}";
             })
             .Where(x => x != null)
