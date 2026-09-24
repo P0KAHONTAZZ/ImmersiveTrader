@@ -67,7 +67,7 @@ public static class TraderActivityService
                 if (!ContractMetadata.TryRead(item, out string contractId, out string issuer, out int progress) || issuer != traderId)
                     return null;
                 var definition = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == contractId && x.TraderId == issuer);
-                return definition == null ? null : $"{definition.Title}: {progress}/{definition.RequiredAmount}";
+                return definition == null ? null : $"{definition.Title}: {progress}/{ContractMetadata.GetRequiredAmount(item, definition.RequiredAmount)}";
             })
             .Where(x => x != null)
             .ToArray();
