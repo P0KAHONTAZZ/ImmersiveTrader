@@ -13,7 +13,7 @@ namespace ImmersiveTrader.Commands;
 public sealed class ImmersiveTraderCommand : ConsoleCommand
 {
     public override string Name => "it";
-    public override string Help => "ImmersiveTrader tools: it help | list | find <id> | findall | spawn <id> | look <id> | diagnose | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId> | rep <traderId> [add <points>]";
+    public override string Help => "ImmersiveTrader tools: it help | list | find <id> | findall | spawn <id> | look <id> | diagnose | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId> | rep <traderId> [add <points>|reset]";
 
     public override void Run(string[] args, Terminal context)
     {
@@ -56,13 +56,14 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it task <offer|accept|status|turnin> <traderId>");
         c.AddString("  it rep <traderId>  - show this trader reputation");
         c.AddString("  it rep <traderId> add <points>  - add reputation points (max 64)");
+        c.AddString("  it rep <traderId> reset  - reset reputation for this trader to 0");
     }
 
     private static void ReputationCommand(string[] args, Terminal c)
     {
         var player = Player.m_localPlayer;
         if (player == null) { c.AddString("Enter a world first."); return; }
-        if (args.Length != 2 && args.Length != 4)
+        if (args.Length != 2 && args.Length != 3 && args.Length != 4)
         {
             c.AddString("Usage: it rep <traderId> [add <points>]");
             return;
@@ -70,6 +71,12 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         var trader = FindTrader(args[1]);
         if (trader == null || trader.IsLegendary) { c.AddString("Unknown regular trader. Use 'it list'."); return; }
 
+        if (args.Length == 3)
+        {
+            if (!Eq(args[2], "reset")) { c.AddString("Usage: it rep <traderId> reset"); return; }
+            int removed = TraderReputation.Reset(player, trader.Id);
+            c.AddString($"{trader.Name}: reputation reset to 0 (removed {removed} points).");
+        }
         if (args.Length == 4)
         {
             if (!Eq(args[2], "add") ||
