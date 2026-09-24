@@ -140,9 +140,9 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
 
         var helmet = Object.Instantiate(attachment.gameObject, head);
         helmet.name = $"ImmersiveTrader_Outfit_{name}";
-        helmet.transform.localPosition = Vector3.zero;
-        helmet.transform.localRotation = Quaternion.identity;
-        helmet.transform.localScale = Vector3.one;
+        helmet.transform.localPosition = attachment.localPosition;
+        helmet.transform.localRotation = attachment.localRotation;
+        helmet.transform.localScale = attachment.localScale;
         foreach (var part in helmet.GetComponentsInChildren<Transform>(true))
             part.gameObject.SetActive(true);
         foreach (var renderer in helmet.GetComponentsInChildren<Renderer>(true))
@@ -168,7 +168,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         mounted.name = $"ImmersiveTrader_Outfit_{prefabName}";
         mounted.transform.localPosition = Vector3.zero;
         mounted.transform.localRotation = Quaternion.identity;
-        mounted.transform.localScale = Vector3.one;
+        mounted.transform.localScale = skin.localScale;
 
         var meshes = mounted.GetComponentsInChildren<SkinnedMeshRenderer>(true);
         if (meshes.Length == 0)
