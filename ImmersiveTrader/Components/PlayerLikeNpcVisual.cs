@@ -105,7 +105,49 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         int attached = 0;
         if (AttachSkin(outfit.Chest, visual, bones)) attached++;
         if (AttachSkin(outfit.Legs, visual, bones)) attached++;
-        Plugin.Log.LogInfo($"Test outfit {TraderId}: {attached}/2 pieces ({outfit.Chest}, {outfit.Legs}).");
+        bool helmet = AttachHelmet(TraderId, visual, bones);
+        Plugin.Log.LogInfo($"Test outfit {TraderId}: {attached}/2 armor pieces, helmet={helmet} ({outfit.Chest}, {outfit.Legs}).");
+    }
+
+    private static readonly Dictionary<string, string> TestHelmets = new()
+    {
+        ["midka"] = "HelmetLeather", ["grimvald"] = "HelmetTrollLeather",
+        ["rudy_warg"] = "HelmetBronze", ["mokra_dzika"] = "HelmetRoot",
+        ["encek"] = "HelmetIron", ["hrothgar"] = "HelmetDrake",
+        ["ylva_frost"] = "HelmetFenring", ["bjarki_goldtooth"] = "HelmetPadded",
+        ["ragnar_turnipson"] = "HelmetPadded", ["cmok"] = "HelmetMage",
+        ["grelka"] = "HelmetCarapace", ["spalony_zenek"] = "HelmetFlametal",
+        ["skjold_cinderborn"] = "HelmetMage_Ashlands"
+    };
+
+    private static bool AttachHelmet(string traderId, Transform visual,
+        Dictionary<string, Transform> bones)
+    {
+        if (!TestHelmets.TryGetValue(traderId, out var name)) return false;
+        if (!bones.TryGetValue("Head", out var head))
+        {
+            Plugin.Log.LogWarning($"Test outfit head bone unavailable for {traderId}.");
+            return false;
+        }
+        var item = PrefabManager.Instance.GetPrefab(name);
+        var attachment = item == null ? null : item.GetComponentsInChildren<Transform>(true)
+            .FirstOrDefault(child => child.name == "attach");
+        if (attachment == null)
+        {
+            Plugin.Log.LogWarning($"Test outfit helmet attachment unavailable: {name}");
+            return false;
+        }
+
+        var helmet = Object.Instantiate(attachment.gameObject, head);
+        helmet.name = $"ImmersiveTrader_Outfit_{name}";
+        helmet.transform.localPosition = Vector3.zero;
+        helmet.transform.localRotation = Quaternion.identity;
+        helmet.transform.localScale = Vector3.one;
+        foreach (var part in helmet.GetComponentsInChildren<Transform>(true))
+            part.gameObject.SetActive(true);
+        foreach (var renderer in helmet.GetComponentsInChildren<Renderer>(true))
+            renderer.enabled = true;
+        return true;
     }
 
     private static bool AttachSkin(string prefabName, Transform visual,
@@ -156,7 +198,15 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
             mesh.enabled = true;
         }
 
-        mounted.SetActive(true);
+        // Vanilla equipment attachment objects are disabled inside item prefabs.
+        // Activating only their root leaves the actual mesh hidden.
+        foreach (var part in mounted.GetComponentsInChildren<Transform>(true))
+            part.gameObject.SetActive(true);
+        foreach (var mesh in mounted.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+        {
+            mesh.enabled = true;
+            mesh.updateWhenOffscreen = true;
+        }
         return true;
     }
 
