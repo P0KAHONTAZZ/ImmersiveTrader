@@ -68,29 +68,52 @@ public static class HaldorShieldBuilder
 
         protection.transform.localPosition = Vector3.zero;
         protection.transform.localRotation = Quaternion.identity;
+        protection.transform.localScale = area.transform.lossyScale;
 
         // Clone only the mesh object bearing the original ForceField material.
         // It can be a sibling of the EffectArea in Valheim's prefab hierarchy.
-        if (visual.GetComponent<Trader>() != null || visual.GetComponent<Character>() != null)
+        var visualRoot = visual.transform;
+        while (visualRoot.parent != null && visualRoot.parent != source.transform &&
+               visualRoot.parent.GetComponentsInChildren<Trader>(true).Length == 0 &&
+               visualRoot.parent.GetComponentsInChildren<Character>(true).Length == 0)
+            visualRoot = visualRoot.parent;
+
+        if (visualRoot.GetComponentsInChildren<Trader>(true).Length != 0 ||
+            visualRoot.GetComponentsInChildren<Character>(true).Length != 0)
         {
             UnityEngine.Object.DestroyImmediate(protection);
-            Plugin.Log.LogWarning("Haldor's ForceField mesh shares the merchant object; refusing to clone the NPC.");
+            Plugin.Log.LogWarning("ForceField is part of the Haldor character; refusing to duplicate him.");
             return false;
         }
-        var bubble = UnityEngine.Object.Instantiate(visual.gameObject, parent);
+
+        var bubble = UnityEngine.Object.Instantiate(visualRoot.gameObject, parent);
         bubble.name = "ImmersiveTrader_HaldorForceField";
-        for (int i = bubble.transform.childCount - 1; i >= 0; i--)
-            UnityEngine.Object.DestroyImmediate(bubble.transform.GetChild(i).gameObject);
-        foreach (var effect in bubble.GetComponents<EffectArea>())
+        bubble.transform.localPosition = visualRoot.position - area.transform.position;
+        bubble.transform.localRotation = visualRoot.rotation;
+        bubble.transform.localScale = visualRoot.lossyScale;
+        foreach (var effect in bubble.GetComponentsInChildren<EffectArea>(true))
             UnityEngine.Object.DestroyImmediate(effect);
-        foreach (var collider in bubble.GetComponents<Collider>())
-            UnityEngine.Object.DestroyImmediate(collider);
-        bubble.transform.localPosition = visual.transform.position - area.transform.position;
-        bubble.transform.localRotation = visual.transform.rotation;
-        bubble.transform.localScale = visual.transform.lossyScale;
+        foreach (var renderer in bubble.GetComponentsInChildren<Renderer>(true))
+            if (renderer.sharedMaterials.Any(material => material != null &&
+                material.name.IndexOf("ForceField", StringComparison.OrdinalIgnoreCase) >= 0))
+                renderer.enabled = true;
+
+        var sourceRadius = area.GetComponent<SphereCollider>();
+        var copyRadius = protection.GetComponent<SphereCollider>();
+        float sourceWorldRadius = sourceRadius == null ? 0f :
+            sourceRadius.radius * Mathf.Max(area.transform.lossyScale.x, area.transform.lossyScale.z);
+        float copyWorldRadius = copyRadius == null ? 0f :
+            copyRadius.radius * Mathf.Max(protection.transform.lossyScale.x, protection.transform.lossyScale.z);
+        if (copyWorldRadius < 10f)
+        {
+            UnityEngine.Object.DestroyImmediate(bubble);
+            UnityEngine.Object.DestroyImmediate(protection);
+            Plugin.Log.LogWarning($"Haldor protection radius too small: {copyWorldRadius:0.0}m; source={sourceWorldRadius:0.0}m.");
+            return false;
+        }
 
         if (!_loggedDetails)
-            Plugin.Log.LogInfo($"Haldor shield copied: area={area.name}, visual={visual.name}, radius={protection.GetComponent<SphereCollider>()?.radius}.");
+            Plugin.Log.LogInfo($"Haldor shield copied: area={area.name}, visual={visualRoot.name}, source radius={sourceWorldRadius:0.0}m, copy radius={copyWorldRadius:0.0}m.");
         _loggedDetails = true;
         return true;
     }
