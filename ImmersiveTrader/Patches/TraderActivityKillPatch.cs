@@ -1,4 +1,5 @@
 using HarmonyLib;
+using System.Runtime.CompilerServices;
 
 namespace ImmersiveTrader.Patches;
 
@@ -10,7 +11,9 @@ namespace ImmersiveTrader.Patches;
 [HarmonyPatch]
 internal static class TraderActivityKillPatch
 {
-    private static readonly System.Collections.Generic.Dictionary<Character, long> LastPlayerHit = new();
+    // Destroyed or despawned creatures must not be kept alive by the tracking table.
+    private sealed class Attribution { internal long PlayerId; }
+    private static readonly ConditionalWeakTable<Character, Attribution> LastPlayerHit = new();
 
     [HarmonyPatch(typeof(Character), nameof(Character.Damage))]
     [HarmonyPrefix]
@@ -19,23 +22,22 @@ internal static class TraderActivityKillPatch
         if (__instance == null || hit == null || __instance.IsPlayer()) return;
         var attacker = hit.GetAttacker();
         if (attacker is Player player)
-            LastPlayerHit[__instance] = player.GetPlayerID();
+            LastPlayerHit.GetValue(__instance, _ => new Attribution()).PlayerId = player.GetPlayerID();
     }
 
     [HarmonyPatch(typeof(Character), "OnDeath")]
     [HarmonyPrefix]
     private static void DeathPrefix(Character __instance)
     {
-        var local = Player.m_localPlayer;
-        if (local == null || __instance == null || __instance.IsPlayer()) return;
+        if (__instance == null || __instance.IsPlayer()) return;
 
-        if (!LastPlayerHit.TryGetValue(__instance, out long playerId))
+        if (!LastPlayerHit.TryGetValue(__instance, out var attribution))
             return;
 
-        // Always discard attribution when the character dies; otherwise long sessions
-        // retain dead Character references indefinitely.
+        // Explicitly clear dead creatures even while no local player exists.
         LastPlayerHit.Remove(__instance);
-        if (playerId != local.GetPlayerID())
+        var local = Player.m_localPlayer;
+        if (local == null || attribution.PlayerId != local.GetPlayerID())
             return;
         string prefabName = Utils.GetPrefabName(__instance.gameObject);
         TraderActivityService.RegisterKillOnPhysicalContracts(local, prefabName);
