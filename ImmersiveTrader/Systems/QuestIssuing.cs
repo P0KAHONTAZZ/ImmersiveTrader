@@ -65,6 +65,13 @@ public static class QuestIssuing
         var def = TreasureRegistry.Treasures.FirstOrDefault(x => x.Id == treasureId);
         if (def == null) return false;
 
+        if (TreasureRegistry.GetOwnerTraderId(treasureId) != source.Id)
+        {
+            Plugin.Log.LogWarning($"Rejected cargo sale with mismatched owner: {treasureId} from {source.Id}");
+            player.Message(MessageHud.MessageType.Center, $"{source.Name}: This shipment is not mine to sell.");
+            return true;
+        }
+
         // Cargo capacity is per issuer, not global: the player may carry at most
         // two active shipments originating from this specific trader.
         int activeFromSource = InventoryTreasureService.GetCarried(player)
