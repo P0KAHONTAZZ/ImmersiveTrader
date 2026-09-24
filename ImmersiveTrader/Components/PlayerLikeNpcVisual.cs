@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Jotunn.Managers;
 using UnityEngine;
 
@@ -71,5 +74,89 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
             renderer.enabled = true;
 
         copy.SetActive(true);
+        ApplyTestOutfit(copy.transform);
     }
+    private static readonly Dictionary<string, (string Chest, string Legs)> TestOutfits = new()
+    {
+        ["midka"] = ("ArmorLeatherChest", "ArmorLeatherLegs"),
+        ["grimvald"] = ("ArmorTrollLeatherChest", "ArmorTrollLeatherLegs"),
+        ["rudy_warg"] = ("ArmorBronzeChest", "ArmorBronzeLegs"),
+        ["mokra_dzika"] = ("ArmorRootChest", "ArmorRootLegs"),
+        ["encek"] = ("ArmorIronChest", "ArmorIronLegs"),
+        ["hrothgar"] = ("ArmorWolfChest", "ArmorWolfLegs"),
+        ["ylva_frost"] = ("ArmorFenringChest", "ArmorFenringLegs"),
+        ["bjarki_goldtooth"] = ("ArmorPaddedCuirass", "ArmorPaddedGreaves"),
+        ["ragnar_turnipson"] = ("ArmorFenringChest", "ArmorFenringLegs"),
+        ["cmok"] = ("ArmorMageChest", "ArmorMageLegs"),
+        ["grelka"] = ("ArmorCarapaceChest", "ArmorCarapaceLegs"),
+        ["spalony_zenek"] = ("ArmorFlametalChest", "ArmorFlametalLegs"),
+        ["skjold_cinderborn"] = ("ArmorMageChest_Ashlands", "ArmorMageLegs_Ashlands")
+    };
+
+    private void ApplyTestOutfit(Transform visual)
+    {
+        if (!TestOutfits.TryGetValue(TraderId, out var outfit)) return;
+
+        var bones = visual.GetComponentsInChildren<Transform>(true)
+            .GroupBy(bone => bone.name, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+
+        int attached = 0;
+        if (AttachSkin(outfit.Chest, visual, bones)) attached++;
+        if (AttachSkin(outfit.Legs, visual, bones)) attached++;
+        Plugin.Log.LogInfo($"Test outfit {TraderId}: {attached}/2 pieces ({outfit.Chest}, {outfit.Legs}).");
+    }
+
+    private static bool AttachSkin(string prefabName, Transform visual,
+        Dictionary<string, Transform> bones)
+    {
+        var item = PrefabManager.Instance.GetPrefab(prefabName);
+        var skin = item == null ? null : item.GetComponentsInChildren<Transform>(true)
+            .FirstOrDefault(child => child.name == "attach_skin");
+        if (skin == null)
+        {
+            Plugin.Log.LogWarning($"Test outfit prefab/attach_skin unavailable: {prefabName}");
+            return false;
+        }
+
+        // Equipment prefabs contain networked dropped-item roots. Copy only their
+        // attachment mesh, then bind its skinned meshes to the NPC's visual bones.
+        var mounted = Object.Instantiate(skin.gameObject, visual);
+        mounted.name = $"ImmersiveTrader_Outfit_{prefabName}";
+        mounted.transform.localPosition = Vector3.zero;
+        mounted.transform.localRotation = Quaternion.identity;
+        mounted.transform.localScale = Vector3.one;
+
+        var meshes = mounted.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+        if (meshes.Length == 0)
+        {
+            Object.Destroy(mounted);
+            Plugin.Log.LogWarning($"Test outfit has no skinned mesh: {prefabName}");
+            return false;
+        }
+
+        foreach (var mesh in meshes)
+        {
+            var original = mesh.bones;
+            var mapped = new Transform[original.Length];
+            for (int i = 0; i < original.Length; i++)
+            {
+                if (original[i] == null || !bones.TryGetValue(original[i].name, out mapped[i]))
+                {
+                    Object.Destroy(mounted);
+                    Plugin.Log.LogWarning($"Test outfit bone unavailable: {prefabName} / {original[i]?.name}");
+                    return false;
+                }
+            }
+
+            mesh.bones = mapped;
+            if (mesh.rootBone != null && bones.TryGetValue(mesh.rootBone.name, out var root))
+                mesh.rootBone = root;
+            mesh.enabled = true;
+        }
+
+        mounted.SetActive(true);
+        return true;
+    }
+
 }
