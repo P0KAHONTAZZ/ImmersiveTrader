@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ImmersiveTrader.Models;
 using Jotunn.Entities;
 using Jotunn.Managers;
@@ -114,4 +115,21 @@ public static class TreasureRegistry
         }
         Plugin.Log.LogInfo($"Cargo items registered: {registered}/{Treasures.Count}");
     }
+    public static string GetOwnerTraderId(string treasureId)
+    {
+        if (treasureId.StartsWith("rudy_")) return "rudy_warg";
+        if (treasureId.StartsWith("mokra_")) return "mokra_dzika";
+        if (treasureId.StartsWith("ylva_")) return "ylva_frost";
+        if (treasureId.StartsWith("bjarki_")) return "bjarki_goldtooth";
+        if (treasureId.StartsWith("ragnar_")) return "ragnar_turnipson";
+        if (treasureId.StartsWith("zenek_")) return "spalony_zenek";
+        if (treasureId.StartsWith("skjold_")) return "skjold_cinderborn";
+
+        int separator = treasureId.IndexOf('_');
+        return separator > 0 ? treasureId.Substring(0, separator) : string.Empty;
+    }
+
+    public static IEnumerable<TreasureDefinition> GetForTrader(string traderId)
+        => Treasures.Where(x => GetOwnerTraderId(x.Id) == traderId);
+
 }
