@@ -13,6 +13,8 @@ public static class NativeCargoBridge
 
     public static void Clear() => Sales.Clear();
 
+    public static bool IsCargo(Trader.TradeItem item) => Sales.ContainsKey(item);
+
     public static void Register(Trader.TradeItem item, TraderDefinition source, Vector3 position, string treasureId)
         => Sales[item] = new CargoSale(source, position, treasureId);
 
