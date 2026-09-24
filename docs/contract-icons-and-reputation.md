@@ -14,6 +14,6 @@ Użytkownik dostarczył `kg.ValheimEnchantmentSystem.dll` jako materiał do pó�
 
 ## Balans kontraktów
 
-Nowe kontrakty mają jeden wariant, bez losowania Rare. Liczba zabójstw zależy od rodzaju przeciwnika: Greydwarf Shaman/Brute 30, Troll 15, Wraith 15, Abomination 10; pełna lista jest w `TraderActivityRegistry`. Nagrody EXP rosną z biomem (Meadows 50–100, Black Forest 125–250, Swamp 250–450, Mountains 350–650, Plains 500–900, Mistlands 700–1200, Ashlands 1000–1500). Faktyczna liczba poziomów zależy od aktualnej umiejętności postaci i modyfikatorów świata. Już wydane zwoje zachowują zapisany cel i wariant.
+Nowe kontrakty mają jeden wariant, bez losowania Rare. Liczba zabójstw zależy od rodzaju przeciwnika: Greydwarf Shaman/Brute 30, Troll 15, Wraith 15, Abomination 10; pełna lista jest w `TraderActivityRegistry`. Każdy ukończony kontrakt zwiększa wskazaną umiejętność dokładnie o 2 poziomy od aktualnego poziomu postaci (maksymalnie do poziomu 100), zachowując procent postępu do kolejnego poziomu. Już wydane zwoje zachowują zapisany cel i wariant.
 
 Każdy rodzaj przeciwnika ma jedną stałą liczbę zabójstw we wszystkich kontraktach. Ewentualne zmniejszenie celu o 10% lub 20% będzie osobnym etapem systemu reputacji; obecnie nie jest włączone.
