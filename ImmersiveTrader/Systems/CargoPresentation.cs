@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using UnityEngine;
 using Jotunn.Managers;
 
@@ -9,6 +11,7 @@ namespace ImmersiveTrader;
 internal static class CargoPresentation
 {
     private static readonly Dictionary<string, Sprite> Icons = new();
+    private static Texture2D? packages;
     private static readonly Dictionary<string, string> Resources = new()
     {
         ["medicine"] = "HealthPotion", ["honey"] = "Honey", ["bandages"] = "LinenThread",
@@ -31,12 +34,15 @@ internal static class CargoPresentation
         ["spicy_food"] = "MorgenHeart", ["fire_medicine"] = "MeadFireResist"
     };
 
-    internal static Sprite? IconFor(string id)
+    internal static Sprite? IconFor(string id, string displayName)
     {
         if (Icons.TryGetValue(id, out var cached)) return cached;
-        var chest = PrefabManager.Instance.GetPrefab("piece_chest_wood");
-        var background = chest?.GetComponent<Piece>()?.m_icon;
-        if (background == null) return null;
+        packages ??= LoadPackages();
+        if (packages == null) return null;
+        int shape = displayName.StartsWith("Beczka", StringComparison.Ordinal) ? 1 :
+            displayName.StartsWith("Worek", StringComparison.Ordinal) ? 2 :
+            displayName.StartsWith("Paczka", StringComparison.Ordinal) || displayName.StartsWith("Wiązka", StringComparison.Ordinal) ? 3 :
+            displayName.StartsWith("Kosz", StringComparison.Ordinal) ? 4 : 0;
         Sprite? label = null;
         foreach (var pair in Resources)
         {
@@ -45,8 +51,6 @@ internal static class CargoPresentation
             label = sprites != null && sprites.Length > 0 ? sprites[0] : null;
             break;
         }
-        if (label == null) return Icons[id] = background;
-
         const int size = 128;
         var target = RenderTexture.GetTemporary(size, size, 0, RenderTextureFormat.ARGB32);
         var previous = RenderTexture.active;
@@ -58,8 +62,9 @@ internal static class CargoPresentation
             try
             {
                 GL.LoadPixelMatrix(0, size, size, 0);
-                Draw(background, new Rect(0, 0, size, size));
-                Draw(label, new Rect(44, 44, 42, 42));
+                Graphics.DrawTexture(new Rect(6, 3, 116, 122), packages,
+                    new Rect(shape / 5f, 0f, 1f / 5f, 1f), 0, 0, 0, 0);
+                if (label != null) Draw(label, new Rect(48, 54, 34, 34));
             }
             finally { GL.PopMatrix(); }
             var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
@@ -70,13 +75,25 @@ internal static class CargoPresentation
         catch (Exception error)
         {
             Plugin.Log.LogWarning($"Cargo icon {id}: {error.Message}");
-            return Icons[id] = background;
+            return null;
         }
         finally
         {
             RenderTexture.active = previous;
             RenderTexture.ReleaseTemporary(target);
         }
+    }
+
+    private static Texture2D? LoadPackages()
+    {
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ImmersiveTrader.Assets.CargoPackages.png");
+        if (stream == null) { Plugin.Log.LogWarning("Cargo package art missing from DLL."); return null; }
+        using var memory = new MemoryStream();
+        stream.CopyTo(memory);
+        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        if (!texture.LoadImage(memory.ToArray())) return null;
+        texture.filterMode = FilterMode.Bilinear;
+        return texture;
     }
 
     private static void Draw(Sprite sprite, Rect destination)

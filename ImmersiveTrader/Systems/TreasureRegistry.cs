@@ -105,7 +105,7 @@ public static class TreasureRegistry
 
             var custom = new CustomItem($"ImmersiveTrader_{def.Id}", def.BasePrefabName);
             var shared = custom.ItemDrop.m_itemData.m_shared;
-            var cargoIcon = CargoPresentation.IconFor(def.Id);
+            var cargoIcon = CargoPresentation.IconFor(def.Id, def.DisplayName);
             if (cargoIcon != null) shared.m_icons = new[] { cargoIcon };
             shared.m_name = def.DisplayName;
             shared.m_description = $"Zapieczętowany ładunek: {def.DisplayName}. Towar transportowy, nie pojedynczy surowiec. Dostarcz go innemu handlarzowi. Nie przechodzi przez portale.";
