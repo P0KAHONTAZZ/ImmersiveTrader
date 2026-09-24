@@ -4,30 +4,32 @@ namespace ImmersiveTrader;
 
 public static class RewardScaling
 {
-    public static int GetBiomeMultiplier(int sourceBiomeTier, int targetBiomeTier)
+    public static float GetBiomeMultiplier(int sourceBiomeTier, int targetBiomeTier)
     {
         int tierDistance = Math.Abs(sourceBiomeTier - targetBiomeTier);
         return tierDistance switch
         {
-            0 => 1,
-            1 => 2,
-            2 => 4,
-            _ => 6
+            0 => 1f,
+            1 => 1.25f,
+            2 => 1.5f,
+            3 => 1.75f,
+            _ => 2f
         };
     }
 
     public static float GetDistanceMultiplier(float metres)
     {
-        if (metres < Plugin.DistanceTier1Metres.Value) return 1f;
-        if (metres < Plugin.DistanceTier2Metres.Value) return 1.25f;
-        if (metres < Plugin.DistanceTier3Metres.Value) return 1.5f;
-        if (metres < Plugin.DistanceTier4Metres.Value) return 1.75f;
-        return 2f;
+        if (metres < 1000f) return 1f;
+        if (metres < 2000f) return 1.3f;
+        if (metres < 3000f) return 1.6f;
+        if (metres < 4000f) return 1.9f;
+        if (metres < 7500f) return 2.2f;
+        return 2.5f;
     }
 
     public static int GetRewardAmount(int baseAmount, int sourceBiomeTier, int targetBiomeTier, float metres)
         => Math.Max(1, (int)Math.Round(baseAmount * GetBiomeMultiplier(sourceBiomeTier, targetBiomeTier) * GetDistanceMultiplier(metres)));
 
-    public static int GetMultiplier(int sourceBiomeTier, int targetBiomeTier)
+    public static float GetMultiplier(int sourceBiomeTier, int targetBiomeTier)
         => GetBiomeMultiplier(sourceBiomeTier, targetBiomeTier);
 }
