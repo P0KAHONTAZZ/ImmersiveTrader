@@ -20,6 +20,7 @@ public static class TraderReputation
 
     private static readonly object Sync = new();
     private static readonly Dictionary<string, int> Points = new();
+    private static readonly Dictionary<string, List<double>> Events = new();
     private static bool loaded;
     private static string FilePath => Path.Combine(Paths.ConfigPath, "ImmersiveTrader-reputation.txt");
 
@@ -49,7 +50,18 @@ public static class TraderReputation
             foreach (string line in File.ReadAllLines(FilePath))
             {
                 int tab = line.IndexOf('\t');
-                if (tab <= 0 || !int.TryParse(line.Substring(tab + 1), NumberStyles.Integer,
+                if (tab <= 0) continue;
+                if (line[0] == 'E')
+                {
+                    if (double.TryParse(line.Substring(tab + 1), NumberStyles.Float, CultureInfo.InvariantCulture, out double stamp))
+                    {
+                        string eventKey = line.Substring(1, tab - 1);
+                        if (!Events.TryGetValue(eventKey, out var list)) Events[eventKey] = list = new List<double>();
+                        list.Add(stamp);
+                    }
+                    continue;
+                }
+                if (!int.TryParse(line.Substring(tab + 1), NumberStyles.Integer,
                         CultureInfo.InvariantCulture, out int value)) continue;
                 Points[line.Substring(0, tab)] = Math.Clamp(value, 0, Maximum);
             }
@@ -73,10 +85,20 @@ public static class TraderReputation
             Load();
             string key = Key(player, trader);
             int current = Points.TryGetValue(key, out int value) ? value : 0;
+            string eventKey = key + "|" + amount;
+            double now = ZNet.instance.GetTimeSeconds();
+            int quota = amount == CargoPoints ? 3 : amount == ContractPoints ? 2 : 0;
+            if (quota == 0) return current;
+            if (!Events.TryGetValue(eventKey, out var history)) Events[eventKey] = history = new List<double>();
+            history.RemoveAll(stamp => stamp > now || now - stamp >= 7d * 1800d);
+            if (history.Count >= quota) return current;
             int next = Math.Min(Maximum, current + amount);
             if (next == current) return next;
             Directory.CreateDirectory(Paths.ConfigPath);
-            File.AppendAllText(FilePath, key + "\t" + next.ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
+            File.AppendAllText(FilePath,
+                "E" + eventKey + "\t" + now.ToString("R", CultureInfo.InvariantCulture) + Environment.NewLine +
+                key + "\t" + next.ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
+            history.Add(now);
             Points[key] = next;
             return next;
         }
