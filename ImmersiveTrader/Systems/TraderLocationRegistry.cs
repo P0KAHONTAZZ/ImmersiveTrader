@@ -48,7 +48,7 @@ public static class TraderLocationRegistry
                 MinDistance = range.min,
                 MaxDistance = range.max,
                 MinDistanceFromSimilar = 900f,
-                Group = $"ImmersiveTrader_{trader.Biome.Replace(" ", "")}",
+                Group = $"ImmersiveTrader_{trader.Id}",
                 IconPlaced = true,
                 IconAlways = true
             };
