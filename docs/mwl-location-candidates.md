@@ -1,6 +1,6 @@
 # Proponowane lokacje More World Locations AIO dla 14 traderów
 
-Status: kandydaci zweryfikowani w aktualnym `LocationDefinitions.cs` repozytorium autora. Link do wydania 2.0.7 dotyczy starszej listy 119 lokacji; przed włączeniem mapowania trzeba potwierdzić prefabrykaty w ZIP wydania 2.0.7. Żaden cudzy asset nie jest dołączony do ImmersiveTrader.
+Status: wszystkie 14 nazw prefabów potwierdzone w oryginalnym archiwum `warpalicious-More_World_Locations_AIO-5.1.2.zip` przesłanym przez użytkownika. Żaden cudzy asset nie został dołączony do ImmersiveTrader. Licencja repozytorium autora (All Rights Reserved, 2026) wymaga jego pisemnej zgody na reprodukcję, redystrybucję i dzieła pochodne; bez tego nie pakować bundle do ImmersiveTrader ani nie publikować z nimi DLL.
 
 | Trader | Biom | Prefab MWL | Motyw |
 |---|---|---|---|
@@ -19,4 +19,4 @@ Status: kandydaci zweryfikowani w aktualnym `LocationDefinitions.cs` repozytoriu
 | Spalony Zenek | Ashlands | MWL_AshlandsFort1 | Fort |
 | Skjold Cinderborn | Ashlands | MWL_AshlandsFort2 | Fort rzemieślnika |
 
-Projekt integracji: opcjonalna zależność od zainstalowanego MWL, bez kopiowania bundle/prefabów. Powiększyć radius i dostosować warunki terenu do oryginalnej lokacji, osadzić jednego NPC w sprawdzonym punkcie interakcji, zapobiec duplikatom innych NPC i wydarzeń, zachować `it findall` 14/14 oraz fallback do własnych lokacji, jeśli MWL nie ma. Wymagane testy nowych światów oraz multiplayer. Sprawdzić licencję i otrzymać zgodę autora przed redystrybucją lub przeróbką assetów.
+Docelowy projekt po otrzymaniu pisemnej zgody autora na wykorzystanie bundle: ImmersiveTrader nadal zależy jedynie od BepInEx i Jotunn. Własny loader zasobów z manifestu oraz 14 bundle spakowanych w dystrybucji ImmersiveTrader. Każdy bundle weryfikować przed rejestracją lokacji; odtworzyć oryginalne ustawienia bioma, radius, różnic terenu i wysokości; ustawić spawn NPC w punkcie wejścia; wykluczyć dodatkowych wrogów, łupy i interakcje oryginalnej lokacji bez naruszania oryginalnych bundle. Zweryfikować 14/14 w nowym świecie, zachowanie multiplayer i wydajność. Bez zgody: stworzyć oryginalne, własne budynki, nie wycinać/portować cudzych assetów.
