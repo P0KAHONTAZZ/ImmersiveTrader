@@ -13,7 +13,7 @@ namespace ImmersiveTrader.Commands;
 public sealed class ImmersiveTraderCommand : ConsoleCommand
 {
     public override string Name => "it";
-    public override string Help => "ImmersiveTrader tools: it help | list | find <id> | findall | spawn <id> | look <id> | diagnose | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId>";
+    public override string Help => "ImmersiveTrader tools: it help | list | find <id> | findall | spawn <id> | look <id> | diagnose | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId> | rep <traderId> [add <points>]";
 
     public override void Run(string[] args, Terminal context)
     {
@@ -31,11 +31,12 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             case "give": GiveTreasure(args, context); break;
             case "route": PrintRoute(args, context); break;
             case "task": TaskCommand(args, context); break;
+            case "rep": ReputationCommand(args, context); break;
             default: context.AddString($"Unknown ImmersiveTrader command: {args[0]}"); PrintHelp(context); break;
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "find", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "find", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -53,6 +54,36 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it give <treasureId> <sourceTraderId>");
         c.AddString("  it route <sourceTraderId> <targetTraderId>");
         c.AddString("  it task <offer|accept|status|turnin> <traderId>");
+        c.AddString("  it rep <traderId>  - show this trader reputation");
+        c.AddString("  it rep <traderId> add <points>  - add reputation points (max 64)");
+    }
+
+    private static void ReputationCommand(string[] args, Terminal c)
+    {
+        var player = Player.m_localPlayer;
+        if (player == null) { c.AddString("Enter a world first."); return; }
+        if (args.Length != 2 && args.Length != 4)
+        {
+            c.AddString("Usage: it rep <traderId> [add <points>]");
+            return;
+        }
+        var trader = FindTrader(args[1]);
+        if (trader == null || trader.IsLegendary) { c.AddString("Unknown regular trader. Use 'it list'."); return; }
+
+        if (args.Length == 4)
+        {
+            if (!Eq(args[2], "add") ||
+                !int.TryParse(args[3], System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out int points) || points <= 0)
+            {
+                c.AddString("Usage: it rep <traderId> add <positivePoints>");
+                return;
+            }
+            int before = TraderReputation.Get(player, trader.Id);
+            int after = TraderReputation.Add(player, trader.Id, points);
+            c.AddString($"{trader.Name}: +{after - before} reputation points.");
+        }
+        c.AddString($"{trader.Name}: {TraderReputation.Describe(player, trader.Id)}");
     }
 
     private static void PrintTraders(Terminal c)
