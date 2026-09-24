@@ -30,7 +30,6 @@ public sealed class Plugin : BaseUnityPlugin
     internal static ConfigEntry<float> DistanceTier4Metres = null!;
     internal static ConfigEntry<int> MietegActiveWorldDays = null!;
     internal static ConfigEntry<float> MietegRevealDistance = null!;
-    internal static ConfigEntry<float> RareContractChance = null!;
 
     private void Awake()
     {
@@ -46,7 +45,6 @@ public sealed class Plugin : BaseUnityPlugin
         DistanceTier4Metres = Config.Bind("Rewards", "DistanceTier4Metres", 7500f, "Route distance where the physical distance bonus increases to x2.00.");
         MietegActiveWorldDays = Config.Bind("LegendaryMieteg", "ActiveWorldDays", 2, "How many world days Mieteg remains active.");
         MietegRevealDistance = Config.Bind("LegendaryMieteg", "RevealDistance", 600f, "Distance in metres at which Mieteg becomes discoverable.");
-        RareContractChance = Config.Bind("Contracts", "RareChance", 0.2f, "Chance (0 to 1) that a newly issued contract is Rare. Rare needs half as many kills for the same reward.");
 
         _harmony = new Harmony(ModGuid);
         _harmony.PatchAll();
