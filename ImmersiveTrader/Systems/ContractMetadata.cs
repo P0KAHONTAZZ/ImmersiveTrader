@@ -33,15 +33,16 @@ public static class ContractMetadata
         contractId = string.Empty; traderId = string.Empty; progress = 0;
         // Metadata on another item must never turn it into a contract. This also
         // excludes unstamped generic scrolls from progress and turn-in handling.
-        if (item.m_dropPrefab == null ||
-            !string.Equals(item.m_dropPrefab.name.Replace("(Clone)", string.Empty),
-                ContractRegistry.PrefabName, StringComparison.Ordinal))
+        if (item.m_dropPrefab == null || !item.m_customData.TryGetValue(ContractIdKey, out contractId))
+            return false;
+        string prefab = item.m_dropPrefab.name.Replace("(Clone)", string.Empty);
+        if (!string.Equals(prefab, ContractRegistry.PrefabName, StringComparison.Ordinal) &&
+            !string.Equals(prefab, ContractRegistry.GetPrefabName(contractId), StringComparison.Ordinal))
             return false;
 
-        return item.m_customData.TryGetValue(ContractIdKey, out contractId)
+        return !string.IsNullOrEmpty(contractId)
             && item.m_customData.TryGetValue(TraderIdKey, out traderId)
             && item.m_customData.TryGetValue(ProgressKey, out var raw)
-            && !string.IsNullOrEmpty(contractId)
             && !string.IsNullOrEmpty(traderId)
             && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out progress)
             && progress >= 0;
