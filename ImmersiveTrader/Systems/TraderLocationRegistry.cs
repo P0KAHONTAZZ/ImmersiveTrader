@@ -30,14 +30,14 @@ public static class TraderLocationRegistry
             anchor.transform.SetParent(container.transform, false);
             // An open, level camp places the trader at its center.
             anchor.transform.localPosition = Vector3.zero;
-            bool vanillaCamp = HaldorCampBuilder.Build(container.transform, anchor.transform);
+            bool hasVanillaShield = HaldorShieldBuilder.Build(container.transform);
             var traderAnchor = anchor.AddComponent<TraderLocationAnchor>();
             traderAnchor.TraderId = trader.Id;
 
-            if (!vanillaCamp)
+            TraderCampBuilder.Build(trader.Id, container.transform);
+            if (!hasVanillaShield)
             {
-                // Keep the trader usable if a game update removes the source location.
-                TraderCampBuilder.Build(trader.Id, container.transform);
+                Plugin.Log.LogWarning($"Vanilla trader shield unavailable for {trader.Id}; using the previous protection.");
                 anchor.AddComponent<TraderSanctuary>();
             }
 
