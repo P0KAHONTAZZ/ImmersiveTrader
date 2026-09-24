@@ -161,6 +161,8 @@ public static class TraderActivityService
             $" | active overall {activeTotal}/5";
     }
 
+    public static int GetWorldDayPublic() => GetWorldDay();
+
     private static int GetWorldDay()
     {
         if (ZNet.instance == null) return 0;
