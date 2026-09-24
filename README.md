@@ -9,7 +9,7 @@ Valheim mod: sieć immersyjnych traderów i questów transportowych.
 - Towarów nie można teleportować. Można mieć maksymalnie 2 aktywne przesyłki od jednego nadawcy.
 - Pięć rodzajów ikon opakowań: skrzynia, beczka, worek, pakunek i kosz. Na ziemi towary mają model skrzyni.
 - 70 fizycznych kontraktów łowieckich obejmuje 24 umiejętności Valheim 1.0. Postęp i umiejętność nagrody są zapisane na zwoju i pozostają po wyrzuceniu oraz podniesieniu.
-- Blood Magic występuje tylko u Grelki w Mistlands. Zwoje wystawione przed rozszerzeniem umiejętności zachowują dotychczasową nagrodę.
+- Blood Magic występuje tylko u Ćmoka w Mistlands. Zwoje wydane wcześniej zachowują zapisaną umiejętność nagrody.
 - Nagrody skalują się wg odległości tierów biomów: x1 / x2 / x4 / x6, z twardym capem x6.
 - Bone Fragments są wykluczone z nagród.
 - Midka jest doświadczonym wojennym healerem i jako jedyna ma zwykły towar w sklepie: Minor Healing Mead za 70 Coins.
