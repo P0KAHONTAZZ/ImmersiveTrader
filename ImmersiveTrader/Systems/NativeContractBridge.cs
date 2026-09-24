@@ -51,6 +51,12 @@ public static class NativeContractBridge
             x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith(ContractRegistry.PrefabName) && !before.Contains(x));
         if (created == null)
         {
+            // Never leave an untracked generic scroll behind if inventory hooks changed
+            // the insertion semantics unexpectedly.
+            var stray = player.GetInventory().GetAllItems().FirstOrDefault(x =>
+                x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith(ContractRegistry.PrefabName) &&
+                !ContractMetadata.TryRead(x, out _, out _, out _));
+            if (stray != null) player.GetInventory().RemoveItem(stray);
             player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: Contract creation failed.");
             return true;
         }
