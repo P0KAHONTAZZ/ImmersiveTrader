@@ -27,7 +27,8 @@ internal static class CargoPresentation
         ["yggwood"] = "YggdrasilWood", ["marble"] = "BlackMarble", ["sap"] = "Sap",
         ["magecaps"] = "MushroomMagecap", ["eitr"] = "Eitr", ["jelly"] = "RoyalJelly",
         ["grausten"] = "Grausten", ["ashwood"] = "Blackwood", ["flametal"] = "FlametalNew",
-        ["smoke"] = "BombSmoke", ["fortification"] = "Grausten"
+        ["smoke"] = "BombSmoke", ["fortification"] = "Grausten",
+        ["spicy_food"] = "MorgenHeart", ["fire_medicine"] = "MeadFireResist"
     };
 
     internal static Sprite? IconFor(string id)
