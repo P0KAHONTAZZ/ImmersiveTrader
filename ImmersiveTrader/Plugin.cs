@@ -67,6 +67,7 @@ public sealed class Plugin : BaseUnityPlugin
         TreasureRegistry.Register();
         ContractRegistry.Register();
         TraderRegistry.Initialize();
+        TraderActivityRegistry.Validate();
         RewardRegistry.Initialize();
         _rewardValidationPending = true;
         NpcPrefabRegistry.Register();
