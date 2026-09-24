@@ -108,7 +108,8 @@ public static class TreasureRegistry
             var cargoIcon = CargoPresentation.IconFor(def.Id, def.DisplayName);
             if (cargoIcon != null) shared.m_icons = new[] { cargoIcon };
             shared.m_name = def.DisplayName;
-            shared.m_description = $"Zapieczętowany ładunek: {def.DisplayName}. Towar transportowy, nie pojedynczy surowiec. Dostarcz go innemu handlarzowi. Nie przechodzi przez portale.";
+            var origin = TraderRegistry.Traders.FirstOrDefault(x => x.Id == GetOwnerTraderId(def.Id));
+            shared.m_description = $"Zapieczętowany ładunek handlowy. Dostarcz go innemu handlarzowi. Nie przechodzi przez portale.\nPochodzenie: <color=yellow>{origin?.Name ?? GetOwnerTraderId(def.Id)}</color>";
             shared.m_weight = def.Weight;
             shared.m_teleportable = false;
             shared.m_maxStackSize = 1;
