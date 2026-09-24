@@ -39,8 +39,8 @@ public static class TraderHouseBuilder
 
         // Both roof halves share the same ridge and overlap the walls. A single
         // pair of meshes replaces manually rotated pieces that left visible gaps.
-        var leftEave = new Vector3(-halfWidth - 0.45f, height - 0.1f, -0.45f);
-        var rightEave = new Vector3(halfWidth + 0.45f, height - 0.1f, -0.45f);
+        var leftEave = new Vector3(-halfWidth - 0.45f, height - 0.5f, -0.45f);
+        var rightEave = new Vector3(halfWidth + 0.45f, height - 0.5f, -0.45f);
         var ridgeFront = new Vector3(0, ridge, -0.45f);
         var ridgeBack = new Vector3(0, ridge, rear + 0.45f);
         Roof(house.transform, "west roof", thatch, leftEave, ridgeFront,
