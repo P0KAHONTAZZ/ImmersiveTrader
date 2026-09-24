@@ -7,6 +7,19 @@ internal static class ContractWorldModel
 {
     internal static void Attach(GameObject prefab, Sprite? parchment)
     {
+        // Humanoid.DropItem expects a Rigidbody on the root of the spawned item.
+        // Coins in this Valheim build provides the ItemDrop and ZNetView but no root body.
+        if (prefab.GetComponent<Rigidbody>() == null)
+        {
+            var body = prefab.AddComponent<Rigidbody>();
+            body.mass = 0.1f;
+            body.interpolation = RigidbodyInterpolation.Interpolate;
+        }
+        if (prefab.GetComponentInChildren<Collider>(true) == null)
+        {
+            var collider = prefab.AddComponent<BoxCollider>();
+            collider.size = new Vector3(0.42f, 0.05f, 0.42f);
+        }
         if (parchment == null) return;
         var shader = Shader.Find("Sprites/Default");
         if (shader == null) { Plugin.Log.LogWarning("Contract sheet shader unavailable."); return; }
