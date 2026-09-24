@@ -40,7 +40,7 @@ public static class NativeContractBridge
             return true;
         }
 
-        var prefab = ObjectDB.instance?.GetItemPrefab(ContractRegistry.PrefabName);
+        var prefab = ObjectDB.instance?.GetItemPrefab(ContractRegistry.GetPrefabName(sale.Contract.Id));
         if (prefab == null || !player.GetInventory().CanAddItem(prefab, 1))
         {
             player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: Make room for the contract first.");
@@ -55,13 +55,13 @@ public static class NativeContractBridge
         }
 
         var created = player.GetInventory().GetAllItems().FirstOrDefault(x =>
-            x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith(ContractRegistry.PrefabName) && !before.Contains(x));
+            x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith(prefab.name) && !before.Contains(x));
         if (created == null)
         {
             // Never leave an untracked generic scroll behind if inventory hooks changed
             // the insertion semantics unexpectedly.
             var stray = player.GetInventory().GetAllItems().FirstOrDefault(x =>
-                x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith(ContractRegistry.PrefabName) &&
+                x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith(prefab.name) &&
                 !ContractMetadata.TryRead(x, out _, out _, out _));
             if (stray != null) player.GetInventory().RemoveItem(stray);
             player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: Contract creation failed.");
