@@ -25,10 +25,14 @@ public static class TraderActivityService
                 continue;
 
             var rewardSkill = ContractMetadata.GetRewardSkill(item, contractId, definition.RewardSkill);
+            if (!ContractSkillReward.TryGrant(player, rewardSkill, (int)definition.RewardSkillLevels, out float before, out float after))
+            {
+                player.Message(MessageHud.MessageType.Center, $"{traderId}: Cannot grant {rewardSkill} levels (skill unavailable or already at maximum). Contract retained.");
+                return true;
+            }
             player.GetInventory().RemoveItem(item);
-            player.RaiseSkill(rewardSkill, definition.RewardSkillLevels);
             player.Message(MessageHud.MessageType.Center,
-                $"Contract complete: {definition.RewardSkillLevels:0} EXP ({rewardSkill})");
+                $"Kontrakt ukończony: {rewardSkill} {before:0.##} → {after:0.##} (+{after - before:0.##} poziomy).");
             return true;
         }
 
