@@ -102,6 +102,8 @@ public static class QuestDelivery
             return true;
         }
 
+        int reputation = TraderReputation.Add(player, carried.SourceTraderId, TraderReputation.CargoPoints);
+
         string message = target.IsLegendary
             ? $"???: Those who trade in gold count coins. Those who trade in favors count roads. Received: {amount} {reward.ItemPrefab}"
             : target.LiesAboutRewards
@@ -109,7 +111,7 @@ public static class QuestDelivery
                 : $"{target.Name}: Deal. Biome x{biomeMultiplier:0.##}, distance {routeMetres:0}m x{distanceMultiplier:0.##}. Your payment: {amount} {reward.ItemPrefab}."
                 + (targetTierUnlocked ? "" : " Better local stock unlocks after the previous biome boss.");
 
-        player.Message(MessageHud.MessageType.Center, message);
+        player.Message(MessageHud.MessageType.Center, message + $" Reputacja u nadawcy: +{TraderReputation.CargoPoints} ({reputation}/{TraderReputation.Maximum}).");
         return true;
     }
 
