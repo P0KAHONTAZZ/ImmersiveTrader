@@ -79,7 +79,6 @@ public static class NativeContractBridge
 
         ContractMetadata.Stamp(created, sale.Contract.Id, sale.Source.Id, TraderActivityService.GetWorldDayPublic());
         created.m_crafterName = sale.Contract.Title;
-        player.GetInventory().Changed();
         Plugin.Log.LogInfo($"Contract scroll issued: {sale.Contract.Id}, issuer={sale.Source.Id}, " +
             $"inventoryItems={player.GetInventory().GetAllItems().Count}, " +
             $"validScrolls={TraderActivityService.CountPhysicalContracts(player, sale.Source.Id)}");
