@@ -35,6 +35,7 @@ public static class ContractRegistry
         shared.m_weight = 0.1f;
         shared.m_maxStackSize = 1;
         shared.m_teleportable = true;
+        ContractWorldModel.Attach(custom.ItemPrefab, parchment);
         ItemManager.Instance.AddItem(custom);
         Plugin.Log.LogInfo("Physical hunting contract scroll registered.");
     }
