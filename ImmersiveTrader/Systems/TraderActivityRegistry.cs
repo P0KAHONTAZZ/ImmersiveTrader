@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ImmersiveTrader.Models;
 
 namespace ImmersiveTrader;
@@ -92,6 +93,23 @@ public static class TraderActivityRegistry
         H("skjold_cinderborn","skjold_4","Sky hunt","Volture",6,Skills.SkillType.Bows,"Hunt Voltures."),
         H("skjold_cinderborn","skjold_5","Ash stalker","Charred_Twitcher",15,Skills.SkillType.Sneak,"Hunt the outer patrols.")
     };
+
+
+    public static void Validate()
+    {
+        var duplicateIds = Activities.GroupBy(x => x.Id).Where(x => x.Count() > 1).Select(x => x.Key).ToArray();
+        foreach (string id in duplicateIds)
+            Plugin.Log.LogWarning($"Duplicate hunting contract id: {id}");
+
+        foreach (var trader in TraderRegistry.Traders.Where(x => !x.IsLegendary))
+        {
+            int count = Activities.Count(x => x.TraderId == trader.Id);
+            if (count != 5)
+                Plugin.Log.LogWarning($"Hunting contracts for {trader.Id}: expected 5, found {count}");
+        }
+
+        Plugin.Log.LogInfo($"Hunting contracts ready: {Activities.Count}; unique ids: {Activities.Select(x => x.Id).Distinct().Count()}");
+    }
 
     private static TraderActivityDefinition H(string trader,string id,string title,string target,int count,Skills.SkillType skill,string text) =>
         new(trader,id,title,TraderActivityType.Hunt,target,count,skill,2f,text);
