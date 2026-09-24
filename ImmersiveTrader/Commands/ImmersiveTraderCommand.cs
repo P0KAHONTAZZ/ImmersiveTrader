@@ -303,7 +303,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         if (source == null || target == null) { c.AddString("Unknown trader ID."); return; }
         if (source.Id == target.Id) { c.AddString("Same trader cannot receive its own shipment."); return; }
         if (target.IsLegendary) { c.AddString($"{source.Name} -> {target.Name}: legendary fixed reward table (no distance multiplier)."); return; }
-        int mult = RewardScaling.GetMultiplier(source.BiomeTier, target.BiomeTier);
-        c.AddString($"{source.Name} (tier {source.BiomeTier}) -> {target.Name} (tier {target.BiomeTier}) = x{mult}");
+        float mult = RewardScaling.GetMultiplier(source.BiomeTier, target.BiomeTier);
+        c.AddString($"{source.Name} (tier {source.BiomeTier}) -> {target.Name} (tier {target.BiomeTier}) = x{mult:0.##}");
     }
 }
