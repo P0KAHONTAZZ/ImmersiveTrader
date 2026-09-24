@@ -8,14 +8,17 @@ public static class ContractRegistry
     public const string PrefabName = "ImmersiveTrader_ContractScroll";
     public static void Register()
     {
-        var source = PrefabManager.Instance.GetPrefab("YmirRemains");
-        if (source == null) { Plugin.Log.LogWarning("Contract scroll base prefab missing: YmirRemains"); return; }
+        // Coins has a complete world-drop hierarchy (mesh, collider and rigidbody).
+        // YmirRemains lacks a reliable dropped-item representation in this game build.
+        // Replace this temporary base with a dedicated scroll prefab when art is ready.
+        var source = PrefabManager.Instance.GetPrefab("Coins");
+        if (source == null) { Plugin.Log.LogWarning("Contract scroll base prefab missing: Coins"); return; }
         var custom = new CustomItem(PrefabName, source);
         var shared = custom.ItemDrop.m_itemData.m_shared;
         // StoreGui.FillList accesses icon slot zero for every offered item.
         // YmirRemains can have no inventory icon in the current Valheim build.
         var coinIcons = PrefabManager.Instance.GetPrefab("Coins")?.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_icons;
-        if (shared.m_icons == null || shared.m_icons.Length == 0)
+        if (shared.m_icons == null || shared.m_icons.Length == 0 || shared.m_icons[0] == null)
         {
             if (coinIcons == null || coinIcons.Length == 0 || coinIcons[0] == null)
             {
