@@ -33,7 +33,5 @@ public static class TraderRegistry
 
     public static void Initialize()
     {
-        RewardRegistry.Initialize();
-        RewardRegistry.Validate();
     }
 }
