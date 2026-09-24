@@ -14,7 +14,12 @@ public static class TraderActivityService
                 continue;
 
             var definition = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == contractId && x.TraderId == traderId);
-            if (definition == null) continue;
+            if (definition == null)
+            {
+                Plugin.Log.LogWarning($"Rejected physical contract with invalid metadata: {contractId}, issuer={issuer}");
+                player.Message(MessageHud.MessageType.Center, $"{traderId}: This contract has invalid papers.");
+                return true;
+            }
             if (progress < definition.RequiredAmount)
             {
                 player.Message(MessageHud.MessageType.Center, $"{definition.Title}: {progress}/{definition.RequiredAmount}");
