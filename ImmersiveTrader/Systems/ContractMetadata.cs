@@ -46,6 +46,10 @@ public static class ContractMetadata
         if (!TryRead(item, out string contractId, out string issuer, out int progress))
             return string.Empty;
         var definition = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == contractId && x.TraderId == issuer);
-        return definition == null ? string.Empty : $"{definition.Title}: {progress}/{definition.RequiredAmount}";
+        return definition == null ? string.Empty :
+            $"{definition.Title}\nCel: {definition.RequiredAmount} x {definition.TargetPrefab}" +
+            $"\nPostęp: {progress}/{definition.RequiredAmount}" +
+            $"\nNagroda: {definition.RewardSkillLevels:0} EXP ({definition.RewardSkill})" +
+            $"\nOddaj zwój: {issuer}";
     }
 }
