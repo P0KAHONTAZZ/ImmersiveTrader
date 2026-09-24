@@ -8,9 +8,6 @@ public static class TraderActivityService
 {
     public static bool TryTurnInPhysical(Player player, string traderId)
     {
-        TraderActivityDefinition? incompleteDefinition = null;
-        int incompleteProgress = 0;
-
         foreach (var item in player.GetInventory().GetAllItems().ToArray())
         {
             if (!ContractMetadata.TryRead(item, out string contractId, out string issuer, out int progress) || issuer != traderId)
@@ -23,12 +20,9 @@ public static class TraderActivityService
                 player.Message(MessageHud.MessageType.Center, $"{traderId}: This contract has invalid papers.");
                 return true;
             }
-            if (progress < definition.RequiredAmount)
-            {
-                incompleteDefinition ??= definition;
-                incompleteProgress = progress;
+            int required = ContractMetadata.GetRequiredAmount(item, definition.RequiredAmount);
+            if (progress < required)
                 continue;
-            }
 
             player.GetInventory().RemoveItem(item);
             player.RaiseSkill(definition.RewardSkill, definition.RewardSkillLevels);
@@ -37,12 +31,6 @@ public static class TraderActivityService
             return true;
         }
 
-        if (incompleteDefinition != null)
-        {
-            player.Message(MessageHud.MessageType.Center,
-                $"{incompleteDefinition.Title}: {incompleteProgress}/{incompleteDefinition.RequiredAmount}");
-            return true;
-        }
         return false;
     }
 
@@ -61,12 +49,13 @@ public static class TraderActivityService
 
             var definition = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == contractId);
             if (definition == null || definition.TraderId != GetIssuer(item) ||
-                progress >= definition.RequiredAmount || !PrefabMatches(prefabName, definition.TargetPrefab))
+                progress >= ContractMetadata.GetRequiredAmount(item, definition.RequiredAmount) || !PrefabMatches(prefabName, definition.TargetPrefab))
                 continue;
 
-            progress = Mathf.Min(progress + 1, definition.RequiredAmount);
+            int required = ContractMetadata.GetRequiredAmount(item, definition.RequiredAmount);
+            progress = Mathf.Min(progress + 1, required);
             ContractMetadata.SetProgress(item, progress);
-            player.Message(MessageHud.MessageType.TopLeft, $"{definition.Title}: {progress}/{definition.RequiredAmount}");
+            player.Message(MessageHud.MessageType.TopLeft, $"{definition.Title}: {progress}/{required}");
         }
     }
 
