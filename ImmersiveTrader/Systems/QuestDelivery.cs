@@ -8,6 +8,7 @@ public static class QuestDelivery
 {
     public static bool TryDeliverAny(Player player, TraderDefinition target, Vector3 targetPosition)
     {
+        // A shipment may go to any of the other 13 regular traders, never back to its issuer.
         var carried = InventoryTreasureService.GetCarried(player).FirstOrDefault(x => x.SourceTraderId != target.Id);
         if (carried == null) return false;
 
