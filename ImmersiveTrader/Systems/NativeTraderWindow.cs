@@ -150,17 +150,23 @@ public static class NativeTraderWindow
         // Five free hunting contracts share the same native list. Selecting one invokes
         // our bridge instead of vanilla's coin purchase and creates a persistent scroll.
         NativeContractBridge.Clear();
-        var contractPrefab = ObjectDB.instance?.GetItemPrefab(ContractRegistry.PrefabName)?.GetComponent<ItemDrop>();
-        if (contractPrefab != null && contractPrefab.m_itemData?.m_shared?.m_icons?.Length > 0 &&
-            contractPrefab.m_itemData.m_shared.m_icons[0] != null)
+        if (ObjectDB.instance != null)
         {
             foreach (var contract in TraderActivityRegistry.Activities.Where(x => x.TraderId == definition.Id))
             {
+                var contractPrefab = ObjectDB.instance.GetItemPrefab(ContractRegistry.GetPrefabName(contract.Id))?.GetComponent<ItemDrop>();
+                if (contractPrefab?.m_itemData?.m_shared == null) continue;
+                var icon = ContractIconRegistry.ForSkill(contract.RewardSkill);
+                if (icon != null) contractPrefab.m_itemData.m_shared.m_icons = new[] { icon };
+                if (contractPrefab.m_itemData.m_shared.m_icons == null ||
+                    contractPrefab.m_itemData.m_shared.m_icons.Length == 0 ||
+                    contractPrefab.m_itemData.m_shared.m_icons[0] == null) continue;
+
                 var contractItem = new Trader.TradeItem
                 {
                     m_prefab = contractPrefab, m_price = 0, m_stack = 1,
                     m_requiredGlobalKey = string.Empty, m_levelUpEffect = false,
-                    m_buyPlayerEffects = new EffectList(), m_icon = ContractIconRegistry.ForSkill(contract.RewardSkill) ?? contractPrefab.m_itemData.m_shared.m_icons[0],
+                    m_buyPlayerEffects = new EffectList(), m_icon = icon ?? contractPrefab.m_itemData.m_shared.m_icons[0],
                     m_name = contract.Title,
                     m_tooltip = $"{contract.Description} Normal: {contract.RequiredAmount} x {contract.TargetPrefab}; Rare: {contract.RequiredAmount / 2} x. Nagroda: {contract.RewardSkillLevels:0} EXP ({contract.RewardSkill}).",
                     m_buyKey = string.Empty, m_incrementKey = string.Empty, m_incrementAmount = 0
@@ -170,7 +176,7 @@ public static class NativeTraderWindow
             }
         }
         else
-            Plugin.Log.LogWarning("Contract shop rows skipped: scroll prefab or icon is unavailable.");
+            Plugin.Log.LogWarning("Contract shop rows skipped: ObjectDB is unavailable.");
 
         if (trader.m_items.Count == 0)
         {
