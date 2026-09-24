@@ -33,6 +33,8 @@ internal static class TraderActivityKillPatch
             return;
 
         LastPlayerHit.Remove(__instance);
-        TraderActivityService.RegisterKill(local, Utils.GetPrefabName(__instance.gameObject));
+        string prefabName = Utils.GetPrefabName(__instance.gameObject);
+        TraderActivityService.RegisterKill(local, prefabName);
+        TraderActivityService.RegisterKillOnPhysicalContracts(local, prefabName);
     }
 }
