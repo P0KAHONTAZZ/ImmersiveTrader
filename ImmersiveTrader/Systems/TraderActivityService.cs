@@ -44,7 +44,8 @@ public static class TraderActivityService
                 continue;
 
             var definition = TraderActivityRegistry.Activities.FirstOrDefault(x => x.Id == contractId);
-            if (definition == null || progress >= definition.RequiredAmount || !PrefabMatches(prefabName, definition.TargetPrefab))
+            if (definition == null || definition.TraderId != GetIssuer(item) ||
+                progress >= definition.RequiredAmount || !PrefabMatches(prefabName, definition.TargetPrefab))
                 continue;
 
             progress = Mathf.Min(progress + 1, definition.RequiredAmount);
@@ -75,6 +76,12 @@ public static class TraderActivityService
     {
         if (ZNet.instance == null) return 0;
         return Mathf.FloorToInt((float)(ZNet.instance.GetTimeSeconds() / 1800.0));
+    }
+
+    private static string GetIssuer(ItemDrop.ItemData item)
+    {
+        ContractMetadata.TryRead(item, out _, out string issuer, out _);
+        return issuer;
     }
 
     private static bool PrefabMatches(string actual, string expected) =>
