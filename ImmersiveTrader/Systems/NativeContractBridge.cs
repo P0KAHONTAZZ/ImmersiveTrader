@@ -26,6 +26,21 @@ public static class NativeContractBridge
             return true;
         }
 
+        try
+        {
+            if (!ItemPurchaseCooldown.CanBuy(player, sale.Source.Id, "contract", sale.Contract.Id, out int days))
+            {
+                player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: {sale.Contract.Title} available in {days} Valheim day(s).");
+                return true;
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Plugin.Log.LogError($"Contract cooldown check failed: {ex}");
+            player.Message(MessageHud.MessageType.Center, "Contract unavailable: cooldown data could not be read.");
+            return true;
+        }
+
         if (TraderActivityService.CountPhysicalContracts(player, sale.Source.Id) >= 2)
         {
             player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: Finish one of my two contracts first.");
@@ -80,6 +95,14 @@ public static class NativeContractBridge
         bool rare = UnityEngine.Random.value < UnityEngine.Mathf.Clamp01(Plugin.RareContractChance.Value);
         int required = rare ? (sale.Contract.RequiredAmount + 1) / 2 : sale.Contract.RequiredAmount;
         ContractMetadata.Stamp(created, sale.Contract.Id, sale.Source.Id, TraderActivityService.GetWorldDayPublic(), required, rare, sale.Contract.RewardSkill);
+        try { ItemPurchaseCooldown.MarkBought(player, sale.Source.Id, "contract", sale.Contract.Id); }
+        catch (System.Exception ex)
+        {
+            Plugin.Log.LogError($"Contract cooldown save failed: {ex}");
+            player.GetInventory().RemoveItem(created);
+            player.Message(MessageHud.MessageType.Center, "Contract issuance cancelled: cooldown data could not be saved.");
+            return true;
+        }
         created.m_crafterName = sale.Contract.Title;
         Plugin.Log.LogInfo($"Contract scroll issued: {sale.Contract.Id}, issuer={sale.Source.Id}, " +
             $"inventoryItems={player.GetInventory().GetAllItems().Count}, " +
