@@ -107,17 +107,7 @@ public static class NativeTraderWindow
         // delivered to any of the other 13 regular traders; destination is not baked
         // into the item, only issuer + origin are stamped at purchase time.
         NativeCargoBridge.Clear();
-        foreach (var cargoDef in TreasureRegistry.Treasures.Where(x => x.Id.StartsWith(definition.Id switch
-        {
-            "rudy_warg" => "rudy_",
-            "mokra_dzika" => "mokra_",
-            "ylva_frost" => "ylva_",
-            "bjarki_goldtooth" => "bjarki_",
-            "ragnar_turnipson" => "ragnar_",
-            "spalony_zenek" => "zenek_",
-            "skjold_cinderborn" => "skjold_",
-            _ => definition.Id + "_"
-        })))
+        foreach (var cargoDef in TreasureRegistry.GetForTrader(definition.Id))
         {
             var cargoPrefab = ObjectDB.instance?.GetItemPrefab($"ImmersiveTrader_{cargoDef.Id}");
             var cargoDrop = cargoPrefab?.GetComponent<ItemDrop>();
