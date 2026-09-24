@@ -147,10 +147,11 @@ public static class ContractMetadata
         if (definition == null) return string.Empty;
         int required = GetRequiredAmount(item, definition.RequiredAmount);
         var rewardSkill = GetRewardSkill(item, contractId, definition.RewardSkill);
-        string variant = item.m_customData.TryGetValue(VariantKey, out var stored) ? stored : "Normal";
-        return $"{definition.Title} ({variant})\nCel: {required} x {definition.TargetPrefab}" +
-            $"\nPostęp: {progress}/{required}" +
-            $"\nNagroda: {definition.RewardSkillLevels:0} EXP ({rewardSkill})" +
-            $"\nOddaj zwój: {issuer}";
+        var trader = TraderRegistry.Traders.FirstOrDefault(x => x.Id == issuer);
+        string variant = item.m_customData.TryGetValue(VariantKey, out var stored) && stored == "Rare" ? " (Rare)" : string.Empty;
+        return $"Cel: <color=yellow>{required} x {definition.TargetPrefab}</color>{variant}" +
+            $"\nPostęp: <color=yellow>{progress}/{required}</color>" +
+            $"\nNagroda: <color=yellow>{definition.RewardSkillLevels:0} EXP ({rewardSkill})</color>" +
+            $"\nWystawca: <color=yellow>{trader?.Name ?? issuer}</color>";
     }
 }
