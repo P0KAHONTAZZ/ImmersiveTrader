@@ -14,6 +14,14 @@ public static class QuestDelivery
             RewardRegistry.Rewards.Any(r => r.TraderId == target.Id && r.TreasureId == x.TreasureId));
         if (carried == null) return false;
 
+        string expectedSource = TreasureRegistry.GetOwnerTraderId(carried.TreasureId);
+        if (string.IsNullOrEmpty(expectedSource) || expectedSource != carried.SourceTraderId)
+        {
+            Plugin.Log.LogWarning($"Rejected cargo with invalid issuer metadata: {carried.TreasureId}, stamped={carried.SourceTraderId}, expected={expectedSource}");
+            player.Message(MessageHud.MessageType.Center, $"{target.Name}: This shipment has invalid papers.");
+            return true;
+        }
+
         bool targetTierUnlocked = target.IsLegendary || ProgressionGate.IsRewardTierUnlocked(target.BiomeTier);
 
         var table = target.IsLegendary ? LegendaryRewardRegistry.Rewards : RewardRegistry.Rewards;
