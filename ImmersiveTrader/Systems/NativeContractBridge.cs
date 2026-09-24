@@ -61,6 +61,15 @@ public static class NativeContractBridge
             return true;
         }
 
+        // Re-check the per-issuer limit immediately before stamping. Inventory hooks may
+        // have inserted another contract while AddItem was running.
+        if (TraderActivityService.CountPhysicalContracts(player, sale.Source.Id) >= 2)
+        {
+            player.GetInventory().RemoveItem(created);
+            player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: Contract limit changed; issuance cancelled.");
+            return true;
+        }
+
         ContractMetadata.Stamp(created, sale.Contract.Id, sale.Source.Id, TraderActivityService.GetWorldDayPublic());
         created.m_crafterName = sale.Contract.Title;
         player.Message(MessageHud.MessageType.Center,
