@@ -16,9 +16,11 @@ public static class ContractRegistry
         var custom = new CustomItem(PrefabName, source);
         var shared = custom.ItemDrop.m_itemData.m_shared;
         // StoreGui.FillList accesses icon slot zero for every offered item.
-        // YmirRemains can have no inventory icon in the current Valheim build.
         var coinIcons = PrefabManager.Instance.GetPrefab("Coins")?.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_icons;
-        if (shared.m_icons == null || shared.m_icons.Length == 0 || shared.m_icons[0] == null)
+        var parchment = ContractIconRegistry.Parchment;
+        if (parchment != null)
+            shared.m_icons = new[] { parchment };
+        else if (shared.m_icons == null || shared.m_icons.Length == 0 || shared.m_icons[0] == null)
         {
             if (coinIcons == null || coinIcons.Length == 0 || coinIcons[0] == null)
             {
