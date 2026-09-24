@@ -105,81 +105,11 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         int attached = 0;
         if (AttachSkin(outfit.Chest, visual, bones)) attached++;
         if (AttachSkin(outfit.Legs, visual, bones)) attached++;
-        bool helmet = AttachHelmet(TraderId, visual, bones);
-        Plugin.Log.LogInfo($"Test outfit {TraderId}: {attached}/2 armor pieces, helmet={helmet} ({outfit.Chest}, {outfit.Legs}).");
-    }
-
-    private static readonly Dictionary<string, string> TestHelmets = new()
-    {
-        ["midka"] = "HelmetLeather", ["grimvald"] = "HelmetTrollLeather",
-        ["rudy_warg"] = "HelmetBronze", ["mokra_dzika"] = "HelmetRoot",
-        ["encek"] = "HelmetIron", ["hrothgar"] = "HelmetDrake",
-        ["ylva_frost"] = "HelmetFenring", ["bjarki_goldtooth"] = "HelmetPadded",
-        ["ragnar_turnipson"] = "HelmetPadded", ["cmok"] = "HelmetMage",
-        ["grelka"] = "HelmetCarapace", ["spalony_zenek"] = "HelmetFlametal",
-        ["skjold_cinderborn"] = "HelmetMage_Ashlands"
-    };
-
-    private static bool AttachHelmet(string traderId, Transform visual,
-        Dictionary<string, Transform> bones)
-    {
-        if (!TestHelmets.TryGetValue(traderId, out var name)) return false;
-        if (!bones.TryGetValue("Head", out var head))
-        {
-            Plugin.Log.LogWarning($"Test outfit head bone unavailable for {traderId}.");
-            return false;
-        }
-        var item = PrefabManager.Instance.GetPrefab(name);
-        var attachment = item == null ? null : item.GetComponentsInChildren<Transform>(true)
-            .FirstOrDefault(child => child.name == "attach");
-        if (attachment == null)
-        {
-            Plugin.Log.LogWarning($"Test outfit helmet attachment unavailable: {name}");
-            return false;
-        }
-
-        var helmet = Object.Instantiate(attachment.gameObject, head);
-        helmet.name = $"ImmersiveTrader_Outfit_{name}";
-        helmet.transform.localPosition = attachment.localPosition;
-        helmet.transform.localRotation = attachment.localRotation;
-        helmet.transform.localScale = attachment.localScale;
-        foreach (var part in helmet.GetComponentsInChildren<Transform>(true))
-            part.gameObject.SetActive(true);
-        var renderers = helmet.GetComponentsInChildren<Renderer>(true)
-            .Where(renderer => renderer is MeshRenderer || renderer is SkinnedMeshRenderer)
-            .ToArray();
-        foreach (var renderer in renderers)
-            renderer.enabled = true;
-        if (renderers.Length == 0)
-        {
-            Object.Destroy(helmet);
-            Plugin.Log.LogWarning($"Test helmet has no wearable mesh: {name}");
-            return false;
-        }
-
-        // An item prefab's attachment can inherit a large scale from the drop
-        // hierarchy. Measure its rendered world size on the live NPC and normalize
-        // against an actual head-sized target instead of guessing an item scale.
-        Bounds bounds = renderers[0].bounds;
-        for (int i = 1; i < renderers.Length; i++)
-            bounds.Encapsulate(renderers[i].bounds);
-        float diameter = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-        if (diameter <= 0.001f)
-        {
-            Object.Destroy(helmet);
-            Plugin.Log.LogWarning($"Test helmet has empty bounds: {name}");
-            return false;
-        }
-        const float targetDiameter = 0.34f;
-        if (diameter > targetDiameter)
-            helmet.transform.localScale *= targetDiameter / diameter;
-
-        bounds = renderers[0].bounds;
-        for (int i = 1; i < renderers.Length; i++)
-            bounds.Encapsulate(renderers[i].bounds);
-        helmet.transform.position += head.position + Vector3.up * 0.06f - bounds.center;
-        Plugin.Log.LogInfo($"Test helmet {traderId}: {name}, size {diameter:0.00}m -> {Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z):0.00}m.");
-        return true;
+        // Detached Player visuals have no live VisEquipment/Humanoid owner to equip
+        // helmets. Manual attach meshes use item-drop transforms and rendered bounds,
+        // which put helmets inside or far above the NPC head. Keep the reliable
+        // skinned chest/legs until an owner-driven equipment path is available.
+        Plugin.Log.LogInfo($"Test outfit {TraderId}: {attached}/2 armor pieces ({outfit.Chest}, {outfit.Legs}); helmet mounting disabled.");
     }
 
     private static bool AttachSkin(string prefabName, Transform visual,
