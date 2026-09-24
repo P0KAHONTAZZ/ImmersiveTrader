@@ -120,6 +120,15 @@ public static class QuestIssuing
         }
 
         TreasureMetadata.Stamp(item, source.Id, source.BiomeTier, sourcePosition.x, sourcePosition.z);
+
+        // Re-check coins immediately before charging. This keeps the operation safe even
+        // if another inventory hook changed the coin stack while the cargo was created.
+        if (inventory.CountItems(coinName) < price)
+        {
+            inventory.RemoveItem(item);
+            player.Message(MessageHud.MessageType.Center, $"{source.Name}: Payment changed; shipment cancelled.");
+            return true;
+        }
         inventory.RemoveItem(coinName, price);
         player.Message(MessageHud.MessageType.Center, $"{source.Name}: Deliver {def.DisplayName} to the other trader.");
         return true;
