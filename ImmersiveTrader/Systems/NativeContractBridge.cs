@@ -79,8 +79,12 @@ public static class NativeContractBridge
 
         ContractMetadata.Stamp(created, sale.Contract.Id, sale.Source.Id, TraderActivityService.GetWorldDayPublic());
         created.m_crafterName = sale.Contract.Title;
+        player.GetInventory().Changed();
+        Plugin.Log.LogInfo($"Contract scroll issued: {sale.Contract.Id}, issuer={sale.Source.Id}, " +
+            $"inventoryItems={player.GetInventory().GetAllItems().Count}, " +
+            $"validScrolls={TraderActivityService.CountPhysicalContracts(player, sale.Source.Id)}");
         player.Message(MessageHud.MessageType.Center,
-            $"Contract accepted: {sale.Contract.Title} - {sale.Contract.RequiredAmount} targets | reward +{sale.Contract.RewardSkillLevels:0} {sale.Contract.RewardSkill}");
+            $"Kontrakt w plecaku: {sale.Contract.Title}. Cel: {sale.Contract.RequiredAmount} x {sale.Contract.TargetPrefab}. Nagroda: {sale.Contract.RewardSkillLevels:0} EXP ({sale.Contract.RewardSkill}).");
         return true;
     }
 }
