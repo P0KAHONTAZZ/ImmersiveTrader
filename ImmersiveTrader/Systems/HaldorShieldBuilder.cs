@@ -71,10 +71,20 @@ public static class HaldorShieldBuilder
 
         // Clone only the mesh object bearing the original ForceField material.
         // It can be a sibling of the EffectArea in Valheim's prefab hierarchy.
+        if (visual.GetComponent<Trader>() != null || visual.GetComponent<Character>() != null)
+        {
+            UnityEngine.Object.DestroyImmediate(protection);
+            Plugin.Log.LogWarning("Haldor's ForceField mesh shares the merchant object; refusing to clone the NPC.");
+            return false;
+        }
         var bubble = UnityEngine.Object.Instantiate(visual.gameObject, parent);
         bubble.name = "ImmersiveTrader_HaldorForceField";
         for (int i = bubble.transform.childCount - 1; i >= 0; i--)
             UnityEngine.Object.DestroyImmediate(bubble.transform.GetChild(i).gameObject);
+        foreach (var effect in bubble.GetComponents<EffectArea>())
+            UnityEngine.Object.DestroyImmediate(effect);
+        foreach (var collider in bubble.GetComponents<Collider>())
+            UnityEngine.Object.DestroyImmediate(collider);
         bubble.transform.localPosition = visual.transform.position - area.transform.position;
         bubble.transform.localRotation = visual.transform.rotation;
         bubble.transform.localScale = visual.transform.lossyScale;
