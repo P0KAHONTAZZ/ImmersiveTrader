@@ -39,8 +39,14 @@ public sealed class TraderNpc : MonoBehaviour, Hoverable, Interactable
     public bool Interact(Humanoid user, bool hold, bool alt)
     {
         if (hold || user is not Player player || Definition == null) return false;
-        // Primary use is the familiar Valheim shop. Alternate use keeps the
-        // courier/task interaction path available while the combined tabbed UI is built.
+        // Delivery has priority over opening StoreGui. A player carrying cargo for
+        // this trader can therefore hand it in with the same normal E interaction.
+        // Without this check the native shop consumed every primary interaction first,
+        // making QuestDelivery unreachable for both Midka and Troldad.
+        if (!alt && QuestDelivery.TryDeliverAny(player, Definition, transform.position))
+            return true;
+
+        // With no deliverable cargo, primary E remains the familiar native Valheim shop.
         if (!alt && NativeTraderWindow.TryOpen(player, Definition, gameObject))
             return true;
 
