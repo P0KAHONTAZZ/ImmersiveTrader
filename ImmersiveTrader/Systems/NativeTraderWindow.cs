@@ -126,6 +126,28 @@ public static class NativeTraderWindow
             NativeCargoBridge.Register(cargoItem, definition, npc.transform.position, cargoDef.Id);
         }
 
+        // Five free hunting contracts share the same native list. Selecting one invokes
+        // our bridge instead of vanilla's coin purchase and creates a persistent scroll.
+        NativeContractBridge.Clear();
+        var contractPrefab = ObjectDB.instance?.GetItemPrefab(ContractRegistry.PrefabName)?.GetComponent<ItemDrop>();
+        if (contractPrefab != null)
+        {
+            foreach (var contract in TraderActivityRegistry.Activities.Where(x => x.TraderId == definition.Id))
+            {
+                var contractItem = new Trader.TradeItem
+                {
+                    m_prefab = contractPrefab, m_price = 0, m_stack = 1,
+                    m_requiredGlobalKey = string.Empty, m_levelUpEffect = false,
+                    m_buyPlayerEffects = new EffectList(), m_icon = null,
+                    m_name = contract.Title,
+                    m_tooltip = $"{contract.Description} Cel: {contract.RequiredAmount} x {contract.TargetPrefab}. Nagroda: +{contract.RewardSkillLevels:0} {contract.RewardSkill}.",
+                    m_buyKey = string.Empty, m_incrementKey = string.Empty, m_incrementAmount = 0
+                };
+                trader.m_items.Add(contractItem);
+                NativeContractBridge.Register(contractItem, definition, contract);
+            }
+        }
+
         if (trader.m_items.Count == 0)
         {
             UnityEngine.Object.Destroy(helper);
@@ -133,7 +155,8 @@ public static class NativeTraderWindow
         }
 
         int cargoRows = trader.m_items.Count(x => NativeCargoBridge.IsCargo(x));
-        Plugin.Log.LogInfo($"Native shop {definition.Id}: {offers.Length} ordinary configured, {cargoRows} cargo rows, {trader.m_items.Count} total rows.");
+        int contractRows = trader.m_items.Count(x => NativeContractBridge.IsContract(x));
+        Plugin.Log.LogInfo($"Native shop {definition.Id}: {offers.Length} ordinary configured, {cargoRows} cargo rows, {contractRows} contract rows, {trader.m_items.Count} total rows.");
 
         gui.Show(trader);
         return true;
