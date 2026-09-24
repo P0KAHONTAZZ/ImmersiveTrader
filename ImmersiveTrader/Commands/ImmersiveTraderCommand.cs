@@ -75,12 +75,26 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
     private static void FindAllLocations(Terminal c)
     {
         if (Player.m_localPlayer == null || ZoneSystem.instance == null) { c.AddString("Enter a world first."); return; }
+        var traders = TraderRegistry.Traders.Where(t => !t.IsLegendary).ToList();
+        int placed = 0;
         int total = 0;
-        foreach (var trader in TraderRegistry.Traders.Where(t => !t.IsLegendary))
-            total += AddLocationPins(c, trader.Id, false);
-        c.AddString(total > 0
-            ? $"Pinned {total} generated ImmersiveTrader location(s)."
-            : "No generated ImmersiveTrader locations found in ZoneSystem.");
+        var missing = new List<string>();
+        foreach (var trader in traders)
+        {
+            int count = AddLocationPins(c, trader.Id, false);
+            total += count;
+            if (count > 0) placed++;
+            else
+            {
+                missing.Add(trader.Id);
+                c.AddString($"MISSING: {trader.Name} [{trader.Id}] ({trader.Biome}) has no generated location.");
+            }
+            if (PrefabManager.Instance.GetPrefab($"ImmersiveTrader_NPCLOOK_{trader.Id}") == null)
+                c.AddString($"MISSING PREFAB: {trader.Id} has no NPCLOOK shell.");
+        }
+        c.AddString($"ImmersiveTrader locations: {placed}/{traders.Count} traders placed; {total} locations pinned.");
+        if (missing.Count > 0)
+            c.AddString($"Missing trader IDs: {string.Join(", ", missing)}");
     }
 
     private static int AddLocationPins(Terminal c, string traderId, bool reportMissing = true)
