@@ -72,6 +72,21 @@ public static class QuestIssuing
             return true;
         }
 
+        try
+        {
+            if (!ItemPurchaseCooldown.CanBuy(player, source.Id, "cargo", treasureId, out int days))
+            {
+                player.Message(MessageHud.MessageType.Center, $"{source.Name}: {def.DisplayName} available in {days} Valheim day(s).");
+                return true;
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Plugin.Log.LogError($"Cargo cooldown check failed: {ex}");
+            player.Message(MessageHud.MessageType.Center, "Purchase unavailable: cooldown data could not be read.");
+            return true;
+        }
+
         // Cargo capacity is per issuer, not global: the player may carry at most
         // two active shipments originating from this specific trader.
         int activeFromSource = InventoryTreasureService.GetCarried(player)
@@ -137,6 +152,15 @@ public static class QuestIssuing
             return true;
         }
         inventory.RemoveItem(coinName, price);
+        try { ItemPurchaseCooldown.MarkBought(player, source.Id, "cargo", treasureId); }
+        catch (System.Exception ex)
+        {
+            Plugin.Log.LogError($"Cargo cooldown save failed: {ex}");
+            inventory.RemoveItem(item);
+            inventory.AddItem(coins, price);
+            player.Message(MessageHud.MessageType.Center, "Purchase cancelled: cooldown data could not be saved. Coins returned.");
+            return true;
+        }
         player.Message(MessageHud.MessageType.Center, $"{source.Name}: Deliver {def.DisplayName} to the other trader.");
         return true;
     }
