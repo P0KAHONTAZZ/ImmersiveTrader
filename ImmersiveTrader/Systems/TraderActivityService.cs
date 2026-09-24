@@ -31,9 +31,10 @@ public static class TraderActivityService
                 return true;
             }
             player.GetInventory().RemoveItem(item);
+            int previousReputation = TraderReputation.Get(player, traderId);
             int reputation = TraderReputation.Add(player, traderId, TraderReputation.ContractPoints);
             player.Message(MessageHud.MessageType.Center,
-                $"Kontrakt ukończony: {rewardSkill} {before:0.##} → {after:0.##} (+{after - before:0.##} poziomy). Reputacja: +{TraderReputation.ContractPoints} ({reputation}/{TraderReputation.Maximum}).");
+                $"Kontrakt ukończony: {rewardSkill} {before:0.##} → {after:0.##} (+{after - before:0.##} poziomy). Reputacja: +{reputation - previousReputation} ({reputation}/{TraderReputation.Maximum}).");
             return true;
         }
 
