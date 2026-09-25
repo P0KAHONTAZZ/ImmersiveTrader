@@ -81,7 +81,7 @@ public sealed class TraderMapDiscovery : MonoBehaviour
             element.GetType().GetProperty("color", Fields)?.SetValue(element,
                 new Color(0.35f, 0.85f, 0.72f, 1f));
             if (element is Component image)
-                image.transform.localScale = Vector3.one * 0.5f;
+                image.transform.localScale = Vector3.one * 1.5f;
         }
     }
 
