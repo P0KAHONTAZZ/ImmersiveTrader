@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using HarmonyLib;
 using UnityEngine;
 
@@ -93,8 +92,6 @@ public sealed class TraderBanter : MonoBehaviour
         _nextCheck = Time.time + 1f;
         var player = Player.m_localPlayer;
         if (player == null || !Scripts.TryGetValue(TraderId, out var lines)) return;
-        var definition = TraderRegistry.Traders.FirstOrDefault(x => x.Id == TraderId);
-        if (definition == null || !ProgressionGate.IsRewardTierUnlocked(definition.BiomeTier)) return;
         float distance = Vector3.Distance(player.transform.position, transform.position);
         if (distance > 20f)
         {
