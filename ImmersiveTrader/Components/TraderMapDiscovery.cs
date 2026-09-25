@@ -13,6 +13,7 @@ public sealed class TraderMapDiscovery : MonoBehaviour
     private float _nextCheck;
     private object _pin;
     private Minimap _map;
+    private bool _styleWarning;
     private static readonly BindingFlags Fields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
     private void Update()
@@ -31,7 +32,15 @@ public sealed class TraderMapDiscovery : MonoBehaviour
                 map.AddPin(transform.position, Minimap.PinType.Icon3, trader.Name, true, false, 0L);
             Plugin.Log.LogInfo($"Trader map discovery: {trader.Name}.");
         }
-        if (_pin != null) StylePin(map, _pin);
+        if (_pin != null)
+        {
+            try { StylePin(map, _pin); }
+            catch (Exception error)
+            {
+                if (!_styleWarning) Plugin.Log.LogWarning($"Trader map pin styling unavailable: {error.Message}");
+                _styleWarning = true;
+            }
+        }
     }
 
     private static object FindExisting(Minimap map, string name, Vector3 position)
@@ -54,7 +63,8 @@ public sealed class TraderMapDiscovery : MonoBehaviour
                 foreach (var entry in icons)
                 {
                     if (entry == null || Read(entry, "m_name") is not string name ||
-                        name.IndexOf("Haldor", StringComparison.OrdinalIgnoreCase) < 0 ||
+                        name.IndexOf("Haldor", StringComparison.OrdinalIgnoreCase) < 0 &&
+                        name.IndexOf("Vendor_BlackForest", StringComparison.OrdinalIgnoreCase) < 0 ||
                         Read(entry, "m_icon") is not Sprite haldorIcon) continue;
                     Write(pin, "m_icon", haldorIcon);
                     break;
