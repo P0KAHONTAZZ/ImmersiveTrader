@@ -22,7 +22,7 @@ public static class ContractRegistry
         int registered = 0;
         foreach (TraderActivityDefinition definition in TraderActivityRegistry.Activities)
         {
-            RegisterItem(GetPrefabName(definition.Id), definition.Title, source, ContractIconRegistry.Parchment);
+            RegisterItem(GetPrefabName(definition.Id), definition.Title, source, ContractIconRegistry.ForSkill(definition.RewardSkill));
             registered++;
         }
         Plugin.Log.LogInfo($"Physical hunting contract scrolls registered: {registered} named contracts + legacy scroll.");
