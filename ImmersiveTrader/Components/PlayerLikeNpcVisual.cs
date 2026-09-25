@@ -56,7 +56,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
             foreach (var component in copy.GetComponentsInChildren<Component>(true))
             {
                 if (component is Transform || component is VisEquipment ||
-                    component is Animator || component is Renderer ||
+                    component.GetType().Name == "Animator" || component is Renderer ||
                     component is MeshFilter || component is LODGroup)
                     continue;
                 Object.DestroyImmediate(component);
@@ -110,27 +110,41 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         var equipment = visual.GetComponent<VisEquipment>();
         if (equipment == null) throw new MissingComponentException("Player visual has no VisEquipment.");
 
-        // With no Player network view, native VisEquipment uses its local
-        // appearance fields, as it does for preview/ghost NPCs.
-        equipment.m_chestItem = ItemHash(outfit.Chest, TraderId);
-        equipment.m_legItem = ItemHash(outfit.Legs, TraderId);
-        equipment.m_helmetItem = ItemHash(outfit.Helmet, TraderId);
-        var refresh = typeof(VisEquipment).GetMethod("UpdateVisuals",
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            null, Type.EmptyTypes, null);
-        refresh?.Invoke(equipment, null);
-        Plugin.Log.LogInfo($"Native outfit {TraderId}: helmet={outfit.Helmet}, chest={outfit.Chest}, legs={outfit.Legs}.");
+        bool helmet = EquipNativeItem(equipment, TraderId, "SetHelmetItem", outfit.Helmet);
+        bool chest = EquipNativeItem(equipment, TraderId, "SetChestItem", outfit.Chest);
+        bool legs = EquipNativeItem(equipment, TraderId, "SetLegItem", outfit.Legs);
+        Plugin.Log.LogInfo($"Native outfit {TraderId}: helmet={helmet}, chest={chest}, legs={legs}.");
     }
 
-    private static int ItemHash(string prefabName, string traderId)
+    private static bool EquipNativeItem(VisEquipment equipment, string traderId, string methodName, string prefabName)
     {
-        if (string.IsNullOrWhiteSpace(prefabName)) return 0;
+        if (string.IsNullOrWhiteSpace(prefabName)) return false;
         if (ObjectDB.instance?.GetItemPrefab(prefabName) == null)
         {
             Plugin.Log.LogWarning($"Outfit item unavailable for {traderId}: {prefabName}");
-            return 0;
+            return false;
         }
-        return StringExtensionMethods.GetStableHashCode(prefabName);
+        try
+        {
+            var method = typeof(VisEquipment).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .FirstOrDefault(candidate => candidate.Name == methodName &&
+                    candidate.GetParameters().Length > 0 &&
+                    candidate.GetParameters()[0].ParameterType == typeof(string));
+            if (method == null) throw new MissingMethodException("VisEquipment", methodName);
+            var parameters = method.GetParameters();
+            var values = new object[parameters.Length];
+            values[0] = prefabName;
+            for (int i = 1; i < parameters.Length; i++)
+                values[i] = parameters[i].HasDefaultValue ? parameters[i].DefaultValue :
+                    parameters[i].ParameterType.IsValueType ? Activator.CreateInstance(parameters[i].ParameterType) : null;
+            method.Invoke(equipment, values);
+            return true;
+        }
+        catch (Exception error)
+        {
+            Plugin.Log.LogWarning($"Native outfit equip failed for {traderId} / {prefabName}: {error}");
+            return false;
+        }
     }
 
     private static readonly Dictionary<string, string> TestHelmets = new()
