@@ -12,6 +12,15 @@ internal static class CargoPresentation
 {
     private static readonly Dictionary<string, Sprite> Icons = new();
     private static Texture2D? packages;
+    private static Texture2D? finalCargo;
+    private static readonly Dictionary<string, int> FinalCargoArt = new()
+    {
+        ["field_medicine"]=0, ["healing_honey"]=1, ["bandages"]=2, ["corewood"]=3,
+        ["copper"]=4, ["thistle"]=5, ["entrails"]=6, ["scrap_iron"]=7,
+        ["silver"]=8, ["frost_mead"]=9, ["cloudberries"]=10, ["blackmetal"]=11,
+        ["sap"]=12, ["eitr"]=13, ["flametal"]=14, ["fortification"]=15
+    };
+
     private static readonly Dictionary<string, string> Resources = new()
     {
         ["medicine"] = "HealthPotion", ["honey"] = "Honey", ["bandages"] = "LinenThread",
@@ -37,6 +46,8 @@ internal static class CargoPresentation
     internal static Sprite? IconFor(string id, string displayName)
     {
         if (Icons.TryGetValue(id, out var cached)) return cached;
+        var final = FinalIcon(id);
+        if (final != null) return Icons[id] = final;
         packages ??= LoadPackages();
         if (packages == null) return null;
         int shape = displayName.EndsWith(" Barrel", StringComparison.Ordinal) ? 1 :
@@ -82,6 +93,33 @@ internal static class CargoPresentation
             RenderTexture.active = previous;
             RenderTexture.ReleaseTemporary(target);
         }
+    }
+
+    private static Sprite? FinalIcon(string id)
+    {
+        foreach (var pair in FinalCargoArt)
+        {
+            if (!id.EndsWith("_" + pair.Key, StringComparison.Ordinal)) continue;
+            finalCargo ??= LoadEmbedded("ImmersiveTrader.Assets.CargoFinalIcons.png");
+            if (finalCargo == null) return null;
+            const int cell = 128;
+            var sprite = Sprite.Create(finalCargo, new Rect(pair.Value * cell, 0, cell, cell), new Vector2(.5f, .5f));
+            sprite.name = $"ImmersiveTrader_FinalCargo_{id}";
+            return sprite;
+        }
+        return null;
+    }
+
+    private static Texture2D? LoadEmbedded(string resource)
+    {
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource);
+        if (stream == null) return null;
+        using var memory = new MemoryStream();
+        stream.CopyTo(memory);
+        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        if (!texture.LoadImage(memory.ToArray())) return null;
+        texture.filterMode = FilterMode.Bilinear;
+        return texture;
     }
 
     private static Texture2D? LoadPackages()
