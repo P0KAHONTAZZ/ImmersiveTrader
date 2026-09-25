@@ -32,10 +32,9 @@ internal static class ContractIconRegistry
     internal static Sprite? ForSkill(Skills.SkillType skill)
     {
         if (icons.TryGetValue(skill, out var cached)) return cached;
-        // The old approved strip was exported as a presentation strip, not a true
-        // fixed-cell atlas. Reading it by cell caused the vertical fragments seen
-        // in inventory. Build every contract icon from the full parchment plus
-        // Valheim's native skill symbol instead: consistent for all 24 skills.
+        // Prefer the rebuilt fixed-cell atlas containing the approved contract art.
+        var final = LoadFinalSkillIcon(skill);
+        if (final != null) return icons[skill] = final;
         var baseSprite = Parchment;
         var player = Player.m_localPlayer;
         if (baseSprite == null || player == null) return baseSprite;
