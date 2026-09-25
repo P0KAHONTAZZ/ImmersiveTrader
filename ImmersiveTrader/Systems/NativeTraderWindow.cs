@@ -48,7 +48,10 @@ public static class NativeTraderWindow
             return false;
         }
 
+        int reputationLevel = TraderReputation.GetLevel(player, definition.Id);
+        bool tierUnlocked = ProgressionGate.IsRewardTierUnlocked(definition.BiomeTier);
         var offers = TraderShop.GetAvailableOffers(player, definition.Id);
+        Plugin.Log.LogInfo($"Shop access {definition.Id}: reputationLevel={reputationLevel}, tierUnlocked={tierUnlocked}, offers={offers.Length}.");
 
         // Never AddComponent<Trader>() to our NPC: Trader.Awake/Update expects a fully
         // authored vanilla trader hierarchy (talk points, dialogue lists, effects, etc.).
