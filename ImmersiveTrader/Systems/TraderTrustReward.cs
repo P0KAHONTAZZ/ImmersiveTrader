@@ -46,10 +46,9 @@ public static class TraderTrustReward
     {
         if (TraderReputation.GetLevel(player, trader) < 5 || !Gifts.TryGetValue(trader, out var gift))
             return;
-        // Unlocking reputation by command or remote deliveries must not bypass
-        // the same boss progression gate that protects this trader's shop.
+        // Gift access follows the same character-based gate as this trader's shop.
         var definition = TraderRegistry.Traders.FirstOrDefault(x => x.Id == trader);
-        if (definition == null || !ProgressionGate.IsRewardTierUnlocked(definition.BiomeTier)) return;
+        if (definition == null || !ProgressionGate.CanAccessTrader(player, definition)) return;
         lock (Sync)
         {
             Load();
