@@ -52,28 +52,32 @@ public static class NativeTraderWindow
 
         // Never AddComponent<Trader>() to our NPC: Trader.Awake/Update expects a fully
         // authored vanilla trader hierarchy (talk points, dialogue lists, effects, etc.).
-        // Clone Haldor's initialized Trader component data onto a disabled helper instead.
-        var haldor = ZNetScene.instance?.GetPrefab("Haldor");
-        var template = haldor?.GetComponent<Trader>();
+        // Clone an initialized vanilla Trader onto a disabled helper instead.
+        // Hildir provides the female trader interaction audio for our three women;
+        // the other traders keep Haldor's existing interaction audio.
+        string templateName = definition.Id is "mokra_dzika" or "ylva_frost" or "grelka"
+            ? "Hildir" : "Haldor";
+        var source = ZNetScene.instance?.GetPrefab(templateName);
+        var template = source?.GetComponent<Trader>();
         if (template == null)
         {
             player.Message(MessageHud.MessageType.Center, "Native trader template is unavailable.");
             return false;
         }
 
-        // Instantiate the helper while the Haldor prefab is disabled. Otherwise its
-        // ZNetView.Awake can create a persistent vanilla Haldor ZDO before we hide it,
-        // which then reappears as a real Haldor after the next world load.
-        bool haldorWasActive = haldor.activeSelf;
+        // Instantiate the helper while its vanilla source prefab is disabled. Otherwise its
+        // ZNetView.Awake can create a persistent vanilla trader ZDO before we hide it,
+        // which then reappears after the next world load.
+        bool sourceWasActive = source.activeSelf;
         GameObject helper;
         try
         {
-            haldor.SetActive(false);
-            helper = UnityEngine.Object.Instantiate(haldor, npc.transform.position + Vector3.down * 1000f, npc.transform.rotation);
+            source.SetActive(false);
+            helper = UnityEngine.Object.Instantiate(source, npc.transform.position + Vector3.down * 1000f, npc.transform.rotation);
         }
         finally
         {
-            haldor.SetActive(haldorWasActive);
+            source.SetActive(sourceWasActive);
         }
 
         helper.name = $"ImmersiveTrader_Store_{definition.Id}";
