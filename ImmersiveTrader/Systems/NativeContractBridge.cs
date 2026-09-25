@@ -109,6 +109,7 @@ public static class NativeContractBridge
             $"validScrolls={TraderActivityService.CountPhysicalContracts(player, sale.Source.Id)}");
         player.Message(MessageHud.MessageType.Center,
             $"Contract added to your inventory: {sale.Contract.Title}. Target: {required} x {sale.Contract.TargetPrefab}. Reward: +{sale.Contract.RewardSkillLevels:0} levels ({sale.Contract.RewardSkill}).");
+        Components.TraderBanter.PurchaseAtShop();
         return true;
     }
 }

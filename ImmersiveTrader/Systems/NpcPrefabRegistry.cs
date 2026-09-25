@@ -92,6 +92,14 @@ public static class NpcPrefabRegistry
         var npcTalk = shell.GetComponent<NpcTalk>();
         if (npcTalk != null) Object.DestroyImmediate(npcTalk);
 
+        // Suppress all inherited vanilla NPC chatter, including child speakers.
+        foreach (var speaker in shell.GetComponentsInChildren<MonoBehaviour>(true))
+            if (speaker != null && (speaker.GetType().Name == "NpcTalk" || speaker.GetType().Name == "RandomSpeak"))
+                Object.DestroyImmediate(speaker);
+
+        var banter = shell.AddComponent<TraderBanter>();
+        banter.TraderId = traderId;
+
         var view = shell.GetComponent<ZNetView>();
         if (view != null) view.m_persistent = false;
 

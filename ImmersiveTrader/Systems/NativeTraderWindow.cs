@@ -12,6 +12,7 @@ namespace ImmersiveTrader;
 public static class NativeTraderWindow
 {
     private static GameObject? activeHelper;
+    public static GameObject? ActiveNpc => activeHelper == null ? null : activeHelper.transform.parent?.gameObject;
 
     public static void Close()
     {

@@ -22,18 +22,23 @@ The plugin creates JSON outfit files for all 13 human traders when it starts. Mi
   "Helmet": "HelmetRootCrown",
   "Chest": "ArmorRootChest",
   "Legs": "ArmorRootLegs",
-  "RightHand": "StaffGreenRoots"
+  "RightHand": "StaffGreenRoots",
+  "LeftHand": ""
 }
 ```
 
 Midka wears green root equipment and holds a green magic staff. Encek wears the
-Deep North Protector set and carries a Frostfire Sword. The other human traders
+Deep North Protector set, a Frostfire Sword and a ShieldGold. Tyrron (the existing
+Mistlands trader internally identified as `cmok`) wears Flametal armor and carries
+ShieldFlametal with MaceGold_FrostFire as the available mace-like weapon. His outfit
+is configured in `outfits/cmok.json` to preserve existing save data. The other human traders
 wear biome-based sets. Troldad retains the Troll appearance.
 
 Edit prefab names while Valheim is closed and restart the game. An empty slot
 removes that item. When upgrading from earlier releases, files containing the
 original generated defaults for Midka, Encek and Ragnar are migrated on startup;
-customized armor choices are preserved. RightHand is added to older files.
+customized armor choices are preserved. RightHand and LeftHand are added to older files. Traders have individual greetings,
+purchase lines and occasional speech bubbles, as well as descriptions in their hover text.
 Trader clothing is rendered on each client: copy customized JSON files to
 other players' installations if everyone should see the same look.
 

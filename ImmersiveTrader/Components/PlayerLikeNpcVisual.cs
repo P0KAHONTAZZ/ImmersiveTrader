@@ -101,7 +101,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         ["ylva_frost"] = ("ArmorFenringChest", "ArmorFenringLegs"),
         ["bjarki_goldtooth"] = ("ArmorPaddedCuirass", "ArmorPaddedGreaves"),
         ["ragnar_turnipson"] = ("ArmorPaddedCuirass", "ArmorPaddedGreaves"),
-        ["cmok"] = ("ArmorMageChest", "ArmorMageLegs"),
+        ["cmok"] = ("ArmorFlametalChest", "ArmorFlametalLegs"),
         ["grelka"] = ("ArmorCarapaceChest", "ArmorCarapaceLegs"),
         ["spalony_zenek"] = ("ArmorFlametalChest", "ArmorFlametalLegs"),
         ["skjold_cinderborn"] = ("ArmorMageChest_Ashlands", "ArmorMageLegs_Ashlands")
@@ -119,6 +119,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         bool chest = SetGhostItem(equipment, TraderId, "m_chestItem", "SetChestItem", outfit.Chest);
         bool legs = SetGhostItem(equipment, TraderId, "m_legItem", "SetLegItem", outfit.Legs);
         bool weapon = SetGhostItem(equipment, TraderId, "m_rightItem", "SetRightItem", outfit.RightHand);
+        bool shield = SetGhostItem(equipment, TraderId, "m_leftItem", "SetLeftItem", outfit.LeftHand);
 
         // On a decorative NPC there is no ZDO on the copied presentation.
         // Write local appearance hashes and ask VisEquipment to rebuild meshes.
@@ -136,7 +137,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         {
             throw new InvalidOperationException($"Outfit refresh failed for {TraderId}", error);
         }
-        Plugin.Log.LogInfo($"Native outfit {TraderId}: helmet={helmet}, chest={chest}, legs={legs}, weapon={weapon}.");
+        Plugin.Log.LogInfo($"Native outfit {TraderId}: helmet={helmet}, chest={chest}, legs={legs}, weapon={weapon}, shield={shield}.");
     }
 
     private static bool SetGhostItem(VisEquipment equipment, string traderId,
@@ -198,7 +199,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         ["rudy_warg"] = "HelmetBronze", ["mokra_dzika"] = "HelmetRoot",
         ["encek"] = "HelmetDNHeavy", ["hrothgar"] = "HelmetDrake",
         ["ylva_frost"] = "HelmetFenring", ["bjarki_goldtooth"] = "HelmetPadded",
-        ["ragnar_turnipson"] = "HelmetPadded", ["cmok"] = "HelmetMage",
+        ["ragnar_turnipson"] = "HelmetPadded", ["cmok"] = "HelmetFlametal",
         ["grelka"] = "HelmetCarapace", ["spalony_zenek"] = "HelmetFlametal",
         ["skjold_cinderborn"] = "HelmetMage_Ashlands"
     };
@@ -206,7 +207,14 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
     private static readonly Dictionary<string, string> TestWeapons = new()
     {
         ["midka"] = "StaffGreenRoots",
-        ["encek"] = "SwordGold_FrostFire"
+        ["encek"] = "SwordGold_FrostFire",
+        ["cmok"] = "MaceGold_FrostFire"
+    };
+
+    private static readonly Dictionary<string, string> TestShields = new()
+    {
+        ["encek"] = "ShieldGold",
+        ["cmok"] = "ShieldFlametal"
     };
 
     [Serializable]
@@ -216,6 +224,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         public string Chest = "";
         public string Legs = "";
         public string RightHand = "";
+        public string LeftHand = "";
     }
 
     public static void InitializeOutfitFiles()
@@ -235,7 +244,8 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
             Helmet = defaultHelmet ?? "",
             Chest = defaults.Chest,
             Legs = defaults.Legs,
-            RightHand = TestWeapons.TryGetValue(traderId, out var weapon) ? weapon : ""
+            RightHand = TestWeapons.TryGetValue(traderId, out var weapon) ? weapon : "",
+            LeftHand = TestShields.TryGetValue(traderId, out var shield) ? shield : ""
         };
         try
         {
@@ -271,11 +281,24 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
                 loaded.Legs = fallback.Legs;
                 changed = true;
             }
+            if (traderId == "cmok" && loaded.Helmet == "HelmetMage" &&
+                loaded.Chest == "ArmorMageChest" && loaded.Legs == "ArmorMageLegs")
+            {
+                loaded.Helmet = fallback.Helmet;
+                loaded.Chest = fallback.Chest;
+                loaded.Legs = fallback.Legs;
+                changed = true;
+            }
             if (traderId == "ragnar_turnipson" &&
                 loaded.Chest == "ArmorFenringChest" && loaded.Legs == "ArmorFenringLegs")
             {
                 loaded.Chest = fallback.Chest;
                 loaded.Legs = fallback.Legs;
+                changed = true;
+            }
+            if (loaded.LeftHand == null || (loaded.LeftHand.Length == 0 && fallback.LeftHand.Length > 0))
+            {
+                loaded.LeftHand = fallback.LeftHand;
                 changed = true;
             }
             if (loaded.RightHand == null || (loaded.RightHand.Length == 0 && fallback.RightHand.Length > 0))

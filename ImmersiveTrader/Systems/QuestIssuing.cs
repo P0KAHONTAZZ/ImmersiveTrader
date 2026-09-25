@@ -162,6 +162,7 @@ public static class QuestIssuing
             return true;
         }
         player.Message(MessageHud.MessageType.Center, $"{source.Name}: Deliver {def.DisplayName} to the other trader.");
+        Components.TraderBanter.PurchaseAtShop();
         return true;
     }
 }
