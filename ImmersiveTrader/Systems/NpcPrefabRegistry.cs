@@ -124,6 +124,9 @@ public static class NpcPrefabRegistry
             playerLook.TraderId = traderId;
         }
 
+        if (traderId == "cmok" || traderId == "grelka")
+            shell.AddComponent<TraderWispLight>();
+
         PrefabManager.Instance.AddPrefab(shell);
     }
 
