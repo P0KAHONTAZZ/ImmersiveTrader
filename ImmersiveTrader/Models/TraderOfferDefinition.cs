@@ -6,5 +6,6 @@ public sealed record TraderOfferDefinition(
     int Price,
     int Stack,
     int RequiredTier,
-    string Label
+    string Label,
+    int RequiredReputationLevel = 1
 );

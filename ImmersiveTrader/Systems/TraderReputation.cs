@@ -69,21 +69,31 @@ public static class TraderReputation
         }
     }
 
+    public static int GetLevel(Player player, string trader) => Level(Get(player, trader));
+
+    internal static string RewardIdentity(Player player, string trader) => Key(player, trader);
+
     public static int Add(Player player, string trader, int amount)
     {
         if (amount <= 0) return Get(player, trader);
+        int next;
         lock (Sync)
         {
             Load();
             string key = Key(player, trader);
             int current = Points.TryGetValue(key, out int value) ? value : 0;
-            int next = Math.Min(Maximum, current + amount);
-            if (next == current) return next;
-            Directory.CreateDirectory(Paths.ConfigPath);
-            File.AppendAllText(FilePath, key + "\t" + next.ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
-            Points[key] = next;
-            return next;
+            next = Math.Min(Maximum, current + amount);
+            if (next != current)
+            {
+                Directory.CreateDirectory(Paths.ConfigPath);
+                File.AppendAllText(FilePath, key + "\t" + next.ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
+                Points[key] = next;
+            }
         }
+        // Grant only after saving reputation; a full inventory leaves the gift pending
+        // until the player talks to the same trader again.
+        if (next >= Maximum) TraderTrustReward.TryGrant(player, trader);
+        return next;
     }
 
     public static int Reset(Player player, string trader)

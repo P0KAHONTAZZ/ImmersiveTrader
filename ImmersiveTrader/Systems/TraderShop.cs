@@ -6,14 +6,17 @@ namespace ImmersiveTrader;
 
 public static class TraderShop
 {
-    public static TraderOfferDefinition[] GetAvailableOffers(string traderId) =>
+    public static TraderOfferDefinition[] GetAvailableOffers(Player player, string traderId) =>
         TraderShopRegistry.Offers
-            .Where(x => x.TraderId == traderId && ProgressionGate.IsRewardTierUnlocked(x.RequiredTier))
+            .Where(x => x.TraderId == traderId &&
+                TraderReputation.GetLevel(player, traderId) >= x.RequiredReputationLevel &&
+                ProgressionGate.IsRewardTierUnlocked(x.RequiredTier))
             .ToArray();
 
     public static bool TryBuy(Player player, TraderOfferDefinition offer)
     {
-        if (!ProgressionGate.IsRewardTierUnlocked(offer.RequiredTier))
+        if (!ProgressionGate.IsRewardTierUnlocked(offer.RequiredTier) ||
+            TraderReputation.GetLevel(player, offer.TraderId) < offer.RequiredReputationLevel)
         {
             player.Message(MessageHud.MessageType.Center, "This stock is not available yet.");
             return false;

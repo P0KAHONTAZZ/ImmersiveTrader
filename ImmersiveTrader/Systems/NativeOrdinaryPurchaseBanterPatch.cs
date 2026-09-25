@@ -7,13 +7,23 @@ namespace ImmersiveTrader;
 [HarmonyPatch(typeof(StoreGui), "BuySelectedItem")]
 internal static class NativeOrdinaryPurchaseBanterPatch
 {
-    private static void Prefix(StoreGui __instance, out int __state)
+    private static bool Prefix(StoreGui __instance, out int __state)
     {
         __state = -1;
         var row = AccessTools.Field(typeof(StoreGui), "m_selectedItem")?.GetValue(__instance) as Trader.TradeItem;
         if (row == null || NativeCargoBridge.IsCargo(row) || NativeContractBridge.IsContract(row) ||
-            NativeTraderWindow.ActiveNpc == null) return;
+            NativeTraderWindow.ActiveNpc == null) return true;
+        if (!NativeTraderWindow.TryGetOrdinarySale(row, out var offer)) return true;
+        var player = Player.m_localPlayer;
+        if (player == null || TraderReputation.GetLevel(player, offer.TraderId) < offer.RequiredReputationLevel ||
+            !ProgressionGate.IsRewardTierUnlocked(offer.RequiredTier))
+        {
+            player?.Message(MessageHud.MessageType.Center,
+                $"Requires {offer.RequiredReputationLevel} reputation stars and biome progression.");
+            return false;
+        }
         __state = CountCarried(row);
+        return true;
     }
 
     private static void Postfix(StoreGui __instance, int __state)

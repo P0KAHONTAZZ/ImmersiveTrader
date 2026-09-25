@@ -9,7 +9,8 @@ A Valheim mod with 14 regular traders, hunting contracts, courier shipments and 
 - Carry up to two shipments and two contracts from each issuing trader. Each individual shipment or contract has its own seven Valheim day purchase cooldown.
 - Hunting contract scrolls track progress in item metadata, even when dropped and recovered. Completing one grants two levels in its specified skill, up to the skill cap.
 - Completing a shipment or contract awards reputation with its issuing trader. Reputation is stored per character, world and trader. The five reputation levels have thresholds of 0, 12, 28, 44 and 64 points.
-- Midka additionally sells Minor Healing Mead for 70 coins. The reputation-unlocked vanilla items listed in the design spreadsheet are not yet implemented in the game.
+- Midka additionally sells Minor Healing Mead for 70 coins. Each trader permanently unlocks one new vanilla shop item at reputation levels 2, 3, 4 and 5; levels 1-4 do not grant free goods. Metal ore and scrap cost at least 500 coins per unit. Skjold sells one Molten Core for 1,000 coins at level 4.
+- Reaching reputation level 5 grants one fixed, free gift per trader, once per character and world. If the inventory is full, free a slot and interact with that trader again; restarting or resetting reputation does not repeat the reward. Biome progression locks apply to the stock and reward.
 - Trader locations and protection domes are available. Human trader outfits use the Player visual equipment system; NPC environments remain under development.
 
 ## Trader outfits
@@ -59,4 +60,4 @@ powershell -ExecutionPolicy Bypass -File .\Build-And-Install-Verified.ps1
 
 The verified installer checks the source and bundled images, builds the DLL, moves duplicate copies aside and compares the installed DLL SHA-256 with the build output. A successful run prints `BUILD OK - DLL COPIED`.
 
-For a multiplayer session, all participants must use a compatible version. Server-wide authority and persistence are still being developed.
+For a multiplayer session, all participants must use a compatible version. Reputation, reward claims and shop unlocks currently persist on each player's local install; server-wide authority and persistence are still being developed.

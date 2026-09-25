@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using ImmersiveTrader.Models;
 using UnityEngine;
 
@@ -12,10 +13,22 @@ namespace ImmersiveTrader;
 public static class NativeTraderWindow
 {
     private static GameObject? activeHelper;
+    private static readonly Dictionary<Trader.TradeItem, TraderOfferDefinition> OrdinarySales = new();
+    public static bool TryGetOrdinarySale(Trader.TradeItem row, out TraderOfferDefinition offer)
+    {
+        if (OrdinarySales.TryGetValue(row, out var found))
+        {
+            offer = found;
+            return true;
+        }
+        offer = null!;
+        return false;
+    }
     public static GameObject? ActiveNpc => activeHelper == null ? null : activeHelper.transform.parent?.gameObject;
 
     public static void Close()
     {
+        OrdinarySales.Clear();
         NativeCargoBridge.Clear();
         NativeContractBridge.Clear();
         if (activeHelper != null)
@@ -35,7 +48,7 @@ public static class NativeTraderWindow
             return false;
         }
 
-        var offers = TraderShop.GetAvailableOffers(definition.Id);
+        var offers = TraderShop.GetAvailableOffers(player, definition.Id);
 
         // Never AddComponent<Trader>() to our NPC: Trader.Awake/Update expects a fully
         // authored vanilla trader hierarchy (talk points, dialogue lists, effects, etc.).

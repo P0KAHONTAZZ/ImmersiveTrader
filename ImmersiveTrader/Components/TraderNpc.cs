@@ -39,6 +39,7 @@ public sealed class TraderNpc : MonoBehaviour, Hoverable, Interactable
     public bool Interact(Humanoid user, bool hold, bool alt)
     {
         if (hold || user is not Player player || Definition == null) return false;
+        TraderTrustReward.TryGrant(player, Definition.Id);
         // Delivery has priority over opening StoreGui. A player carrying cargo for
         // this trader can therefore hand it in with the same normal E interaction.
         // Without this check the native shop consumed every primary interaction first,
