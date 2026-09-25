@@ -12,7 +12,19 @@ namespace ImmersiveTrader;
 internal static class ContractIconRegistry
 {
     private static Sprite? parchment;
+    private static Texture2D? finalSheet;
     private static readonly Dictionary<Skills.SkillType, Sprite> icons = new();
+    private static readonly Dictionary<Skills.SkillType, int> FinalArt = new()
+    {
+        [Skills.SkillType.Axes]=0, [Skills.SkillType.Blocking]=1, [Skills.SkillType.Bows]=2,
+        [Skills.SkillType.Clubs]=3, [Skills.SkillType.Knives]=4, [Skills.SkillType.Polearms]=5,
+        [Skills.SkillType.Swords]=6, [Skills.SkillType.Unarmed]=7, [Skills.SkillType.WoodCutting]=8,
+        [Skills.SkillType.Pickaxes]=9, [Skills.SkillType.Spears]=10, [Skills.SkillType.Crossbows]=11,
+        [Skills.SkillType.Run]=12, [Skills.SkillType.Swim]=13, [Skills.SkillType.Jump]=14,
+        [Skills.SkillType.Sneak]=15, [Skills.SkillType.Fishing]=16, [Skills.SkillType.Cooking]=17,
+        [Skills.SkillType.Farming]=18, [Skills.SkillType.Crafting]=19, [Skills.SkillType.BloodMagic]=20,
+        [Skills.SkillType.ElementalMagic]=21
+    };
     private const int Size = 128;
 
     internal static Sprite? Parchment => parchment ??= LoadParchment();
@@ -20,6 +32,8 @@ internal static class ContractIconRegistry
     internal static Sprite? ForSkill(Skills.SkillType skill)
     {
         if (icons.TryGetValue(skill, out var cached)) return cached;
+        var final = LoadFinalSkillIcon(skill);
+        if (final != null) return icons[skill] = final;
         var baseSprite = Parchment;
         var player = Player.m_localPlayer;
         if (baseSprite == null || player == null) return baseSprite;
@@ -65,6 +79,30 @@ internal static class ContractIconRegistry
             Plugin.Log.LogWarning($"Could not render contract skill icon {skill}: {error.Message}");
             return baseSprite;
         }
+    }
+
+    private static Sprite? LoadFinalSkillIcon(Skills.SkillType skill)
+    {
+        if (!FinalArt.TryGetValue(skill, out int index)) return null; // Ride/Dodge keep runtime fallback until dedicated art exists.
+        finalSheet ??= LoadTexture("ImmersiveTrader.Assets.ContractSkillIcons.png");
+        if (finalSheet == null) return null;
+        const int cell = 128;
+        if (finalSheet.width < (index + 1) * cell || finalSheet.height < cell) return null;
+        var sprite = Sprite.Create(finalSheet, new Rect(index * cell, 0, cell, cell), new Vector2(.5f, .5f));
+        sprite.name = $"ImmersiveTrader_FinalContract_{skill}";
+        return sprite;
+    }
+
+    private static Texture2D? LoadTexture(string resource)
+    {
+        using Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource);
+        if (stream == null) return null;
+        using var memory = new MemoryStream();
+        stream.CopyTo(memory);
+        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        if (!texture.LoadImage(memory.ToArray())) return null;
+        texture.filterMode = FilterMode.Bilinear;
+        return texture;
     }
 
     private static void DrawSprite(Sprite sprite, Rect destination)
