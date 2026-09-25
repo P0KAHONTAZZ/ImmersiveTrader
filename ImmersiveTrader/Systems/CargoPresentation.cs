@@ -1,41 +1,37 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using UnityEngine;
 using Jotunn.Managers;
 
 namespace ImmersiveTrader;
 
-/// <summary>Vanilla chest silhouette and resource labels for the physical cargo.</summary>
+/// <summary>
+/// Cargo presentation intentionally reuses native Valheim item art.
+/// This keeps every shipment readable in inventory and avoids maintaining
+/// a partial custom atlas. The physical drop also uses the native resource
+/// model rather than forcing every shipment into the same wooden chest.
+/// </summary>
 internal static class CargoPresentation
 {
     private static readonly Dictionary<string, Sprite> Icons = new();
-    private static Texture2D? packages;
-    private static Texture2D? finalCargo;
-    private static readonly Dictionary<string, int> FinalCargoArt = new()
-    {
-        ["field_medicine"]=0, ["healing_honey"]=1, ["bandages"]=2, ["corewood"]=3,
-        ["copper"]=4, ["thistle"]=5, ["entrails"]=6, ["scrap_iron"]=7,
-        ["silver"]=8, ["frost_mead"]=9, ["cloudberries"]=10, ["blackmetal"]=11,
-        ["sap"]=12, ["eitr"]=13, ["flametal"]=14, ["fortification"]=15
-    };
 
     private static readonly Dictionary<string, string> Resources = new()
     {
-        ["medicine"] = "HealthPotion", ["honey"] = "Honey", ["bandages"] = "LinenThread",
+        ["field_medicine"] = "HealthPotion", ["healing_honey"] = "Honey", ["bandages"] = "LinenThread",
         ["herbs"] = "Dandelion", ["resin"] = "Resin", ["corewood"] = "RoundLog",
         ["hides"] = "TrollHide", ["meat"] = "RawMeat", ["wood"] = "Wood",
         ["amber"] = "Amber", ["copper"] = "Copper", ["tin"] = "Tin",
         ["cores"] = "SurtlingCore", ["arrows"] = "ArrowWood", ["rubies"] = "Ruby",
-        ["thistle"] = "Thistle", ["entrails"] = "Entrails", ["iron"] = "Iron",
-        ["roots"] = "Root", ["bloodbags"] = "Bloodbag", ["guck"] = "Guck",
+        ["thistle"] = "Thistle", ["entrails"] = "Entrails", ["scrap_iron"] = "IronScrap",
+        ["iron"] = "Iron", ["roots"] = "Root", ["bloodbags"] = "Bloodbag", ["guck"] = "Guck",
         ["chains"] = "Chain", ["sausages"] = "Sausages", ["bark"] = "ElderBark",
-        ["obsidian"] = "Obsidian", ["silver"] = "Silver", ["crystal"] = "Crystal",
-        ["pelts"] = "WolfPelt", ["onions"] = "Onion", ["seeds"] = "OnionSeeds",
-        ["mead"] = "MeadFrostResist", ["barley"] = "Barley", ["flour"] = "BarleyFlour",
-        ["flax"] = "Flax", ["cloudberries"] = "Cloudberry", ["blackmetal"] = "BlackMetal",
-        ["coins"] = "Coins", ["puffs"] = "MushroomJotunPuffs", ["softtissue"] = "Softtissue",
+        ["obsidian"] = "Obsidian", ["silver"] = "Silver", ["wolf_meat"] = "WolfMeat",
+        ["crystal"] = "Crystal", ["pelts"] = "WolfPelt", ["onions"] = "Onion",
+        ["seeds"] = "OnionSeeds", ["frost_mead"] = "MeadFrostResist",
+        ["barley"] = "Barley", ["flour"] = "BarleyFlour", ["flax"] = "Flax",
+        ["cloudberries"] = "Cloudberry", ["blackmetal"] = "BlackMetal",
+        ["coins"] = "Coins", ["lox_meat"] = "LoxMeat",
+        ["puffs"] = "MushroomJotunPuffs", ["softtissue"] = "Softtissue",
         ["yggwood"] = "YggdrasilWood", ["marble"] = "BlackMarble", ["sap"] = "Sap",
         ["magecaps"] = "MushroomMagecap", ["eitr"] = "Eitr", ["jelly"] = "RoyalJelly",
         ["grausten"] = "Grausten", ["ashwood"] = "Blackwood", ["flametal"] = "FlametalNew",
@@ -46,135 +42,84 @@ internal static class CargoPresentation
     internal static Sprite? IconFor(string id, string displayName)
     {
         if (Icons.TryGetValue(id, out var cached)) return cached;
-        var final = FinalIcon(id);
-        if (final != null) return Icons[id] = final;
-        packages ??= LoadPackages();
-        if (packages == null) return null;
-        int shape = displayName.EndsWith(" Barrel", StringComparison.Ordinal) ? 1 :
-            displayName.EndsWith(" Sack", StringComparison.Ordinal) ? 2 :
-            displayName.EndsWith(" Bundle", StringComparison.Ordinal) ? 3 :
-            displayName.EndsWith(" Basket", StringComparison.Ordinal) ? 4 : 0;
-        Sprite? label = null;
-        foreach (var pair in Resources)
-        {
-            if (!id.EndsWith("_" + pair.Key, StringComparison.Ordinal)) continue;
-            var sprites = PrefabManager.Instance.GetPrefab(pair.Value)?.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_icons;
-            label = sprites != null && sprites.Length > 0 ? sprites[0] : null;
-            break;
-        }
-        const int size = 128;
-        var target = RenderTexture.GetTemporary(size, size, 0, RenderTextureFormat.ARGB32);
-        var previous = RenderTexture.active;
-        try
-        {
-            RenderTexture.active = target;
-            GL.Clear(true, true, Color.clear);
-            GL.PushMatrix();
-            try
-            {
-                GL.LoadPixelMatrix(0, size, size, 0);
-                Graphics.DrawTexture(new Rect(6, 3, 116, 122), packages,
-                    new Rect(shape / 5f, 0f, 1f / 5f, 1f), 0, 0, 0, 0);
-                if (label != null) Draw(label, new Rect(48, 54, 34, 34));
-            }
-            finally { GL.PopMatrix(); }
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            texture.ReadPixels(new Rect(0, 0, size, size), 0, 0);
-            texture.Apply();
-            return Icons[id] = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f));
-        }
-        catch (Exception error)
-        {
-            Plugin.Log.LogWarning($"Cargo icon {id}: {error.Message}");
-            return null;
-        }
-        finally
-        {
-            RenderTexture.active = previous;
-            RenderTexture.ReleaseTemporary(target);
-        }
-    }
+        var prefab = ResourcePrefab(id);
+        var sprites = prefab?.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_icons;
+        if (sprites != null && sprites.Length > 0 && sprites[0] != null)
+            return Icons[id] = sprites[0];
 
-    private static Sprite? FinalIcon(string id)
-    {
-        foreach (var pair in FinalCargoArt)
-        {
-            if (!id.EndsWith("_" + pair.Key, StringComparison.Ordinal)) continue;
-            finalCargo ??= LoadEmbedded("ImmersiveTrader.Assets.CargoFinalIcons.png");
-            if (finalCargo == null) return null;
-            const int cell = 128;
-            var sprite = Sprite.Create(finalCargo, new Rect(pair.Value * cell, 0, cell, cell), new Vector2(.5f, .5f));
-            sprite.name = $"ImmersiveTrader_FinalCargo_{id}";
-            return sprite;
-        }
+        Plugin.Log.LogWarning($"Cargo icon source missing for {id}; keeping cloned base icon.");
         return null;
     }
 
-    private static Texture2D? LoadEmbedded(string resource)
+    private static GameObject? ResourcePrefab(string id)
     {
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource);
-        if (stream == null) return null;
-        using var memory = new MemoryStream();
-        stream.CopyTo(memory);
-        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-        if (!texture.LoadImage(memory.ToArray())) return null;
-        texture.filterMode = FilterMode.Bilinear;
-        return texture;
+        // Longest suffix wins: e.g. hrothgar_wolf_meat must resolve wolf_meat,
+        // not the generic meat mapping.
+        string? best = null;
+        foreach (var key in Resources.Keys)
+            if (id.EndsWith("_" + key, StringComparison.Ordinal) &&
+                (best == null || key.Length > best.Length))
+                best = key;
+        return best == null ? null : PrefabManager.Instance.GetPrefab(Resources[best]);
     }
 
-    private static Texture2D? LoadPackages()
+    internal static void AttachWorldCrate(GameObject item, string id)
     {
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ImmersiveTrader.Assets.CargoPackages.png");
-        if (stream == null) { Plugin.Log.LogWarning("Cargo package art missing from DLL."); return null; }
-        using var memory = new MemoryStream();
-        stream.CopyTo(memory);
-        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-        if (!texture.LoadImage(memory.ToArray())) return null;
-        texture.filterMode = FilterMode.Bilinear;
-        return texture;
-    }
+        var source = ResourcePrefab(id);
+        if (source == null)
+        {
+            Plugin.Log.LogWarning($"Cargo world model source missing for {id}; keeping base model.");
+            return;
+        }
 
-    private static void Draw(Sprite sprite, Rect destination)
-    {
-        var source = sprite.textureRect;
-        var texture = sprite.texture;
-        Graphics.DrawTexture(destination, texture,
-            new Rect(source.x / texture.width, source.y / texture.height,
-                source.width / texture.width, source.height / texture.height), 0, 0, 0, 0);
-    }
-
-    internal static void AttachWorldCrate(GameObject item)
-    {
-        var chest = PrefabManager.Instance.GetPrefab("piece_chest_wood");
-        if (chest == null) { Plugin.Log.LogWarning("Cargo chest model missing: piece_chest_wood"); return; }
         if (item.GetComponent<Rigidbody>() == null)
         {
             var body = item.AddComponent<Rigidbody>();
             body.mass = 8f;
+            body.interpolation = RigidbodyInterpolation.Interpolate;
         }
+
+        // Hide only the cloned base prefab renderers. The new native visual is
+        // added afterwards, so it cannot accidentally be disabled.
+        foreach (var renderer in item.GetComponentsInChildren<Renderer>(true))
+            renderer.enabled = false;
+
+        var visualRoot = new GameObject("ImmersiveTrader_CargoVisual");
+        visualRoot.transform.SetParent(item.transform, false);
+        visualRoot.transform.localPosition = new Vector3(0f, 0.12f, 0f);
+        visualRoot.transform.localRotation = Quaternion.Euler(0f, 25f, 0f);
+
+        int copied = 0;
+        foreach (var renderer in source.GetComponentsInChildren<Renderer>(true))
+        {
+            if (renderer is not MeshRenderer meshRenderer) continue;
+            var filter = renderer.GetComponent<MeshFilter>();
+            if (filter == null || filter.sharedMesh == null) continue;
+
+            var child = new GameObject("NativeCargoMesh");
+            child.transform.SetParent(visualRoot.transform, false);
+            child.transform.localPosition = source.transform.InverseTransformPoint(renderer.transform.position);
+            child.transform.localRotation = Quaternion.Inverse(source.transform.rotation) * renderer.transform.rotation;
+            child.transform.localScale = renderer.transform.lossyScale;
+            child.AddComponent<MeshFilter>().sharedMesh = filter.sharedMesh;
+            child.AddComponent<MeshRenderer>().sharedMaterials = meshRenderer.sharedMaterials;
+            copied++;
+        }
+
+        if (copied == 0)
+        {
+            foreach (var renderer in item.GetComponentsInChildren<Renderer>(true))
+                renderer.enabled = true;
+            UnityEngine.Object.Destroy(visualRoot);
+            Plugin.Log.LogWarning($"Cargo native mesh unavailable for {id}; keeping base model.");
+            return;
+        }
+
         if (item.GetComponentInChildren<Collider>(true) == null)
         {
             var collider = item.AddComponent<BoxCollider>();
-            collider.size = new Vector3(.55f, .4f, .42f);
-            collider.center = new Vector3(0f, .2f, 0f);
+            collider.size = new Vector3(.5f, .35f, .5f);
+            collider.center = new Vector3(0f, .18f, 0f);
         }
-
-        int copied = 0;
-        foreach (var renderer in chest.GetComponentsInChildren<MeshRenderer>(true))
-        {
-            var filter = renderer.GetComponent<MeshFilter>();
-            if (filter == null || filter.sharedMesh == null) continue;
-            var visual = new GameObject("ImmersiveTrader_CargoCrate");
-            visual.transform.SetParent(item.transform, false);
-            visual.transform.localPosition = chest.transform.InverseTransformPoint(renderer.transform.position);
-            visual.transform.localRotation = Quaternion.Inverse(chest.transform.rotation) * renderer.transform.rotation;
-            visual.transform.localScale = renderer.transform.lossyScale;
-            visual.AddComponent<MeshFilter>().sharedMesh = filter.sharedMesh;
-            visual.AddComponent<MeshRenderer>().sharedMaterials = renderer.sharedMaterials;
-            copied++;
-        }
-        if (copied == 0) return;
-        foreach (var renderer in item.GetComponentsInChildren<Renderer>(true))
-            if (renderer.gameObject.name != "ImmersiveTrader_CargoCrate") renderer.enabled = false;
     }
 }
