@@ -49,7 +49,7 @@ public static class NativeTraderWindow
         }
 
         int reputationLevel = TraderReputation.GetLevel(player, definition.Id);
-        bool tierUnlocked = ProgressionGate.IsRewardTierUnlocked(definition.BiomeTier);
+        bool tierUnlocked = ProgressionGate.CanAccessTrader(player, definition);
         var offers = TraderShop.GetAvailableOffers(player, definition.Id);
         Plugin.Log.LogInfo($"Shop access {definition.Id}: reputationLevel={reputationLevel}, tierUnlocked={tierUnlocked}, offers={offers.Length}.");
 
