@@ -6,8 +6,8 @@ namespace ImmersiveTrader;
 
 public static class ProgressionGate
 {
-    // Boss kills are stored as unique keys on each character by Valheim.
-    // A different character on the same server must not inherit world progression.
+    // Vanilla boss progression is represented by global world keys. Personal
+    // ImmersiveTrader access keys still remain character-specific.
     private static readonly Dictionary<int, string> RequiredPreviousBossKey = new()
     {
         { 1, "defeated_eikthyr" },
@@ -73,8 +73,14 @@ public static class ProgressionGate
     public static bool IsRewardTierUnlocked(Player player, int rewardTier)
     {
         if (rewardTier <= 0 || !Plugin.ProgressionLock.Value) return true;
-        return player != null && RequiredPreviousBossKey.TryGetValue(rewardTier, out var key)
-            && (player.HaveUniqueKey(key) || HighestKnownMaterialTier(player) >= rewardTier);
+        if (player == null || !RequiredPreviousBossKey.TryGetValue(rewardTier, out var key)) return false;
+
+        // Boss stones/events set vanilla GLOBAL keys, not Player unique keys.
+        // Checking HaveUniqueKey here kept Swamp+ traders permanently locked.
+        bool bossDefeated = ZoneSystem.instance != null && ZoneSystem.instance.GetGlobalKey(key);
+        bool legacyPersonalKey = player.HaveUniqueKey(key);
+        bool materialEvidence = HighestKnownMaterialTier(player) >= rewardTier;
+        return bossDefeated || legacyPersonalKey || materialEvidence;
     }
 
     public static bool CanAccessTrader(Player player, TraderDefinition trader)
