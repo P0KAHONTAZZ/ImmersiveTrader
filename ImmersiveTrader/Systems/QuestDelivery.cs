@@ -22,7 +22,7 @@ public static class QuestDelivery
             return true;
         }
 
-        bool targetTierUnlocked = target.IsLegendary || ProgressionGate.IsRewardTierUnlocked(target.BiomeTier);
+        bool targetTierUnlocked = target.IsLegendary || ProgressionGate.CanAccessTrader(player, target);
 
         var table = target.IsLegendary ? LegendaryRewardRegistry.Rewards : RewardRegistry.Rewards;
         var reward = table.FirstOrDefault(x => x.TraderId == target.Id && x.TreasureId == carried.TreasureId);
@@ -40,7 +40,7 @@ public static class QuestDelivery
             var fallback = TraderRegistry.Traders
                 .Where(x => !x.IsLegendary &&
                             x.Id != carried.SourceTraderId &&
-                            ProgressionGate.IsRewardTierUnlocked(x.BiomeTier))
+                            ProgressionGate.CanAccessTrader(player, x))
                 .OrderByDescending(x => x.BiomeTier)
                 .ThenBy(x => x.Id)
                 .Select(x => RewardRegistry.Rewards.FirstOrDefault(r =>
