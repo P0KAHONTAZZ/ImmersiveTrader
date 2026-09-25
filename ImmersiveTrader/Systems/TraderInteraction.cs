@@ -27,7 +27,7 @@ public static class TraderInteraction
 
     private static void ShowOrBuyStock(Player player, TraderDefinition trader)
     {
-        var offers = TraderShop.GetAvailableOffers(trader.Id);
+        var offers = TraderShop.GetAvailableOffers(player, trader.Id);
         if (offers.Length == 0)
         {
             player.Message(MessageHud.MessageType.Center, $"{trader.Name}: Nothing for sale right now.");
@@ -39,7 +39,7 @@ public static class TraderInteraction
 
     private static void ShowStock(Player player, TraderDefinition trader)
     {
-        var stock = TraderShop.GetAvailableOffers(trader.Id);
+        var stock = TraderShop.GetAvailableOffers(player, trader.Id);
         if (stock.Length > 0)
         {
             var offer = stock[0];
