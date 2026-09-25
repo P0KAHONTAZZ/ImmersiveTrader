@@ -68,7 +68,7 @@ public static class TraderTrustReward
             if (!inventory.CanAddItem(prefab, gift.Quantity))
             {
                 player.Message(MessageHud.MessageType.Center,
-                    "Trusted reward waiting: make room for the full gift (30 ore needs a free inventory slot). Reopen this trader's shop.");
+                    $"Trusted reward waiting: make room for {gift.Quantity} x {gift.Name}, then reopen this trader's shop.");
                 return;
             }
 
