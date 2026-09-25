@@ -80,9 +80,10 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             else if (Eq(args[2], "revoke")) ProgressionGate.RevokeAccess(player, trader.Id);
             else { c.AddString("Usage: it access <traderId> [grant|revoke]"); return; }
         }
-        bool personalBoss = ProgressionGate.IsRewardTierUnlocked(player, trader.BiomeTier);
+        bool progress = ProgressionGate.IsRewardTierUnlocked(player, trader.BiomeTier);
         bool overrideAccess = ProgressionGate.HasAccess(player, trader.Id);
-        c.AddString($"{trader.Name}: access={(personalBoss || overrideAccess ? "open" : "locked")}; boss progression={(personalBoss ? "unlocked" : "locked")}; manual access={(overrideAccess ? "granted" : "none")}.");
+        int materialTier = ProgressionGate.HighestKnownMaterialTier(player);
+        c.AddString($"{trader.Name}: access={(progress || overrideAccess ? "open" : "locked")}; personal boss key or material progress={(progress ? "recognized" : "unrecognized")}; highest known material tier={materialTier}; manual access={(overrideAccess ? "granted" : "none")}.");
     }
 
     private static void ReputationCommand(string[] args, Terminal c)
