@@ -55,7 +55,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
 
             foreach (var component in copy.GetComponentsInChildren<Component>(true))
             {
-                if (component is Transform || component is VisEquipment ||
+                if (component is Transform || component is ZNetView || component is VisEquipment ||
                     component.GetType().Name == "Animator" || component is Renderer ||
                     component is MeshFilter || component is LODGroup)
                     continue;
@@ -66,7 +66,12 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
             if (equipment == null) throw new MissingComponentException("Player prefab has no VisEquipment.");
             foreach (var renderer in copy.GetComponentsInChildren<Renderer>(true))
                 renderer.enabled = true;
-            copy.SetActive(true);
+            // VisEquipment.Awake requires a ZNetView on its own root.
+            // Suppress ZDO creation so the decoration cannot register as a
+            // second networked player alongside the Hildir trader shell.
+            ZNetView.m_forceDisableInit = true;
+            try { copy.SetActive(true); }
+            finally { ZNetView.m_forceDisableInit = false; }
             ApplyTestOutfit(copy.transform);
 
             // Hide the shell only after the presentation is built successfully.
@@ -128,7 +133,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         }
         catch (Exception error)
         {
-            Plugin.Log.LogWarning($"Outfit refresh failed for {TraderId}: {error}");
+            throw new InvalidOperationException($"Outfit refresh failed for {TraderId}", error);
         }
         Plugin.Log.LogInfo($"Native outfit {TraderId}: helmet={helmet}, chest={chest}, legs={legs}.");
     }
