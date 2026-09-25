@@ -12,6 +12,27 @@ A Valheim mod with 14 regular traders, hunting contracts, courier shipments and 
 - Midka additionally sells Minor Healing Mead for 70 coins. The reputation-unlocked vanilla items listed in the design spreadsheet are not yet implemented in the game.
 - Trader locations, protection domes and the player-like trader visual prototype are under active development. The experimental manual helmet mounting was disabled because it distorted NPC heads.
 
+## Trader outfits
+
+Each trader creates a JSON outfit file when their NPC first appears, for example
+`BepInEx/config/ImmersiveTrader/outfits/midka.json`:
+
+```json
+{
+  "Helmet": "HelmetLeather",
+  "Chest": "ArmorLeatherChest",
+  "Legs": "ArmorLeatherLegs"
+}
+```
+
+Edit prefab names while the game is closed, then restart Valheim. An empty `Helmet`
+hides the helmet. The game renders helmets through the Player visual's native
+`VisEquipment` when available; it never scales an item-drop model onto the
+head. A missing native equipment component leaves the NPC without a helmet and
+writes a warning to `BepInEx/LogOutput.log`. The trader interaction shell and
+world location remain unchanged. On multiplayer clients, copy the same outfit
+files to each player's machine for consistent appearance.
+
 ## Requirements
 
 - Valheim, BepInEx and Jotunn. Compile against the locally installed Valheim assemblies.

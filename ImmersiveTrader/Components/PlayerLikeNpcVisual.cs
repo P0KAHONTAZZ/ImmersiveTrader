@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
+using System.Reflection;
+using BepInEx;
 using Jotunn.Managers;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -96,7 +99,8 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
 
     private void ApplyTestOutfit(Transform visual)
     {
-        if (!TestOutfits.TryGetValue(TraderId, out var outfit)) return;
+        if (!TestOutfits.TryGetValue(TraderId, out var defaults)) return;
+        var outfit = LoadOutfit(TraderId, defaults);
 
         var bones = visual.GetComponentsInChildren<Transform>(true)
             .GroupBy(bone => bone.name, StringComparer.Ordinal)
@@ -105,7 +109,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         int attached = 0;
         if (AttachSkin(outfit.Chest, visual, bones)) attached++;
         if (AttachSkin(outfit.Legs, visual, bones)) attached++;
-        bool helmet = AttachHelmet(TraderId, bones);
+        bool helmet = EquipNativeHelmet(visual, TraderId, outfit.Helmet);
         Plugin.Log.LogInfo($"Test outfit {TraderId}: {attached}/2 armor pieces, helmet={helmet} ({outfit.Chest}, {outfit.Legs}).");
     }
 
@@ -120,50 +124,86 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         ["skjold_cinderborn"] = "HelmetMage_Ashlands"
     };
 
-    private static bool AttachHelmet(string traderId, Dictionary<string, Transform> bones)
+    [Serializable]
+    private sealed class TraderOutfit
     {
-        if (!TestHelmets.TryGetValue(traderId, out var name)) return false;
-        if (!bones.TryGetValue("Head", out var head))
+        public string Helmet = "";
+        public string Chest = "";
+        public string Legs = "";
+    }
+
+    private static TraderOutfit LoadOutfit(string traderId, (string Chest, string Legs) defaults)
+    {
+        TestHelmets.TryGetValue(traderId, out var defaultHelmet);
+        var fallback = new TraderOutfit
         {
-            Plugin.Log.LogWarning($"Test outfit head bone unavailable for {traderId}.");
+            Helmet = defaultHelmet ?? "",
+            Chest = defaults.Chest,
+            Legs = defaults.Legs
+        };
+        try
+        {
+            string directory = Path.Combine(Paths.ConfigPath, "ImmersiveTrader", "outfits");
+            Directory.CreateDirectory(directory);
+            string path = Path.Combine(directory, traderId + ".json");
+            if (!File.Exists(path))
+            {
+                File.WriteAllText(path, JsonUtility.ToJson(fallback, true));
+                return fallback;
+            }
+            var loaded = JsonUtility.FromJson<TraderOutfit>(File.ReadAllText(path));
+            if (loaded == null || loaded.Helmet == null || loaded.Chest == null || loaded.Legs == null)
+                throw new InvalidDataException("Outfit must define Helmet, Chest and Legs.");
+            return loaded;
+        }
+        catch (Exception error)
+        {
+            Plugin.Log.LogWarning($"Outfit configuration for {traderId} could not be read; using defaults: {error.Message}");
+            return fallback;
+        }
+    }
+
+    private static bool EquipNativeHelmet(Transform visual, string traderId, string prefabName)
+    {
+        if (string.IsNullOrWhiteSpace(prefabName)) return false;
+        if (ObjectDB.instance?.GetItemPrefab(prefabName) == null)
+        {
+            Plugin.Log.LogWarning($"Outfit helmet prefab unavailable for {traderId}: {prefabName}");
             return false;
         }
 
-        var item = PrefabManager.Instance.GetPrefab(name);
-        var attachment = item == null ? null : item.GetComponentsInChildren<Transform>(true)
-            .FirstOrDefault(child => child.name == "attach");
-        if (attachment == null)
+        // The copied Player Visual may retain its native VisEquipment component.
+        // Let Valheim attach the helmet through that component. A hand-mounted
+        // mesh cannot be made reliable by adjusting a scale or bone offset.
+        var equipment = visual.GetComponentInChildren<VisEquipment>(true);
+        if (equipment == null)
         {
-            Plugin.Log.LogWarning($"Test outfit helmet attachment unavailable: {name}");
+            Plugin.Log.LogWarning($"Native VisEquipment unavailable on Player Visual for {traderId}; helmet skipped.");
             return false;
         }
-
-        // Native equipment attaches the wearable child to the animated head socket.
-        // The item-drop hierarchy's local transform belongs to its inventory/world
-        // model, so copying that transform or recentering world bounds breaks alignment.
-        var helmet = Object.Instantiate(attachment.gameObject, head, false);
-        helmet.name = $"ImmersiveTrader_Outfit_{name}";
-        helmet.transform.localPosition = Vector3.zero;
-        helmet.transform.localRotation = Quaternion.identity;
-        helmet.transform.localScale = Vector3.one;
-
-        foreach (var part in helmet.GetComponentsInChildren<Transform>(true))
-            part.gameObject.SetActive(true);
-
-        var renderers = helmet.GetComponentsInChildren<Renderer>(true)
-            .Where(renderer => renderer is MeshRenderer || renderer is SkinnedMeshRenderer)
-            .ToArray();
-        if (renderers.Length == 0)
+        try
         {
-            Object.Destroy(helmet);
-            Plugin.Log.LogWarning($"Test helmet has no wearable mesh: {name}");
+            var method = typeof(VisEquipment).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .FirstOrDefault(candidate => candidate.Name == "SetHelmetItem" &&
+                    candidate.GetParameters().Length > 0 &&
+                    candidate.GetParameters()[0].ParameterType == typeof(string));
+            if (method == null)
+                throw new MissingMethodException("VisEquipment", "SetHelmetItem");
+            var parameters = method.GetParameters();
+            var values = new object[parameters.Length];
+            values[0] = prefabName;
+            for (int i = 1; i < parameters.Length; i++)
+                values[i] = parameters[i].HasDefaultValue ? parameters[i].DefaultValue :
+                    parameters[i].ParameterType.IsValueType ? Activator.CreateInstance(parameters[i].ParameterType) : null;
+            method.Invoke(equipment, values);
+            Plugin.Log.LogInfo($"Native helmet equipped for {traderId}: {prefabName}");
+            return true;
+        }
+        catch (Exception error)
+        {
+            Plugin.Log.LogWarning($"Native helmet equip failed for {traderId}: {error}");
             return false;
         }
-
-        foreach (var renderer in renderers)
-            renderer.enabled = true;
-        Plugin.Log.LogInfo($"Test helmet {traderId}: {name} attached to animated Head bone.");
-        return true;
     }
 
     private static bool AttachSkin(string prefabName, Transform visual,
