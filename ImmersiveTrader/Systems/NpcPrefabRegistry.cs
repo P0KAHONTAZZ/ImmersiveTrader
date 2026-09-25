@@ -59,6 +59,8 @@ public static class NpcPrefabRegistry
 
             var interaction = prefab.GetComponent<TraderNpc>() ?? prefab.AddComponent<TraderNpc>();
             interaction.TraderId = trader.Id;
+            var discovery = prefab.GetComponent<TraderMapDiscovery>() ?? prefab.AddComponent<TraderMapDiscovery>();
+            discovery.TraderId = trader.Id;
 
             // Creature-derived visuals keep their Character/AI only for model animation.
             // Interaction is handled by a dedicated NPC hover anchor, matching the
@@ -105,6 +107,8 @@ public static class NpcPrefabRegistry
 
         var npc = shell.GetComponent<TraderNpc>() ?? shell.AddComponent<TraderNpc>();
         npc.TraderId = traderId;
+        var discovery = shell.GetComponent<TraderMapDiscovery>() ?? shell.AddComponent<TraderMapDiscovery>();
+        discovery.TraderId = traderId;
 
         var descriptor = shell.AddComponent<NpcLookPrototype>();
         descriptor.VisualSource = visualSource;
