@@ -14,7 +14,7 @@ public static class TraderRegistry
         new("rudy_warg", "Rudy Warg", "Black Forest", 1, "Hunting and archery"),
 
         new("mokra_dzika", "Mokra Dzika", "Swamp", 2, "Swamp reagents and farming"),
-        new("bogdan_bones", "Bogdan Bones", "Swamp", 2, "Blood, entrails and utility"),
+        new("encek", "Encek", "Swamp", 2, "Blood, entrails and utility"),
 
         new("hrothgar", "Hrothgar", "Mountains", 3, "Wolves, obsidian and archery"),
         new("ylva_frost", "Ylva Frost", "Mountains", 3, "Onions, crystals and frost"),
@@ -33,6 +33,5 @@ public static class TraderRegistry
 
     public static void Initialize()
     {
-        RewardRegistry.Initialize();
     }
 }

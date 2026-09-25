@@ -4,8 +4,8 @@ namespace ImmersiveTrader;
 
 public static class ProgressionGate
 {
-    // Vanilla global keys from defeated bosses. Ashlands uses Fader.
-    private static readonly Dictionary<int, string> RequiredBossKey = new()
+    // A biome's normal reward pool becomes available after the previous biome boss is defeated.
+    private static readonly Dictionary<int, string> RequiredPreviousBossKey = new()
     {
         { 1, "defeated_eikthyr" },
         { 2, "defeated_gdking" },
@@ -15,13 +15,16 @@ public static class ProgressionGate
         { 6, "defeated_queen" }
     };
 
-    public static bool CanReceiveTier(int targetTier)
+    public static bool IsRewardTierUnlocked(int rewardTier)
     {
-        if (targetTier <= 0 || !Plugin.ProgressionLock.Value)
+        if (rewardTier <= 0 || !Plugin.ProgressionLock.Value)
             return true;
 
-        return RequiredBossKey.TryGetValue(targetTier, out var key)
+        return RequiredPreviousBossKey.TryGetValue(rewardTier, out var key)
             && ZoneSystem.instance != null
             && ZoneSystem.instance.GetGlobalKey(key);
     }
+
+    // Kept for compatibility with older call sites.
+    public static bool CanReceiveTier(int targetTier) => IsRewardTierUnlocked(targetTier);
 }

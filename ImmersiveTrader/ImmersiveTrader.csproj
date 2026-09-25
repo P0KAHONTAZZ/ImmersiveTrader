@@ -1,27 +1,36 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\Environment.props" Condition="Exists('..\Environment.props')" />
+
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <AssemblyName>ImmersiveTrader</AssemblyName>
     <RootNamespace>ImmersiveTrader</RootNamespace>
+    <ValheimManaged>$(VALHEIM_INSTALL)\valheim_Data\Managed</ValheimManaged>
+    <BepInExCore>$(VALHEIM_INSTALL)\BepInEx\core</BepInExCore>
+    <BepInExPlugins>$(VALHEIM_INSTALL)\BepInEx\plugins</BepInExPlugins>
+    <JotunnDll Condition="Exists('$(BepInExPlugins)\Jotunn.dll')">$(BepInExPlugins)\Jotunn.dll</JotunnDll>
+    <JotunnDll Condition="'$(JotunnDll)' == '' and Exists('$(BepInExPlugins)\Jotunn\Jotunn.dll')">$(BepInExPlugins)\Jotunn\Jotunn.dll</JotunnDll>
+    <JotunnDll Condition="'$(JotunnDll)' == '' and Exists('$(BepInExPlugins)\Jotun\plugins\Jotunn.dll')">$(BepInExPlugins)\Jotun\plugins\Jotunn.dll</JotunnDll>
   </PropertyGroup>
+
+  <Target Name="ValidateValheimPath" BeforeTargets="ResolveReferences">
+    <Error Condition="'$(VALHEIM_INSTALL)' == ''" Text="VALHEIM_INSTALL is not set. Copy Environment.props.example to Environment.props and set the Valheim installation path." />
+    <Error Condition="!Exists('$(VALHEIM_INSTALL)\valheim.exe')" Text="Valheim was not found at: $(VALHEIM_INSTALL)" />
+    <Error Condition="'$(JotunnDll)' == ''" Text="Jotunn.dll was not found under $(BepInExPlugins). Install Jotunn or set JotunnDll in Environment.props." />
+  </Target>
+
   <ItemGroup>
-    <Reference Include="BepInEx">
-      <HintPath>lib/BepInEx.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Jotunn">
-      <HintPath>lib/Jotunn.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="assembly_valheim">
-      <HintPath>lib/assembly_valheim.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>lib/UnityEngine.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
+    <Reference Include="BepInEx"><HintPath>$(BepInExCore)\BepInEx.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(BepInExCore)\0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Jotunn"><HintPath>$(JotunnDll)</HintPath><Private>false</Private></Reference>
+    <Reference Include="assembly_valheim"><HintPath>$(ValheimManaged)\assembly_valheim.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="assembly_utils"><HintPath>$(ValheimManaged)\assembly_utils.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="SoftReferenceableAssets"><HintPath>$(ValheimManaged)\SoftReferenceableAssets.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Splatform"><HintPath>$(ValheimManaged)\Splatform.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(ValheimManaged)\UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(ValheimManaged)\UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(ValheimManaged)\UnityEngine.PhysicsModule.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
 </Project>

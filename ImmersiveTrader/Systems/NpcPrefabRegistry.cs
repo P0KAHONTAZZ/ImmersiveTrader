@@ -1,5 +1,5 @@
+using System.Collections.Generic;
 using ImmersiveTrader.Components;
-using Jotunn.Entities;
 using Jotunn.Managers;
 using UnityEngine;
 
@@ -9,6 +9,32 @@ public static class NpcPrefabRegistry
 {
     private static bool _registered;
 
+    // Uses only vanilla Valheim prefabs. If a source prefab is unavailable after a game
+    // update, that trader safely falls back to Haldor instead of breaking registration.
+    private static readonly Dictionary<string, (string Prefab, float Scale)> Looks = new()
+    {
+        ["midka"] = ("Hildir", 1.00f),
+        ["troldad"] = ("Troll", 0.42f),
+        ["grimvald"] = ("Haldor", 1.00f),
+        ["rudy_warg"] = ("Dverger", 1.00f),
+        ["mokra_dzika"] = ("BogWitch", 1.00f),
+        ["encek"] = ("Draugr", 0.95f),
+        ["hrothgar"] = ("Fenring", 0.82f),
+        ["ylva_frost"] = ("DvergerMage", 0.95f),
+        ["bjarki_goldtooth"] = ("Goblin", 1.05f),
+        ["ragnar_turnipson"] = ("GoblinBrute", 0.78f),
+        ["cmok"] = ("DvergerMage", 0.90f),
+        ["grelka"] = ("Dverger", 0.95f),
+        ["spalony_zenek"] = ("Haldor", 1.00f),
+        ["skjold_cinderborn"] = ("Hildir", 1.00f)
+    };
+
+    // Reserved human/player-style visual source. Do not clone Player directly into the
+    // live roster yet: Player carries input, inventory, camera and networking behaviour.
+    // The next visual layer can copy only its humanoid/VisEquipment presentation onto a
+    // neutral NPC shell while keeping TraderNpc and NPC networking authoritative.
+    public const string PlayerStyleVisualSource = "Player";
+
     public static void Register()
     {
         if (_registered) return;
@@ -17,21 +43,188 @@ public static class NpcPrefabRegistry
         {
             if (trader.IsLegendary) continue;
 
-            // Haldor is used as a stable passive trader base. Custom visuals will replace
-            // individual traders in the asset-bundle stage.
-            var prefab = PrefabManager.Instance.CreateClonedPrefab($"ImmersiveTrader_NPC_{trader.Id}", "Haldor");
+            var look = Looks.TryGetValue(trader.Id, out var selected) ? selected : ("Haldor", 1f);
+            string source = PrefabManager.Instance.GetPrefab(look.Item1) != null ? look.Item1 : "Haldor";
+
+            var prefab = PrefabManager.Instance.CreateClonedPrefab($"ImmersiveTrader_NPC_{trader.Id}", source);
             if (prefab == null) continue;
 
-            var vanillaTrader = prefab.GetComponent<Trader>();
-            if (vanillaTrader != null)
-                Object.DestroyImmediate(vanillaTrader);
+            // Parallel NPC-shell prototype: every regular trader also gets a native
+            // Hildir-based interaction shell. This lets us compare the current visual
+            // prefab against known-good NPC behaviour without replacing the live roster.
+            RegisterNpcShellPrototype(trader.Id, source, look.Item2);
+
+            MakePassive(prefab);
+            prefab.transform.localScale = Vector3.one * look.Item2;
 
             var interaction = prefab.GetComponent<TraderNpc>() ?? prefab.AddComponent<TraderNpc>();
             interaction.TraderId = trader.Id;
 
+            // Creature-derived visuals keep their Character/AI only for model animation.
+            // Interaction is handled by a dedicated NPC hover anchor, matching the
+            // reliable trader-style path used by Hildir/BogWitch rather than rewriting
+            // Player's private hover state.
+            if (prefab.GetComponent<Character>() != null)
+                PrepareCreatureTrader(prefab, interaction);
+
             PrefabManager.Instance.AddPrefab(prefab);
         }
 
+        RegisterJackie();
         _registered = true;
+    }
+
+    private static void RegisterNpcShellPrototype(string traderId, string visualSource, float visualScale)
+    {
+        string shellName = $"ImmersiveTrader_NPCLOOK_{traderId}";
+        if (PrefabManager.Instance.GetPrefab(shellName) != null) return;
+
+        // Troldad is intentionally not human-looking. Keep the native Troll body,
+        // scaled to roughly human height, while using the same safe passive/interaction
+        // setup as the proven creature trader.
+        string shellSource = traderId == "troldad" ? "Troll" : "Hildir";
+        var shell = PrefabManager.Instance.CreateClonedPrefab(shellName, shellSource);
+        if (shell == null) return;
+
+        var vanillaTrader = shell.GetComponent<Trader>();
+        if (vanillaTrader != null) Object.DestroyImmediate(vanillaTrader);
+
+        var npcTalk = shell.GetComponent<NpcTalk>();
+        if (npcTalk != null) Object.DestroyImmediate(npcTalk);
+
+        var view = shell.GetComponent<ZNetView>();
+        if (view != null) view.m_persistent = false;
+
+        var npc = shell.GetComponent<TraderNpc>() ?? shell.AddComponent<TraderNpc>();
+        npc.TraderId = traderId;
+
+        var descriptor = shell.AddComponent<NpcLookPrototype>();
+        descriptor.VisualSource = visualSource;
+        descriptor.VisualScale = visualScale;
+
+        if (traderId == "troldad")
+        {
+            shell.transform.localScale = Vector3.one * visualScale;
+            MakePassive(shell);
+            PrepareCreatureTrader(shell, npc);
+        }
+        else
+        {
+            // Human traders use the validated Hildir interaction shell with only
+            // Player's visual hierarchy mounted on top.
+            var playerLook = shell.GetComponent<PlayerLikeNpcVisual>() ?? shell.AddComponent<PlayerLikeNpcVisual>();
+            playerLook.TraderId = traderId;
+        }
+
+        PrefabManager.Instance.AddPrefab(shell);
+    }
+
+    private static void MakePassive(GameObject prefab)
+    {
+        var vanillaTrader = prefab.GetComponent<Trader>();
+        if (vanillaTrader != null) Object.DestroyImmediate(vanillaTrader);
+
+        var npcTalk = prefab.GetComponent<NpcTalk>();
+        if (npcTalk != null) Object.DestroyImmediate(npcTalk);
+
+        // Creature-derived trader prefabs must keep their native AI component.
+        // Valheim's Character/Humanoid, animation and EnemyHud paths expect a valid
+        // creature layout. Stripping MonsterAI/AnimalAI left half-creature prefabs
+        // and caused EnemyHud.UpdateHuds NullReferenceExceptions at runtime.
+        // Aggression is disabled instead of removing AI.
+        var monsterAi = prefab.GetComponent<MonsterAI>();
+        if (monsterAi != null)
+        {
+            monsterAi.m_viewRange = 0f;
+            monsterAi.m_viewAngle = 0f;
+            monsterAi.m_hearRange = 0f;
+            monsterAi.m_alertRange = 0f;
+            monsterAi.m_fleeIfNotAlerted = false;
+        }
+
+        var animalAi = prefab.GetComponent<AnimalAI>();
+        if (animalAi != null)
+        {
+            animalAi.m_viewRange = 0f;
+            animalAi.m_viewAngle = 0f;
+            animalAi.m_hearRange = 0f;
+        }
+
+        var character = prefab.GetComponent<Character>();
+        if (character != null)
+        {
+            character.m_faction = Character.Faction.Players;
+            character.m_name = string.Empty;
+        }
+
+        var tameable = prefab.GetComponent<Tameable>();
+        if (tameable != null) Object.DestroyImmediate(tameable);
+    }
+
+    private static void PrepareCreatureTrader(GameObject prefab, TraderNpc owner)
+    {
+        // Do not put Interactable/Hoverable proxies on native creature hitboxes.
+        // Valheim resolves those hitboxes through Character and that competes with the
+        // normal NPC hover path. One explicit interaction volume is deterministic.
+        foreach (var proxy in prefab.GetComponentsInChildren<TraderInteractionProxy>(true))
+            Object.DestroyImmediate(proxy);
+
+        var anchor = new GameObject("ImmersiveTrader_NpcInteraction");
+        anchor.transform.SetParent(prefab.transform, false);
+
+        // The anchor is a child of the already-scaled creature root. Troldad's Troll
+        // root is only 0.42 scale, so a "normal" local collider became tiny in world
+        // space and the raycast kept hitting the Troll Character instead. Compensate
+        // for root scale so the interaction surface is roughly NPC-sized in world space.
+        float rootScale = Mathf.Max(0.01f, prefab.transform.localScale.x);
+        float worldHeight = owner.TraderId == "troldad" ? 1.45f : 1.15f;
+        float worldRadius = owner.TraderId == "troldad" ? 1.10f : 0.75f;
+        anchor.transform.localPosition = new Vector3(0f, worldHeight / rootScale, 0f);
+
+        var collider = anchor.AddComponent<SphereCollider>();
+        collider.radius = worldRadius / rootScale;
+        collider.isTrigger = false;
+
+        var interactionProxy = anchor.AddComponent<TraderInteractionProxy>();
+        interactionProxy.Owner = owner;
+
+        var character = prefab.GetComponent<Character>();
+        if (character != null)
+            character.m_name = string.Empty;
+    }
+
+    private static void RegisterJackie()
+    {
+        if (PrefabManager.Instance.GetPrefab("ImmersiveTrader_Jackie") != null) return;
+
+        var wolf = PrefabManager.Instance.CreateClonedPrefab("ImmersiveTrader_Jackie", "Wolf");
+        if (wolf == null) return;
+
+        // Jackie must use the same neutral/player faction as our traders.
+        // Keeping native Wolf MonsterAI is fine, but leaving the cloned wolf on its
+        // original ForestMonsters faction makes it attack both the player and Troldad.
+        var character = wolf.GetComponent<Character>();
+        if (character != null)
+        {
+            character.m_name = "Jackie";
+            character.m_faction = Character.Faction.Players;
+        }
+
+        var monsterAi = wolf.GetComponent<MonsterAI>();
+        if (monsterAi != null)
+        {
+            monsterAi.m_viewRange = 0f;
+            monsterAi.m_viewAngle = 0f;
+            monsterAi.m_hearRange = 0f;
+            monsterAi.m_alertRange = 0f;
+            monsterAi.m_fleeIfNotAlerted = false;
+        }
+
+        var tameable = wolf.GetComponent<Tameable>();
+        if (tameable != null)
+            Object.DestroyImmediate(tameable);
+
+        wolf.transform.localScale = Vector3.one * 0.9f;
+        PrefabManager.Instance.AddPrefab(wolf);
     }
 }

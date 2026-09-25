@@ -1,0 +1,104 @@
+using System.Collections.Generic;
+using System.Linq;
+using HarmonyLib;
+using ImmersiveTrader.Models;
+
+namespace ImmersiveTrader;
+
+public static class NativeContractBridge
+{
+    private sealed record ContractSale(TraderDefinition Source, TraderActivityDefinition Contract);
+    private static readonly Dictionary<Trader.TradeItem, ContractSale> Sales = new();
+
+    public static void Clear() => Sales.Clear();
+    public static bool IsContract(Trader.TradeItem item) => Sales.ContainsKey(item);
+    public static void Register(Trader.TradeItem item, TraderDefinition source, TraderActivityDefinition contract)
+        => Sales[item] = new ContractSale(source, contract);
+
+    public static bool TryHandle(Player player, Trader.TradeItem item)
+    {
+        if (!Sales.TryGetValue(item, out var sale)) return false;
+
+        if (sale.Contract.TraderId != sale.Source.Id)
+        {
+            Plugin.Log.LogWarning($"Rejected contract sale with mismatched issuer: {sale.Contract.Id}, contract={sale.Contract.TraderId}, shop={sale.Source.Id}");
+            player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: This contract is not mine to issue.");
+            return true;
+        }
+
+        if (TraderActivityService.CountPhysicalContracts(player, sale.Source.Id) >= 2)
+        {
+            player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: Finish one of my two contracts first.");
+            return true;
+        }
+
+        bool alreadyCarried = player.GetInventory().GetAllItems().Any(x =>
+            ContractMetadata.TryRead(x, out string id, out _, out _) && id == sale.Contract.Id);
+        if (alreadyCarried)
+        {
+            player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: You already carry this contract.");
+            return true;
+        }
+
+        var prefab = ObjectDB.instance?.GetItemPrefab(ContractRegistry.PrefabName);
+        if (prefab == null || !player.GetInventory().CanAddItem(prefab, 1))
+        {
+            player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: Make room for the contract first.");
+            return true;
+        }
+
+        var before = player.GetInventory().GetAllItems().ToArray();
+        if (!player.GetInventory().AddItem(prefab, 1))
+        {
+            player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: Could not issue the contract.");
+            return true;
+        }
+
+        var created = player.GetInventory().GetAllItems().FirstOrDefault(x =>
+            x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith(ContractRegistry.PrefabName) && !before.Contains(x));
+        if (created == null)
+        {
+            // Never leave an untracked generic scroll behind if inventory hooks changed
+            // the insertion semantics unexpectedly.
+            var stray = player.GetInventory().GetAllItems().FirstOrDefault(x =>
+                x.m_dropPrefab != null && x.m_dropPrefab.name.StartsWith(ContractRegistry.PrefabName) &&
+                !ContractMetadata.TryRead(x, out _, out _, out _));
+            if (stray != null) player.GetInventory().RemoveItem(stray);
+            player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: Contract creation failed.");
+            return true;
+        }
+
+        // Re-check the per-issuer limit immediately before stamping. Inventory hooks may
+        // have inserted another contract while AddItem was running.
+        if (TraderActivityService.CountPhysicalContracts(player, sale.Source.Id) >= 2)
+        {
+            player.GetInventory().RemoveItem(created);
+            player.Message(MessageHud.MessageType.Center, $"{sale.Source.Name}: Contract limit changed; issuance cancelled.");
+            return true;
+        }
+
+        bool rare = UnityEngine.Random.value < UnityEngine.Mathf.Clamp01(Plugin.RareContractChance.Value);
+        int required = rare ? (sale.Contract.RequiredAmount + 1) / 2 : sale.Contract.RequiredAmount;
+        ContractMetadata.Stamp(created, sale.Contract.Id, sale.Source.Id, TraderActivityService.GetWorldDayPublic(), required, rare);
+        created.m_crafterName = sale.Contract.Title;
+        Plugin.Log.LogInfo($"Contract scroll issued: {sale.Contract.Id}, issuer={sale.Source.Id}, " +
+            $"inventoryItems={player.GetInventory().GetAllItems().Count}, " +
+            $"validScrolls={TraderActivityService.CountPhysicalContracts(player, sale.Source.Id)}");
+        player.Message(MessageHud.MessageType.Center,
+            $"Kontrakt w plecaku: {sale.Contract.Title} ({(rare ? "Rare" : "Normal")}). Cel: {required} x {sale.Contract.TargetPrefab}. Nagroda: {sale.Contract.RewardSkillLevels:0} EXP ({sale.Contract.RewardSkill}).");
+        return true;
+    }
+}
+
+[HarmonyPatch(typeof(StoreGui), "BuySelectedItem")]
+internal static class NativeContractBuyPatch
+{
+    private static bool Prefix(StoreGui __instance)
+    {
+        var player = Player.m_localPlayer;
+        if (player == null) return true;
+        var selected = AccessTools.Field(typeof(StoreGui), "m_selectedItem")?.GetValue(__instance) as Trader.TradeItem;
+        if (selected == null) return true;
+        return !NativeContractBridge.TryHandle(player, selected);
+    }
+}

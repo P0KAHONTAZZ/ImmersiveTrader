@@ -9,7 +9,8 @@ public static class InventoryTreasureService
         ItemDrop.ItemData Item,
         string TreasureId,
         string SourceTraderId,
-        int SourceBiomeTier);
+        int SourceBiomeTier,
+        string ShipmentId);
 
     public static IReadOnlyList<CarriedTreasure> GetCarried(Player player)
     {
@@ -23,7 +24,12 @@ public static class InventoryTreasureService
             if (!TreasureMetadata.TryRead(item, out var sourceTrader, out var sourceTier))
                 continue;
 
-            result.Add(new CarriedTreasure(item, treasureId, sourceTrader, sourceTier));
+            result.Add(new CarriedTreasure(
+                item,
+                treasureId,
+                sourceTrader,
+                sourceTier,
+                TreasureMetadata.GetShipmentId(item)));
         }
 
         return result;
@@ -39,7 +45,9 @@ public static class InventoryTreasureService
         if (!prefab.StartsWith(prefix))
             return false;
 
-        treasureId = prefab.Substring(prefix.Length).Replace("(Clone)", string.Empty);
-        return TreasureRegistry.Treasures.Any(x => x.Id == treasureId);
+        string candidate = prefab.Substring(prefix.Length).Replace("(Clone)", string.Empty);
+        bool known = TreasureRegistry.Treasures.Any(x => x.Id == candidate);
+        if (known) treasureId = candidate;
+        return known;
     }
 }
