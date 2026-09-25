@@ -34,7 +34,7 @@ public static class TraderActivityService
             int previousReputation = TraderReputation.Get(player, traderId);
             int reputation = TraderReputation.Add(player, traderId, TraderReputation.ContractPoints);
             player.Message(MessageHud.MessageType.Center,
-                $"Kontrakt ukończony: {rewardSkill} {before:0.##} → {after:0.##} (+{after - before:0.##} poziomy). Reputacja: +{reputation - previousReputation} ({reputation}/{TraderReputation.Maximum}).");
+                $"Contract completed: {rewardSkill} {before:0.##} → {after:0.##} (+{after - before:0.##} levels). Reputation: +{reputation - previousReputation} ({reputation}/{TraderReputation.Maximum}).");
             return true;
         }
 

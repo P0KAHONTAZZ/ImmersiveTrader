@@ -107,12 +107,12 @@ public static class TraderReputation
         int level = points >= 64 ? 5 : points >= 44 ? 4 : points >= 28 ? 3 : points >= 12 ? 2 : 1;
         string name = level switch
         {
-            1 => "Sceptyczny",
-            2 => "Neutralny",
-            3 => "Życzliwy",
-            4 => "Przyjacielski",
-            _ => "Zaufany"
+            1 => "Skeptical",
+            2 => "Neutral",
+            3 => "Favorable",
+            4 => "Friendly",
+            _ => "Trusted"
         };
-        return $"{points}/{Maximum} (poziom {level}/5: {name})";
+        return $"{points}/{Maximum} (level {level}/5: {name})";
     }
 }

@@ -32,7 +32,7 @@ public sealed class TraderNpc : MonoBehaviour, Hoverable, Interactable
     {
         if (Definition == null) return string.Empty;
         var localPlayer = Player.m_localPlayer;
-        string reputation = localPlayer == null ? "" : $"\nReputacja: <color=yellow>{TraderReputation.Describe(localPlayer, TraderId)}</color>";
+        string reputation = localPlayer == null ? "" : $"\nReputation: <color=yellow>{TraderReputation.Describe(localPlayer, TraderId)}</color>";
         if (TraderId == "midka")
             return $"{Definition.Name}\n[<color=yellow><b>E</b></color>] Talk\nWar healer & field medic{reputation}";
         return $"{Definition.Name}\n[<color=yellow><b>E</b></color>] Talk{reputation}";

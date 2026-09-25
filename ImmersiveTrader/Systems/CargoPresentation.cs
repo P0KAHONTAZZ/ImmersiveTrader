@@ -39,10 +39,10 @@ internal static class CargoPresentation
         if (Icons.TryGetValue(id, out var cached)) return cached;
         packages ??= LoadPackages();
         if (packages == null) return null;
-        int shape = displayName.StartsWith("Beczka", StringComparison.Ordinal) ? 1 :
-            displayName.StartsWith("Worek", StringComparison.Ordinal) ? 2 :
-            displayName.StartsWith("Paczka", StringComparison.Ordinal) || displayName.StartsWith("Wiązka", StringComparison.Ordinal) ? 3 :
-            displayName.StartsWith("Kosz", StringComparison.Ordinal) ? 4 : 0;
+        int shape = displayName.EndsWith(" Barrel", StringComparison.Ordinal) ? 1 :
+            displayName.EndsWith(" Sack", StringComparison.Ordinal) ? 2 :
+            displayName.EndsWith(" Bundle", StringComparison.Ordinal) ? 3 :
+            displayName.EndsWith(" Basket", StringComparison.Ordinal) ? 4 : 0;
         Sprite? label = null;
         foreach (var pair in Resources)
         {

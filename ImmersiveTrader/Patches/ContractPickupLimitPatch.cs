@@ -39,7 +39,7 @@ internal static class ContractPickupLimitPatch
         if (TraderActivityService.CountPhysicalContracts(player, issuer) < 2) return true;
         var trader = TraderRegistry.Traders.FirstOrDefault(x => x.Id == issuer);
         player.Message(MessageHud.MessageType.Center,
-            $"Masz już dwa kontrakty od {trader?.Name ?? issuer}. Oddaj jeden, zanim podniesiesz kolejny.");
+            $"You already have two contracts from {trader?.Name ?? issuer}. Turn one in before picking up another.");
         __result = false;
         return false;
     }

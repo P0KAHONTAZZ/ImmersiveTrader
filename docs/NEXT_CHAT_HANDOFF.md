@@ -1,9 +1,36 @@
-# ImmersiveTrader — przekazanie do następnego czatu (2026-09-24)
+# ImmersiveTrader development handoff (2026-09-25)
 
-Repo: P0KAHONTAZZ/ImmersiveTrader, gałąź `feature/contract-world-model`. Stabilny punkt odniesienia: `stable-patch-2026-09-24`. Użytkownik pracuje w `C:\Users\PC\Desktop\AlbionGit\ImmersiveTrader`, buduje `powershell -ExecutionPolicy Bypass -File .\Build-And-Install-Verified.ps1`; lokalne SDK Valheim dostępne u użytkownika, w środowisku Codex brak dotnet i bibliotek Valheim. Nie deklarować lokalnej kompilacji. Użytkownik potwierdził: 14/14 traderów, transporty, kontrakty, cooldown 7 dni, reputacja add 64 zachowuje się po relogu, reset 0 działa.
+Repository: `P0KAHONTAZZ/ImmersiveTrader`, branch `feature/contract-world-model`. Earlier stable reference: `stable-patch-2026-09-24`. The user builds on Windows at `C:\Users\PC\Desktop\AlbionGit\ImmersiveTrader` with `Build-And-Install-Verified.ps1`. This environment has no local Valheim assemblies or .NET SDK; do not claim a successful local game build.
 
-Zadanie aktywne: sprawdzić nową, oryginalną implementację pełnych domów dla 14 traderów w grze, skorygować jej wygląd i przebudować warianty indywidualnie. Commit implementacji: ee936f0, pliki TraderHouseBuilder.cs, TraderCampBuilder.cs, TraderLocationRegistry.cs. Każdy dom ma ściany, wejście 2m, podłogę, dach wyznaczony wspólną kalenicą i prefabrowe materiały Valheim, NPC stoi wewnątrz na z=4. ExteriorRadius=14. Nie skompilowano lokalnie z powodu braku dotnet/Valheim; użytkownik musi uruchomić Build-And-Install-Verified.ps1. Wcześniejsze ręcznie ułożone stanowiska miały rozszczelnione dachy i zostały wycofane w commicie `f812892`; nie wracać do tej metody. Użytkownik przesłał `warpalicious-More_World_Locations_AIO-5.1.2.zip` i chce wykorzystać 14 prefabów, po jednym na tradera, wewnątrz ImmersiveTrader, bez dodatkowych modów poza Jotunn i BepInEx. Dokładne 14 nazw i przypisanie w `docs/mwl-location-candidates.md`. Potwierdzono wszystkie 14 bundle w przesłanym ZIP 5.1.2.
+## Working features reported by the user
 
-MWL nie jest używane w implementacji budynków. BLOKADA ZEWNĘTRZNA dotycząca ewentualnego użycia MWL: LICENSE repozytorium `jneb802/MoreWorldLocations_All` ma All Rights Reserved, zabrania reprodukcji, redystrybucji, zmian i dzieł pochodnych bez uprzedniej pisemnej zgody autora. Samo upoważnienie użytkownika nie jest zgodą posiadacza praw. Nie commitować bundle, nie przepakowywać ich do DLL ani nie publikować zmodyfikowanych assetów bez zgody autora. Po uzyskaniu zgody: zarejestrować 14 własnych lokacji z prefabami i parametrami terenu właściwymi dla każdego źródłowego bundle, umieścić NPC w dostępnym miejscu, usunąć/wyłączyć niepożądanych przeciwników i interakcje, zadbać o 14/14, wydajność i multiplayer. Alternatywa bez zgody: oryginalne budynki zaprojektowane od zera z prefabów Valheim, żadnych wyciętych assetów MWL.
+- 14/14 generated traders; shipments, contracts and reward delivery work.
+- Seven Valheim day per-item purchase cooldown; two active contracts and shipments per issuer.
+- Reputation survives relog; console add and reset commands work.
+- The Haldor-style protection dome is visible and enemies do not attack.
+- `it goto midka` works.
 
-Google Sheet moda: `https://docs.google.com/spreadsheets/d/1dOLE7p1TyOh0TZw6MiFiDV8B69KYI0ORzEuD73kQYeM/edit` (zakładka Komendy moda zawiera `it rep ... add/reset`).
+## Current visuals
+
+The experimental NPCLOOK prototype mounts Player's `Visual` hierarchy on a Hildir-based shell. Body and leg equipment are skinned to the copied visual. A hand-positioned helmet grew far too large and later clipped inside Midka's head. The manual helmet mounting was disabled in `PlayerLikeNpcVisual.cs` in commit `78c017d`; the user has not yet installed or tested that change. Revisit headwear only after finding an owner-driven, character-equipment approach. Troldad uses a scaled native Troll body.
+
+## English language pass
+
+The current branch translates 70 contract titles and descriptions, 70 cargo labels, tooltips, reputation labels, in-game notifications, the build script and documentation into English. Trader IDs, prefab names, custom-data keys, serialized data and monster targets must not change when adjusting language. Cargo package icon selection must follow the English cargo labels.
+
+## Buildings and third-party assets
+
+The user's earlier house experiments looked broken. They provided More World Locations AIO as inspiration; candidate locations are documented in `docs/mwl-location-candidates.md`. Its All Rights Reserved license does not permit bundling those assets without the author's written permission. Use original, independently designed locations and native Valheim pieces if no permission is obtained.
+
+## Design spreadsheet
+
+https://docs.google.com/spreadsheets/d/1dOLE7p1TyOh0TZw6MiFiDV8B69KYI0ORzEuD73kQYeM/edit. `Reputation Stock` contains a design for vanilla item offers at levels 2–5 and a one-time level 5 gift per trader. These offers and gifts are not yet implemented in the DLL.
+
+## User build command
+
+```powershell
+cd C:\Users\PC\Desktop\AlbionGit\ImmersiveTrader
+git fetch origin feature/contract-world-model
+git restore --source=FETCH_HEAD -- .
+powershell -ExecutionPolicy Bypass -File .\Build-And-Install-Verified.ps1
+```

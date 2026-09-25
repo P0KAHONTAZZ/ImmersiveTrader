@@ -113,7 +113,7 @@ public static class QuestDelivery
                 : $"{target.Name}: Deal. Biome x{biomeMultiplier:0.##}, distance {routeMetres:0}m x{distanceMultiplier:0.##}. Your payment: {amount} {reward.ItemPrefab}."
                 + (targetTierUnlocked ? "" : " Better local stock unlocks after the previous biome boss.");
 
-        player.Message(MessageHud.MessageType.Center, message + $" Reputacja u nadawcy: +{reputation - previousReputation} ({reputation}/{TraderReputation.Maximum}).");
+        player.Message(MessageHud.MessageType.Center, message + $" Sender reputation: +{reputation - previousReputation} ({reputation}/{TraderReputation.Maximum}).");
         return true;
     }
 

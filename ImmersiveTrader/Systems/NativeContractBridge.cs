@@ -108,7 +108,7 @@ public static class NativeContractBridge
             $"inventoryItems={player.GetInventory().GetAllItems().Count}, " +
             $"validScrolls={TraderActivityService.CountPhysicalContracts(player, sale.Source.Id)}");
         player.Message(MessageHud.MessageType.Center,
-            $"Kontrakt w plecaku: {sale.Contract.Title}. Cel: {required} x {sale.Contract.TargetPrefab}. Nagroda: +{sale.Contract.RewardSkillLevels:0} poziomy ({sale.Contract.RewardSkill}).");
+            $"Contract added to your inventory: {sale.Contract.Title}. Target: {required} x {sale.Contract.TargetPrefab}. Reward: +{sale.Contract.RewardSkillLevels:0} levels ({sale.Contract.RewardSkill}).");
         return true;
     }
 }

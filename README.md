@@ -1,34 +1,32 @@
 # ImmersiveTrader
 
-Valheim mod: sieć immersyjnych traderów i questów transportowych.
+A Valheim mod with 14 regular traders, hunting contracts, courier shipments and reputation.
 
-## Aktualny zakres
-- 14 stałych traderów: po 2 w Meadows, Black Forest, Swamp, Mountains, Plains, Mistlands i Ashlands.
-- Legendary Mieteg jako sekretny, rzadki trader.
-- 70 ciężkich towarów transportowych, po 5 u każdego zwykłego handlarza; 910 tras dostawy.
-- Towarów nie można teleportować. Można mieć maksymalnie 2 aktywne przesyłki od jednego nadawcy.
-- Pięć rodzajów ikon opakowań: skrzynia, beczka, worek, pakunek i kosz. Na ziemi towary mają model skrzyni.
-- 70 fizycznych kontraktów łowieckich obejmuje 24 umiejętności Valheim 1.0. Postęp i umiejętność nagrody są zapisane na zwoju i pozostają po wyrzuceniu oraz podniesieniu.
-- Blood Magic występuje tylko u Ćmoka w Mistlands. Zwoje wydane wcześniej zachowują zapisaną umiejętność nagrody.
-- Nagrody skalują się wg odległości tierów biomów: x1 / x2 / x4 / x6, z twardym capem x6.
-- Bone Fragments są wykluczone z nagród.
-- Midka jest doświadczonym wojennym healerem i jako jedyna ma zwykły towar w sklepie: Minor Healing Mead za 70 Coins.
-- Pozostali handlarze oferują tylko towary transportowe i kontrakty łowieckie.
-- Troldad jest drwalem, myśliwym i alkoholikiem; zapowiada inną nagrodę niż faktycznie daje.
+## Gameplay
 
-## Stack
-- BepInEx
-- Jotunn
+- Two traders in each biome from Meadows through Ashlands. Legendary Mieteg is a separate rare trader.
+- Each regular trader offers five shipments and five hunting contracts. Cargo is physical, heavy and cannot pass through portals.
+- Carry up to two shipments and two contracts from each issuing trader. Each individual shipment or contract has its own seven Valheim day purchase cooldown.
+- Hunting contract scrolls track progress in item metadata, even when dropped and recovered. Completing one grants two levels in its specified skill, up to the skill cap.
+- Completing a shipment or contract awards reputation with its issuing trader. Reputation is stored per character, world and trader. The five reputation levels have thresholds of 0, 12, 28, 44 and 64 points.
+- Midka additionally sells Minor Healing Mead for 70 coins. The reputation-unlocked vanilla items listed in the design spreadsheet are not yet implemented in the game.
+- Trader locations, protection domes and the player-like trader visual prototype are under active development. The experimental manual helmet mounting was disabled because it distorted NPC heads.
 
-## Instalacja na Windows
+## Requirements
 
-Zamknij Valheim. W PowerShell przejdź do katalogu repozytorium i pobierz aktualną gałąź:
+- Valheim, BepInEx and Jotunn. Compile against the locally installed Valheim assemblies.
+
+## Install on Windows
+
+Close Valheim, then run in PowerShell from the repository directory:
 
 ```powershell
 cd C:\Users\PC\Desktop\AlbionGit\ImmersiveTrader
 git fetch origin feature/contract-world-model
-git restore --source=FETCH_HEAD -- Assets/contract-scroll-simple.png Assets/cargo-packages.png ImmersiveTrader/ImmersiveTrader.csproj ImmersiveTrader/Systems/ContractIconRegistry.cs ImmersiveTrader/Systems/ContractWorldModel.cs ImmersiveTrader/Systems/ContractRegistry.cs ImmersiveTrader/Systems/RewardRegistry.cs ImmersiveTrader/Systems/CargoPresentation.cs ImmersiveTrader/Systems/TreasureRegistry.cs Build-And-Install-Verified.ps1
+git restore --source=FETCH_HEAD -- .
 powershell -ExecutionPolicy Bypass -File .\Build-And-Install-Verified.ps1
 ```
 
-Skrypt weryfikuje skompilowaną DLL przez SHA256. Dodatkowe kopie `ImmersiveTrader.dll` przenosi do `BepInEx\disabled-ImmersiveTrader`.
+The verified installer checks the source and bundled images, builds the DLL, moves duplicate copies aside and compares the installed DLL SHA-256 with the build output. A successful run prints `BUILD OK - DLL COPIED`.
+
+For a multiplayer session, all participants must use a compatible version. Server-wide authority and persistence are still being developed.
