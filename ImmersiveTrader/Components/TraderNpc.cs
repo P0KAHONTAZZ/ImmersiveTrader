@@ -32,6 +32,8 @@ public sealed class TraderNpc : MonoBehaviour, Hoverable, Interactable
     {
         if (Definition == null) return string.Empty;
         var localPlayer = Player.m_localPlayer;
+        if (!ProgressionGate.IsRewardTierUnlocked(Definition.BiomeTier))
+            return $"{Definition.Name}\nTrading locked: defeat the previous biome boss.";
         string reputation = localPlayer == null ? "" : $"\nReputation: {TraderReputation.DescribeStanding(localPlayer, TraderId)}";
         return $"{Definition.Name}\n[<color=yellow><b>E</b></color>] Talk\n{Definition.Theme}{reputation}";
     }
@@ -39,6 +41,12 @@ public sealed class TraderNpc : MonoBehaviour, Hoverable, Interactable
     public bool Interact(Humanoid user, bool hold, bool alt)
     {
         if (hold || user is not Player player || Definition == null) return false;
+        if (!ProgressionGate.IsRewardTierUnlocked(Definition.BiomeTier))
+        {
+            player.Message(MessageHud.MessageType.Center,
+                $"{Definition.Name}: defeat the previous biome boss before trading.");
+            return true;
+        }
         // Delivery has priority over opening StoreGui. A player carrying cargo for
         // this trader can therefore hand it in with the same normal E interaction.
         // Without this check the native shop consumed every primary interaction first,
