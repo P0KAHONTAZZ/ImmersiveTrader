@@ -23,8 +23,7 @@ internal static class ContractIconRegistry
         [Skills.SkillType.Run]=12, [Skills.SkillType.Swim]=13, [Skills.SkillType.Jump]=14,
         [Skills.SkillType.Sneak]=15, [Skills.SkillType.Fishing]=16, [Skills.SkillType.Cooking]=17,
         [Skills.SkillType.Farming]=18, [Skills.SkillType.Crafting]=19, [Skills.SkillType.BloodMagic]=20,
-        [Skills.SkillType.ElementalMagic]=21,
-        [Skills.SkillType.Ride]=22, [Skills.SkillType.Dodge]=23
+        [Skills.SkillType.ElementalMagic]=21
     };
     private const int Size = 128;
 
@@ -84,7 +83,7 @@ internal static class ContractIconRegistry
 
     private static Sprite? LoadFinalSkillIcon(Skills.SkillType skill)
     {
-        if (!FinalArt.TryGetValue(skill, out int index)) return null;
+        if (!FinalArt.TryGetValue(skill, out int index)) return null; // Ride/Dodge use the runtime Valheim-skill fallback until dedicated approved art exists.
         finalSheet ??= LoadTexture("ImmersiveTrader.Assets.ContractSkillIcons.png");
         if (finalSheet == null) return null;
         const int cell = 128;
