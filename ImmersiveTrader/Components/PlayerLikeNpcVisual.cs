@@ -118,9 +118,12 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         bool helmet = SetGhostItem(equipment, TraderId, "m_helmetItem", "SetHelmetItem", outfit.Helmet);
         bool chest = SetGhostItem(equipment, TraderId, "m_chestItem", "SetChestItem", outfit.Chest);
         bool legs = SetGhostItem(equipment, TraderId, "m_legItem", "SetLegItem", outfit.Legs);
-        bool weapon = SetGhostItem(equipment, TraderId, "m_rightItem", "SetRightItem", outfit.RightHand);
-        bool shield = SetGhostItem(equipment, TraderId, "m_leftItem", "SetLeftItem", outfit.LeftHand);
-        bool cape = SetGhostItem(equipment, TraderId, "m_shoulderItem", "SetShoulderItem", outfit.Cape);
+        // Hands and shoulders need the native VisEquipment setters. Merely writing the
+        // local hash fields is enough for armour, but does not reliably build attachment
+        // objects on our decorative Player clone.
+        bool weapon = SetVisibleItem(equipment, TraderId, "m_rightItem", "SetRightItem", outfit.RightHand);
+        bool shield = SetVisibleItem(equipment, TraderId, "m_leftItem", "SetLeftItem", outfit.LeftHand);
+        bool cape = SetVisibleItem(equipment, TraderId, "m_shoulderItem", "SetShoulderItem", outfit.Cape);
 
         // On a decorative NPC there is no ZDO on the copied presentation.
         // Write local appearance hashes and ask VisEquipment to rebuild meshes.
@@ -169,6 +172,25 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         }
     }
 
+    private static bool SetVisibleItem(VisEquipment equipment, string traderId,
+        string fieldName, string methodName, string prefabName)
+    {
+        if (string.IsNullOrWhiteSpace(prefabName)) return false;
+        if (ObjectDB.instance?.GetItemPrefab(prefabName) == null)
+        {
+            Plugin.Log.LogWarning($"Outfit item unavailable for {traderId}: {prefabName}");
+            return false;
+        }
+
+        // This is the same native path that proved reliable for Midka/Encek/Tyrron.
+        // Call the setter first so Valheim actually creates the hand/shoulder attachment.
+        if (EquipNativeItem(equipment, traderId, methodName, prefabName))
+            return true;
+
+        // Compatibility fallback for game versions where a setter signature changes.
+        return SetGhostItem(equipment, traderId, fieldName, methodName, prefabName);
+    }
+
     private static bool EquipNativeItem(VisEquipment equipment, string traderId, string methodName, string prefabName)
     {
         try
@@ -209,15 +231,15 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
     {
         ["midka"] = "StaffGreenRoots",
         ["grimvald"] = "FishingRod",
-        ["rudy_warg"] = "BowFineWood",
-        ["mokra_dzika"] = "Torch",
+        ["rudy_warg"] = "Stagbreaker",
+        ["mokra_dzika"] = "SledgeIron",
         ["encek"] = "SwordGold_FrostFire",
-        ["hrothgar"] = "BowHuntsman",
-        ["ylva_frost"] = "KnifeSilver",
-        ["bjarki_goldtooth"] = "AtgeirBlackmetal",
-        ["ragnar_turnipson"] = "Cultivator",
+        ["hrothgar"] = "BattleaxeCrystal",
+        ["ylva_frost"] = "Frostner",
+        ["bjarki_goldtooth"] = "Porcupine",
+        ["ragnar_turnipson"] = "AtgeirBlackmetal",
         ["cmok"] = "MaceGold_FrostFire",
-        ["grelka"] = "SwordMistwalker",
+        ["grelka"] = "DvergerStaffHeal",
         ["spalony_zenek"] = "SwordNiedhogg",
         ["skjold_cinderborn"] = "StaffFireball"
     };
@@ -332,6 +354,26 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
                 changed = true;
             }
             if (loaded.RightHand == null || (loaded.RightHand.Length == 0 && fallback.RightHand.Length > 0))
+            {
+                loaded.RightHand = fallback.RightHand;
+                changed = true;
+            }
+            var previousGeneratedWeapons = new Dictionary<string, string>
+            {
+                ["grimvald"] = "FishingRod",
+                ["rudy_warg"] = "BowFineWood",
+                ["mokra_dzika"] = "Torch",
+                ["hrothgar"] = "BowHuntsman",
+                ["ylva_frost"] = "KnifeSilver",
+                ["bjarki_goldtooth"] = "AtgeirBlackmetal",
+                ["ragnar_turnipson"] = "Cultivator",
+                ["grelka"] = "SwordMistwalker",
+                ["spalony_zenek"] = "SwordNiedhogg",
+                ["skjold_cinderborn"] = "StaffFireball"
+            };
+            if (previousGeneratedWeapons.TryGetValue(traderId, out var previousWeapon) &&
+                loaded.RightHand == previousWeapon && fallback.RightHand.Length > 0 &&
+                loaded.RightHand != fallback.RightHand)
             {
                 loaded.RightHand = fallback.RightHand;
                 changed = true;
