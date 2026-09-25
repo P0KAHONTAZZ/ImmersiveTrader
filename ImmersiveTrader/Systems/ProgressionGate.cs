@@ -31,9 +31,17 @@ public static class ProgressionGate
         { 6, new[] { "FlametalOreNew", "Flametal", "Blackwood" } }
     };
 
+    private static Player _cachedPlayer;
+    private static float _nextMaterialCheck;
+    private static int _cachedMaterialTier;
+
     public static int HighestKnownMaterialTier(Player player)
     {
         if (player == null || ObjectDB.instance == null) return 0;
+        if (_cachedPlayer == player && Time.time < _nextMaterialCheck) return _cachedMaterialTier;
+        _cachedPlayer = player;
+        _nextMaterialCheck = Time.time + 5f;
+        _cachedMaterialTier = 0;
         for (int tier = 6; tier >= 1; tier--)
         {
             if (!MaterialEvidence.TryGetValue(tier, out var prefabs)) continue;
@@ -42,7 +50,10 @@ public static class ProgressionGate
                 var item = ObjectDB.instance.GetItemPrefab(prefabName)?.GetComponent<ItemDrop>();
                 var materialName = item?.m_itemData?.m_shared?.m_name;
                 if (!string.IsNullOrEmpty(materialName) && player.IsKnownMaterial(materialName))
+                {
+                    _cachedMaterialTier = tier;
                     return tier;
+                }
             }
         }
         return 0;
