@@ -6,8 +6,8 @@ namespace ImmersiveTrader;
 
 public static class ProgressionGate
 {
-    // Vanilla boss progression is represented by global world keys. Personal
-    // ImmersiveTrader access keys still remain character-specific.
+    // Vanilla defeated_* keys are world-wide. ImmersiveTrader mirrors boss participation
+    // into character unique keys and gates traders exclusively on those personal keys.
     private static readonly Dictionary<int, string> RequiredPreviousBossKey = new()
     {
         { 1, "defeated_eikthyr" },
@@ -59,6 +59,8 @@ public static class ProgressionGate
         return 0;
     }
 
+    internal static string PersonalBossKey(string vanillaBossKey) => "ImmersiveTrader_personal_" + vanillaBossKey;
+
     private static string AccessKey(string traderId) => "ImmersiveTrader_access_" + traderId;
 
     public static bool HasAccess(Player player, string traderId)
@@ -75,12 +77,9 @@ public static class ProgressionGate
         if (rewardTier <= 0 || !Plugin.ProgressionLock.Value) return true;
         if (player == null || !RequiredPreviousBossKey.TryGetValue(rewardTier, out var key)) return false;
 
-        // Boss stones/events set vanilla GLOBAL keys, not Player unique keys.
-        // Checking HaveUniqueKey here kept Swamp+ traders permanently locked.
-        bool bossDefeated = ZoneSystem.instance != null && ZoneSystem.instance.GetGlobalKey(key);
+        bool personalBossDefeated = player.HaveUniqueKey(PersonalBossKey(key));
         bool legacyPersonalKey = player.HaveUniqueKey(key);
-        bool materialEvidence = HighestKnownMaterialTier(player) >= rewardTier;
-        return bossDefeated || legacyPersonalKey || materialEvidence;
+        return personalBossDefeated || legacyPersonalKey;
     }
 
     public static bool CanAccessTrader(Player player, TraderDefinition trader)
