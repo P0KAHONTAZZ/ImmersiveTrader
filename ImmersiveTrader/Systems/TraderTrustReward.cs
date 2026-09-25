@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using BepInEx;
 
 namespace ImmersiveTrader;
@@ -46,8 +45,8 @@ public static class TraderTrustReward
     {
         if (TraderReputation.GetLevel(player, trader) < 5 || !Gifts.TryGetValue(trader, out var gift))
             return;
-        if (!ProgressionGate.IsRewardTierUnlocked(
-                TraderRegistry.Traders.First(x => x.Id == trader).BiomeTier)) return;
+        // The gift is earned from this trader's reputation, including cargo delivered
+        // before the next boss falls. The boss gate still applies to store stock.
         lock (Sync)
         {
             Load();
@@ -69,7 +68,7 @@ public static class TraderTrustReward
             if (!inventory.CanAddItem(prefab, gift.Quantity))
             {
                 player.Message(MessageHud.MessageType.Center,
-                    "Trusted reward waiting: make space for the entire gift, then reopen this trader's shop.");
+                    "Trusted reward waiting: make room for the full gift (30 ore needs a free inventory slot). Reopen this trader's shop.");
                 return;
             }
 
