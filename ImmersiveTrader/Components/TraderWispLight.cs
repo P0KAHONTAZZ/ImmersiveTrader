@@ -10,9 +10,22 @@ public sealed class TraderWispLight : MonoBehaviour
 {
     private const string DecorationName = "ImmersiveTrader_ActiveWisplight";
     private float _nextAttempt;
+    private Transform _orb;
+    private float _phase;
 
     private void Update()
     {
+        // Keep the vanilla demister and particle effects on the orb. Only its
+        // local position moves, as a free Wisplight does near its wearer.
+        if (_orb != null)
+        {
+            float t = Time.time * 0.85f + _phase;
+            _orb.localPosition = new Vector3(
+                0.4f + Mathf.Sin(t) * 0.45f,
+                1.8f + Mathf.Sin(t * 1.4f) * 0.22f,
+                0.2f + Mathf.Cos(t * 0.8f) * 0.35f);
+            return;
+        }
         if (Time.time < _nextAttempt) return;
         _nextAttempt = Time.time + 2f;
         if (Player.m_localPlayer == null) return; // Dedicated server creates no local visual.
@@ -23,7 +36,7 @@ public sealed class TraderWispLight : MonoBehaviour
         if (visual == null || !visual.gameObject.activeInHierarchy) return;
         if (visual.Find(DecorationName) != null)
         {
-            enabled = false;
+            _orb = visual.Find(DecorationName);
             return;
         }
 
@@ -54,8 +67,9 @@ public sealed class TraderWispLight : MonoBehaviour
             copy.SetActive(true);
             if (copy.GetComponentInChildren<Demister>(true) == null)
                 throw new MissingComponentException("Wisplight effect has no Demister.");
+            _orb = copy.transform;
+            _phase = UnityEngine.Random.Range(0f, 6.28f);
             Plugin.Log.LogInfo($"Mistlands Wisplight active for {GetComponent<TraderNpc>()?.TraderId}.");
-            enabled = false;
         }
         catch (Exception error)
         {
