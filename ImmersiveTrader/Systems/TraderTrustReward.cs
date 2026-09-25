@@ -22,8 +22,8 @@ public static class TraderTrustReward
         ["ylva_frost"] = new("BlackMetalScrap", "Black Metal Scrap", 30),
         ["bjarki_goldtooth"] = new("GrapplingHook", "Grappling Hook"),
         ["ragnar_turnipson"] = new("SaddleLox", "Lox Saddle"),
-        ["cmok"] = new("FlametalOreNew", "Flametal Ore", 30),
-        ["grelka"] = new("FlametalOreNew", "Flametal Ore", 30),
+        ["cmok"] = new("MoltenCore", "Molten Core", 5),
+        ["grelka"] = new("FlametalOreNew", "Flametal Ore", 10),
         ["spalony_zenek"] = new("SaddleAsksvin", "Asksvin Saddle"),
         ["skjold_cinderborn"] = new("SaddleMoose", "Moose Saddle")
     };
@@ -52,7 +52,10 @@ public static class TraderTrustReward
         {
             Load();
             string key = TraderReputation.RewardIdentity(player, trader);
-            if (gift.Quantity == 30) key += "|metal-gift-v2";
+            if (trader == "cmok" || trader == "grelka")
+                key += "|trust-gift-v3";
+            else if (gift.Quantity == 30)
+                key += "|metal-gift-v2";
             if (Claimed.Contains(key)) return;
             var prefab = ObjectDB.instance?.GetItemPrefab(gift.Prefab);
             if (prefab == null)
@@ -60,8 +63,8 @@ public static class TraderTrustReward
                 Plugin.Log.LogWarning($"Trust gift item missing for {trader}: {gift.Prefab}");
                 return;
             }
-            // Version only the six replaced rewards: previously claimed utility items
-            // do not consume the new metals, while every other grant remains one-time.
+            // Prior versions of these two Mistlands gifts stay claimed; grant the
+            // updated reward exactly once even to players who claimed an older one.
             var inventory = player.GetInventory();
             if (!inventory.CanAddItem(prefab, gift.Quantity))
             {
