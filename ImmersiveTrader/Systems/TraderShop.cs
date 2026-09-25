@@ -10,12 +10,12 @@ public static class TraderShop
         TraderShopRegistry.Offers
             .Where(x => x.TraderId == traderId &&
                 TraderReputation.GetLevel(player, traderId) >= x.RequiredReputationLevel &&
-                ProgressionGate.IsRewardTierUnlocked(x.RequiredTier))
+                ProgressionGate.CanAccessOffer(player, x))
             .ToArray();
 
     public static bool TryBuy(Player player, TraderOfferDefinition offer)
     {
-        if (!ProgressionGate.IsRewardTierUnlocked(offer.RequiredTier) ||
+        if (!ProgressionGate.CanAccessOffer(player, offer) ||
             TraderReputation.GetLevel(player, offer.TraderId) < offer.RequiredReputationLevel)
         {
             player.Message(MessageHud.MessageType.Center, "This stock is not available yet.");
