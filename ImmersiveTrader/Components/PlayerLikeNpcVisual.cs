@@ -231,12 +231,12 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
     {
         ["midka"] = "StaffGreenRoots",
         ["grimvald"] = "FishingRod",
-        ["rudy_warg"] = "Stagbreaker",
+        ["rudy_warg"] = "KnifeBlackMetal",
         ["mokra_dzika"] = "SledgeIron",
         ["encek"] = "SwordGold_FrostFire",
         ["hrothgar"] = "BattleaxeCrystal",
-        ["ylva_frost"] = "Frostner",
-        ["bjarki_goldtooth"] = "Porcupine",
+        ["ylva_frost"] = "MaceSilver",
+        ["bjarki_goldtooth"] = "MaceNeedle",
         ["ragnar_turnipson"] = "AtgeirBlackmetal",
         ["cmok"] = "MaceGold_FrostFire",
         ["grelka"] = "DvergerStaffHeal",
@@ -247,6 +247,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
     private static readonly Dictionary<string, string> TestShields = new()
     {
         ["encek"] = "ShieldGold",
+        ["ylva_frost"] = "DvergerLantern",
         ["cmok"] = "ShieldFlametal"
     };
 
@@ -361,11 +362,11 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
             var previousGeneratedWeapons = new Dictionary<string, string>
             {
                 ["grimvald"] = "FishingRod",
-                ["rudy_warg"] = "BowFineWood",
+                ["rudy_warg"] = "Stagbreaker",
                 ["mokra_dzika"] = "Torch",
                 ["hrothgar"] = "BowHuntsman",
-                ["ylva_frost"] = "KnifeSilver",
-                ["bjarki_goldtooth"] = "AtgeirBlackmetal",
+                ["ylva_frost"] = "Frostner",
+                ["bjarki_goldtooth"] = "Porcupine",
                 ["ragnar_turnipson"] = "Cultivator",
                 ["grelka"] = "SwordMistwalker",
                 ["spalony_zenek"] = "SwordNiedhogg",
