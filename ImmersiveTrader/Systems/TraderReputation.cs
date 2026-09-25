@@ -90,9 +90,6 @@ public static class TraderReputation
                 Points[key] = next;
             }
         }
-        // Grant only after saving reputation; a full inventory leaves the gift pending
-        // until the player talks to the same trader again.
-        if (next >= Maximum) TraderTrustReward.TryGrant(player, trader);
         return next;
     }
 

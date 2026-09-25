@@ -69,7 +69,7 @@ public static class TraderTrustReward
             if (!inventory.CanAddItem(prefab, gift.Quantity))
             {
                 player.Message(MessageHud.MessageType.Center,
-                    "Trusted reward waiting: make space for the entire gift, then talk to this trader again.");
+                    "Trusted reward waiting: make space for the entire gift, then reopen this trader's shop.");
                 return;
             }
 
@@ -89,7 +89,7 @@ public static class TraderTrustReward
                 if (granted > 0 && !string.IsNullOrEmpty(itemName))
                     inventory.RemoveItem(itemName, granted);
                 player.Message(MessageHud.MessageType.Center,
-                    "Trusted reward could not fit in your inventory; make space and talk again.");
+                    "Trusted reward could not fit in your inventory; make space and reopen the shop.");
                 return;
             }
 
@@ -106,7 +106,7 @@ public static class TraderTrustReward
                 Plugin.Log.LogError($"Could not record trust gift for {trader}: {error}");
                 if (!string.IsNullOrEmpty(itemName)) inventory.RemoveItem(itemName, granted);
                 player.Message(MessageHud.MessageType.Center,
-                    "Trusted reward could not be saved; speak to this trader again later.");
+                    "Trusted reward could not be saved; reopen this trader's shop later.");
             }
         }
     }

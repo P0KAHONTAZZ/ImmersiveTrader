@@ -209,6 +209,10 @@ public static class NativeTraderWindow
             Close();
             throw;
         }
+        // The gift is delivered only after the issuer's shop opens successfully.
+        // Delivery or contract turn-in at another NPC never triggers a gift.
+        try { TraderTrustReward.TryGrant(player, definition.Id); }
+        catch (Exception error) { Plugin.Log.LogWarning($"Trust gift delivery deferred for {definition.Id}: {error}"); }
         return true;
     }
 }
