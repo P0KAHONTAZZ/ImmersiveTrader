@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using BepInEx;
 
 namespace ImmersiveTrader;
@@ -45,8 +46,10 @@ public static class TraderTrustReward
     {
         if (TraderReputation.GetLevel(player, trader) < 5 || !Gifts.TryGetValue(trader, out var gift))
             return;
-        // The gift is earned from this trader's reputation, including cargo delivered
-        // before the next boss falls. The boss gate still applies to store stock.
+        // Unlocking reputation by command or remote deliveries must not bypass
+        // the same boss progression gate that protects this trader's shop.
+        var definition = TraderRegistry.Traders.FirstOrDefault(x => x.Id == trader);
+        if (definition == null || !ProgressionGate.IsRewardTierUnlocked(definition.BiomeTier)) return;
         lock (Sync)
         {
             Load();
