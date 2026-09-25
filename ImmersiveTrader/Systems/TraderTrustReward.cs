@@ -9,21 +9,21 @@ namespace ImmersiveTrader;
 /// <summary>One trust gift per character, world, and trader; retried when inventory is full.</summary>
 public static class TraderTrustReward
 {
-    public sealed record Gift(string Prefab, string Name);
+    public sealed record Gift(string Prefab, string Name, int Quantity = 1);
     public static readonly IReadOnlyDictionary<string, Gift> Gifts = new Dictionary<string, Gift>
     {
         ["midka"] = new("HelmetDverger", "Dverger Circlet"),
         ["troldad"] = new("MeadTamer", "Brew of Animal Whispers"),
-        ["grimvald"] = new("BeltStrength", "Megingjord"),
+        ["grimvald"] = new("IronScrap", "Scrap Iron", 30),
         ["rudy_warg"] = new("HelmetRoot", "Root Mask"),
-        ["mokra_dzika"] = new("CapeWolf", "Wolf Fur Cape"),
-        ["encek"] = new("Wishbone", "Wishbone"),
+        ["mokra_dzika"] = new("SilverOre", "Silver Ore", 30),
+        ["encek"] = new("SilverOre", "Silver Ore", 30),
         ["hrothgar"] = new("SaddleLox", "Lox Saddle"),
-        ["ylva_frost"] = new("ArmorFenringChest", "Fenris Coat"),
+        ["ylva_frost"] = new("BlackMetalScrap", "Black Metal Scrap", 30),
         ["bjarki_goldtooth"] = new("GrapplingHook", "Grappling Hook"),
         ["ragnar_turnipson"] = new("SaddleLox", "Lox Saddle"),
-        ["cmok"] = new("CapeFeather", "Feather Cape"),
-        ["grelka"] = new("Demister", "Wisplight"),
+        ["cmok"] = new("FlametalOreNew", "Flametal Ore", 30),
+        ["grelka"] = new("FlametalOreNew", "Flametal Ore", 30),
         ["spalony_zenek"] = new("SaddleAsksvin", "Asksvin Saddle"),
         ["skjold_cinderborn"] = new("SaddleMoose", "Moose Saddle")
     };
@@ -52,6 +52,7 @@ public static class TraderTrustReward
         {
             Load();
             string key = TraderReputation.RewardIdentity(player, trader);
+            if (gift.Quantity == 30) key += "|metal-gift-v2";
             if (Claimed.Contains(key)) return;
             var prefab = ObjectDB.instance?.GetItemPrefab(gift.Prefab);
             if (prefab == null)
@@ -59,27 +60,48 @@ public static class TraderTrustReward
                 Plugin.Log.LogWarning($"Trust gift item missing for {trader}: {gift.Prefab}");
                 return;
             }
+            // Version only the six replaced rewards: previously claimed utility items
+            // do not consume the new metals, while every other grant remains one-time.
             var inventory = player.GetInventory();
-            if (!inventory.CanAddItem(prefab, 1))
+            if (!inventory.CanAddItem(prefab, gift.Quantity))
             {
                 player.Message(MessageHud.MessageType.Center,
-                    "Trusted reward waiting: clear one inventory slot, then speak to this trader again.");
+                    "Trusted reward waiting: make space for the entire gift, then talk to this trader again.");
                 return;
             }
-            if (!inventory.AddItem(prefab, 1)) return;
+
+            int remaining = gift.Quantity;
+            int granted = 0;
+            int stackSize = Math.Max(1, prefab.GetComponent<ItemDrop>().m_itemData.m_shared.m_maxStackSize);
+            while (remaining > 0)
+            {
+                int take = Math.Min(remaining, stackSize);
+                if (!inventory.AddItem(prefab, take)) break;
+                remaining -= take;
+                granted += take;
+            }
+            var itemName = prefab.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_name;
+            if (remaining > 0)
+            {
+                if (granted > 0 && !string.IsNullOrEmpty(itemName))
+                    inventory.RemoveItem(itemName, granted);
+                player.Message(MessageHud.MessageType.Center,
+                    "Trusted reward could not fit in your inventory; make space and talk again.");
+                return;
+            }
+
             try
             {
                 Directory.CreateDirectory(Paths.ConfigPath);
                 File.AppendAllText(FilePath, key + Environment.NewLine);
                 Claimed.Add(key);
                 player.Message(MessageHud.MessageType.Center,
-                    $"Trusted reward: {gift.Name} added to your inventory.");
+                    $"Trusted reward: {gift.Quantity} x {gift.Name} added to your inventory.");
             }
             catch (Exception error)
             {
                 Plugin.Log.LogError($"Could not record trust gift for {trader}: {error}");
-                var itemName = prefab.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_name;
-                if (!string.IsNullOrEmpty(itemName)) inventory.RemoveItem(itemName, 1);
+                if (!string.IsNullOrEmpty(itemName)) inventory.RemoveItem(itemName, granted);
                 player.Message(MessageHud.MessageType.Center,
                     "Trusted reward could not be saved; speak to this trader again later.");
             }
