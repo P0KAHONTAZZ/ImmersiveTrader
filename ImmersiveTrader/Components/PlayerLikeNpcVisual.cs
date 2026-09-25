@@ -120,6 +120,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         bool legs = SetGhostItem(equipment, TraderId, "m_legItem", "SetLegItem", outfit.Legs);
         bool weapon = SetGhostItem(equipment, TraderId, "m_rightItem", "SetRightItem", outfit.RightHand);
         bool shield = SetGhostItem(equipment, TraderId, "m_leftItem", "SetLeftItem", outfit.LeftHand);
+        bool cape = SetGhostItem(equipment, TraderId, "m_shoulderItem", "SetShoulderItem", outfit.Cape);
 
         // On a decorative NPC there is no ZDO on the copied presentation.
         // Write local appearance hashes and ask VisEquipment to rebuild meshes.
@@ -137,7 +138,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         {
             throw new InvalidOperationException($"Outfit refresh failed for {TraderId}", error);
         }
-        Plugin.Log.LogInfo($"Native outfit {TraderId}: helmet={helmet}, chest={chest}, legs={legs}, weapon={weapon}, shield={shield}.");
+        Plugin.Log.LogInfo($"Native outfit {TraderId}: helmet={helmet}, chest={chest}, legs={legs}, weapon={weapon}, shield={shield}, cape={cape}.");
     }
 
     private static bool SetGhostItem(VisEquipment equipment, string traderId,
@@ -207,14 +208,41 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
     private static readonly Dictionary<string, string> TestWeapons = new()
     {
         ["midka"] = "StaffGreenRoots",
+        ["grimvald"] = "FishingRod",
+        ["rudy_warg"] = "BowFineWood",
+        ["mokra_dzika"] = "Torch",
         ["encek"] = "SwordGold_FrostFire",
-        ["cmok"] = "MaceGold_FrostFire"
+        ["hrothgar"] = "BowHuntsman",
+        ["ylva_frost"] = "KnifeSilver",
+        ["bjarki_goldtooth"] = "AtgeirBlackmetal",
+        ["ragnar_turnipson"] = "Cultivator",
+        ["cmok"] = "MaceGold_FrostFire",
+        ["grelka"] = "SwordMistwalker",
+        ["spalony_zenek"] = "SwordMistwalker",
+        ["skjold_cinderborn"] = "StaffFireball"
     };
 
     private static readonly Dictionary<string, string> TestShields = new()
     {
         ["encek"] = "ShieldGold",
         ["cmok"] = "ShieldFlametal"
+    };
+
+    private static readonly Dictionary<string, string> TestCapes = new()
+    {
+        ["midka"] = "CapeDeerHide",
+        ["grimvald"] = "CapeTrollHide",
+        ["rudy_warg"] = "CapeTrollHide",
+        ["mokra_dzika"] = "CapeTrollHide",
+        ["encek"] = "CapeDeepNorth",
+        ["hrothgar"] = "CapeWolf",
+        ["ylva_frost"] = "CapeWolf",
+        ["bjarki_goldtooth"] = "CapeLox",
+        ["ragnar_turnipson"] = "CapeLinen",
+        ["cmok"] = "CapeAsh",
+        ["grelka"] = "CapeFeather",
+        ["spalony_zenek"] = "CapeAsh",
+        ["skjold_cinderborn"] = "CapeAsksvin"
     };
 
     [Serializable]
@@ -225,6 +253,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         public string Legs = "";
         public string RightHand = "";
         public string LeftHand = "";
+        public string Cape = "";
     }
 
     public static void InitializeOutfitFiles()
@@ -245,7 +274,8 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
             Chest = defaults.Chest,
             Legs = defaults.Legs,
             RightHand = TestWeapons.TryGetValue(traderId, out var weapon) ? weapon : "",
-            LeftHand = TestShields.TryGetValue(traderId, out var shield) ? shield : ""
+            LeftHand = TestShields.TryGetValue(traderId, out var shield) ? shield : "",
+            Cape = TestCapes.TryGetValue(traderId, out var cape) ? cape : ""
         };
         try
         {
@@ -304,6 +334,11 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
             if (loaded.RightHand == null || (loaded.RightHand.Length == 0 && fallback.RightHand.Length > 0))
             {
                 loaded.RightHand = fallback.RightHand;
+                changed = true;
+            }
+            if (string.IsNullOrEmpty(loaded.Cape) && fallback.Cape.Length > 0)
+            {
+                loaded.Cape = fallback.Cape;
                 changed = true;
             }
             if (changed)
