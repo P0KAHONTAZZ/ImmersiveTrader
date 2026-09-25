@@ -113,7 +113,7 @@ public static class TreasureRegistry
             shared.m_weight = def.Weight;
             shared.m_teleportable = false;
             shared.m_maxStackSize = 1;
-            CargoPresentation.AttachWorldCrate(custom.ItemPrefab);
+            CargoPresentation.AttachWorldCrate(custom.ItemPrefab, def.Id);
             ItemManager.Instance.AddItem(custom);
             registered++;
         }
