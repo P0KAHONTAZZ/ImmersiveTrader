@@ -38,8 +38,9 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         var playerPrefab = PrefabManager.Instance.GetPrefab(NpcPrefabRegistry.PlayerStyleVisualSource);
         if (playerPrefab == null) return;
 
-        // Never instantiate the Player root: it contains input, inventory and player
-        // networking. Copy only its visual child when one can be identified safely.
+        // Keep the Player root inactive while copying it: VisEquipment belongs to
+        // that root, not to the Visual child. Remove the player/network behaviours
+        // before activation; the existing trader shell owns all gameplay.
         Transform? visual = playerPrefab.transform.Find("Visual");
         if (visual == null)
         {
@@ -53,27 +54,26 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         foreach (var renderer in GetComponentsInChildren<Renderer>(true))
             renderer.enabled = false;
 
-        // CharacterAnimEvent expects a complete Character/Humanoid owner during Awake.
-        // It is unsafe on a detached visual hierarchy, so disable/remove those event
-        // components on a temporary inactive template before instantiation.
-        bool sourceActive = visual.gameObject.activeSelf;
-        visual.gameObject.SetActive(false);
-        var copy = Object.Instantiate(visual.gameObject, transform);
-        visual.gameObject.SetActive(sourceActive);
+        bool sourceActive = playerPrefab.activeSelf;
+        playerPrefab.SetActive(false);
+        GameObject copy;
+        try { copy = Object.Instantiate(playerPrefab, transform); }
+        finally { playerPrefab.SetActive(sourceActive); }
         copy.name = "ImmersiveTrader_PlayerVisual";
         _playerVisual = copy.transform;
         copy.transform.localPosition = Vector3.zero;
         copy.transform.localRotation = Quaternion.identity;
         copy.transform.localScale = Vector3.one;
 
-        foreach (var animEvent in copy.GetComponentsInChildren<CharacterAnimEvent>(true))
-            Object.DestroyImmediate(animEvent);
-
-        foreach (var nview in copy.GetComponentsInChildren<ZNetView>(true))
-            Object.DestroyImmediate(nview);
         foreach (var player in copy.GetComponentsInChildren<Player>(true))
             Object.DestroyImmediate(player);
-
+        foreach (var nview in copy.GetComponentsInChildren<ZNetView>(true))
+            Object.DestroyImmediate(nview);
+        foreach (var component in copy.GetComponentsInChildren<MonoBehaviour>(true))
+            if (!(component is VisEquipment))
+                component.enabled = false;
+        foreach (var collider in copy.GetComponentsInChildren<Collider>(true))
+            collider.enabled = false;
         foreach (var renderer in copy.GetComponentsInChildren<Renderer>(true))
             renderer.enabled = true;
 
@@ -102,15 +102,16 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         if (!TestOutfits.TryGetValue(TraderId, out var defaults)) return;
         var outfit = LoadOutfit(TraderId, defaults);
 
-        var bones = visual.GetComponentsInChildren<Transform>(true)
-            .GroupBy(bone => bone.name, StringComparer.Ordinal)
-            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
-
-        int attached = 0;
-        if (AttachSkin(outfit.Chest, visual, bones)) attached++;
-        if (AttachSkin(outfit.Legs, visual, bones)) attached++;
-        bool helmet = EquipNativeHelmet(visual, TraderId, outfit.Helmet);
-        Plugin.Log.LogInfo($"Test outfit {TraderId}: {attached}/2 armor pieces, helmet={helmet} ({outfit.Chest}, {outfit.Legs}).");
+        var equipment = visual.GetComponentInChildren<VisEquipment>(true);
+        if (equipment == null)
+        {
+            Plugin.Log.LogWarning($"Native VisEquipment unavailable on cloned Player for {TraderId}; outfit skipped.");
+            return;
+        }
+        bool helmet = EquipNativeItem(equipment, TraderId, "SetHelmetItem", outfit.Helmet);
+        bool chest = EquipNativeItem(equipment, TraderId, "SetChestItem", outfit.Chest);
+        bool legs = EquipNativeItem(equipment, TraderId, "SetLegItem", outfit.Legs);
+        Plugin.Log.LogInfo($"Native outfit {TraderId}: helmet={helmet}, chest={chest}, legs={legs}.");
     }
 
     private static readonly Dictionary<string, string> TestHelmets = new()
@@ -173,32 +174,21 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         }
     }
 
-    private static bool EquipNativeHelmet(Transform visual, string traderId, string prefabName)
+    private static bool EquipNativeItem(VisEquipment equipment, string traderId, string methodName, string prefabName)
     {
         if (string.IsNullOrWhiteSpace(prefabName)) return false;
         if (ObjectDB.instance?.GetItemPrefab(prefabName) == null)
         {
-            Plugin.Log.LogWarning($"Outfit helmet prefab unavailable for {traderId}: {prefabName}");
-            return false;
-        }
-
-        // The copied Player Visual may retain its native VisEquipment component.
-        // Let Valheim attach the helmet through that component. A hand-mounted
-        // mesh cannot be made reliable by adjusting a scale or bone offset.
-        var equipment = visual.GetComponentInChildren<VisEquipment>(true);
-        if (equipment == null)
-        {
-            Plugin.Log.LogWarning($"Native VisEquipment unavailable on Player Visual for {traderId}; helmet skipped.");
+            Plugin.Log.LogWarning($"Outfit item unavailable for {traderId}: {prefabName}");
             return false;
         }
         try
         {
             var method = typeof(VisEquipment).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .FirstOrDefault(candidate => candidate.Name == "SetHelmetItem" &&
+                .FirstOrDefault(candidate => candidate.Name == methodName &&
                     candidate.GetParameters().Length > 0 &&
                     candidate.GetParameters()[0].ParameterType == typeof(string));
-            if (method == null)
-                throw new MissingMethodException("VisEquipment", "SetHelmetItem");
+            if (method == null) throw new MissingMethodException("VisEquipment", methodName);
             var parameters = method.GetParameters();
             var values = new object[parameters.Length];
             values[0] = prefabName;
@@ -206,12 +196,11 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
                 values[i] = parameters[i].HasDefaultValue ? parameters[i].DefaultValue :
                     parameters[i].ParameterType.IsValueType ? Activator.CreateInstance(parameters[i].ParameterType) : null;
             method.Invoke(equipment, values);
-            Plugin.Log.LogInfo($"Native helmet equipped for {traderId}: {prefabName}");
             return true;
         }
         catch (Exception error)
         {
-            Plugin.Log.LogWarning($"Native helmet equip failed for {traderId}: {error}");
+            Plugin.Log.LogWarning($"Native outfit equip failed for {traderId} / {prefabName}: {error}");
             return false;
         }
     }
