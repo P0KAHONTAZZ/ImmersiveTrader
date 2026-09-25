@@ -125,11 +125,20 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
     };
 
     [Serializable]
-    private sealed class TraderOutfit
+    public sealed class TraderOutfit
     {
         public string Helmet = "";
         public string Chest = "";
         public string Legs = "";
+    }
+
+    public static void InitializeOutfitFiles()
+    {
+        // Configuration belongs to the plugin, not to a loaded world zone.
+        // Generate all human trader files on plugin startup so players can edit
+        // them before traveling to a trader's location.
+        foreach (var pair in TestOutfits)
+            LoadOutfit(pair.Key, pair.Value);
     }
 
     private static TraderOutfit LoadOutfit(string traderId, (string Chest, string Legs) defaults)
@@ -149,6 +158,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
             if (!File.Exists(path))
             {
                 File.WriteAllText(path, JsonUtility.ToJson(fallback, true));
+                Plugin.Log.LogInfo($"Created trader outfit file: {path}");
                 return fallback;
             }
             var loaded = JsonUtility.FromJson<TraderOutfit>(File.ReadAllText(path));

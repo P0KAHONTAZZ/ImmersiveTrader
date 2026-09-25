@@ -30,6 +30,7 @@ public sealed class Plugin : BaseUnityPlugin
     private void Awake()
     {
         Log = Logger;
+        Components.PlayerLikeNpcVisual.InitializeOutfitFiles();
         TreasureWeight = Config.Bind("Treasures", "Weight", 80f, "Weight of each quest treasure.");
         MaxCarriedTreasures = Config.Bind("Treasures", "MaxCarried", 2, "Maximum number of active quest treasures.");
         MidkaHealingMeadPrice = Config.Bind("Midka", "MinorHealingMeadPrice", 70, "Legacy configuration value. Midka's native shop always sells Minor Healing Mead for 70 coins.");

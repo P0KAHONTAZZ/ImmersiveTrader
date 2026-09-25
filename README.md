@@ -14,7 +14,7 @@ A Valheim mod with 14 regular traders, hunting contracts, courier shipments and 
 
 ## Trader outfits
 
-Each trader creates a JSON outfit file when their NPC first appears, for example
+The plugin creates JSON outfit files for all 13 human traders at startup (no world visit required), for example
 `BepInEx/config/ImmersiveTrader/outfits/midka.json`:
 
 ```json
