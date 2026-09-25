@@ -13,7 +13,7 @@ namespace ImmersiveTrader.Commands;
 public sealed class ImmersiveTraderCommand : ConsoleCommand
 {
     public override string Name => "it";
-    public override string Help => "ImmersiveTrader tools: it help | list | find <id> | goto <id> | findall | spawn <id> | look <id> | diagnose | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId> | rep <traderId> [add <points>|reset] | access <traderId> [grant|revoke]";
+    public override string Help => "ImmersiveTrader tools: it help | list | find <id> | goto <id> | findall | spawn <id> | look <id> | diagnose | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId> | rep <traderId> [add <points>|reset] | access <traderId> [grant|revoke] | camp <traderId|clear>";
 
     public override void Run(string[] args, Terminal context)
     {
@@ -34,11 +34,12 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             case "task": TaskCommand(args, context); break;
             case "rep": ReputationCommand(args, context); break;
             case "access": AccessCommand(args, context); break;
+            case "camp": CampPreview(args, context); break;
             default: context.AddString($"Unknown ImmersiveTrader command: {args[0]}"); PrintHelp(context); break;
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep", "access" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep", "access", "camp" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -60,7 +61,49 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it rep <traderId>  - show this trader reputation");
         c.AddString("  it rep <traderId> add <points>  - add reputation points (max 64)");
         c.AddString("  it rep <traderId> reset  - reset reputation for this trader to 0");
+        c.AddString("  it camp <traderId>  - preview that trader's camp layout in front of you (not saved)");
+        c.AddString("  it camp clear       - remove the camp preview");
         c.AddString("  it access <traderId> [grant|revoke]  - view or change this character\u0027s trader access");
+    }
+
+    private static GameObject? _campPreview;
+
+    private static void CampPreview(string[] args, Terminal c)
+    {
+        var player = Player.m_localPlayer;
+        if (player == null || ZNetScene.instance == null) { c.AddString("Enter a world first."); return; }
+        if (args.Length != 2) { c.AddString("Usage: it camp <traderId|clear>"); return; }
+
+        ClearCampPreview();
+        if (Eq(args[1], "clear")) { c.AddString("Camp preview removed."); return; }
+
+        var trader = FindTrader(args[1]);
+        if (trader == null || trader.IsLegendary) { c.AddString("Unknown regular trader. Use 'it list'."); return; }
+
+        // Same build path as the generated location. The trader's spot is 6 m ahead and the
+        // camp front (+Z) faces the player. Terrain is not levelled in the preview.
+        var forward = Vector3.ProjectOnPlane(player.transform.forward, Vector3.up).normalized;
+        var root = new GameObject($"ImmersiveTrader_CampPreview_{trader.Id}");
+        root.SetActive(false);
+        root.transform.SetPositionAndRotation(player.transform.position + forward * 6f, Quaternion.LookRotation(-forward));
+        TraderCampBuilder.Build(trader.Id, root.transform);
+        foreach (var view in root.GetComponentsInChildren<ZNetView>(true))
+            view.m_persistent = false;
+        root.SetActive(true);
+        _campPreview = root;
+        c.AddString($"Camp preview for {trader.Name}: {root.GetComponentsInChildren<ZNetView>().Length} pieces. Missing pieces are listed in the BepInEx log.");
+    }
+
+    private static void ClearCampPreview()
+    {
+        if (_campPreview == null) return;
+        foreach (var view in _campPreview.GetComponentsInChildren<ZNetView>(true))
+        {
+            if (view.IsValid()) ZNetScene.instance.Destroy(view.gameObject);
+            else UnityEngine.Object.Destroy(view.gameObject);
+        }
+        UnityEngine.Object.Destroy(_campPreview);
+        _campPreview = null;
     }
 
     private static void AccessCommand(string[] args, Terminal c)

@@ -10,4 +10,5 @@ public sealed record TraderCampProp(
     bool Optional = true
 );
 
-public sealed record TraderCampDefinition(string TraderId, TraderCampProp[] Props);
+// LevelRadius > 0 flattens terrain under a larger settlement and widens the location footprint.
+public sealed record TraderCampDefinition(string TraderId, TraderCampProp[] Props, float LevelRadius = 0f);

@@ -19,8 +19,7 @@ public static class TraderCampBuilder
             var source = PrefabManager.Instance.GetPrefab(prop.Prefab);
             if (source == null)
             {
-                if (!prop.Optional)
-                    Plugin.Log.LogWarning($"Required camp prop '{prop.Prefab}' missing for {traderId}.");
+                Plugin.Log.LogWarning($"{(prop.Optional ? "Optional" : "Required")} camp prop '{prop.Prefab}' missing for {traderId}.");
                 continue;
             }
 
@@ -49,5 +48,12 @@ public static class TraderCampBuilder
 
         foreach (var wear in instance.GetComponentsInChildren<WearNTear>(true))
             Object.DestroyImmediate(wear);
+
+        // Settlement walls and roofs must not become free wood, and camp fires/torches stay lit.
+        foreach (var piece in instance.GetComponentsInChildren<Piece>(true))
+            piece.m_canBeRemoved = false;
+
+        foreach (var fire in instance.GetComponentsInChildren<Fireplace>(true))
+            fire.m_infiniteFuel = true;
     }
 }

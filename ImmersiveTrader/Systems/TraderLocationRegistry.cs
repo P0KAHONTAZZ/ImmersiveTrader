@@ -1,3 +1,4 @@
+using System.Linq;
 using ImmersiveTrader.Components;
 using Jotunn.Configs;
 using Jotunn.Entities;
@@ -35,6 +36,9 @@ public static class TraderLocationRegistry
             traderAnchor.TraderId = trader.Id;
 
             TraderCampBuilder.Build(trader.Id, container.transform);
+            float levelRadius = TraderCampRegistry.Camps.FirstOrDefault(x => x.TraderId == trader.Id)?.LevelRadius ?? 0f;
+            if (levelRadius > 0f)
+                AddLeveling(container.transform, levelRadius);
             if (!hasVanillaShield)
             {
                 Plugin.Log.LogWarning($"Vanilla trader shield unavailable for {trader.Id}; using the previous protection.");
@@ -50,7 +54,7 @@ public static class TraderLocationRegistry
                 Priotized = true,
                 CenterFirst = false,
                 ClearArea = true,
-                ExteriorRadius = 14f,
+                ExteriorRadius = Mathf.Max(14f, levelRadius + 2f),
                 MinAltitude = 3f,
                 MinDistance = range.min,
                 MaxDistance = range.max,
@@ -64,6 +68,20 @@ public static class TraderLocationRegistry
         }
 
         _registered = true;
+    }
+
+    // Same mechanism vanilla locations use: flatten a round pad at the location origin height.
+    private static void AddLeveling(Transform parent, float radius)
+    {
+        var leveling = new GameObject("ImmersiveTrader_Leveling");
+        leveling.transform.SetParent(parent, false);
+        var terrain = leveling.AddComponent<TerrainModifier>();
+        terrain.m_level = true;
+        terrain.m_levelRadius = radius;
+        terrain.m_square = false;
+        terrain.m_smooth = true;
+        terrain.m_smoothRadius = radius + 4f;
+        terrain.m_paintCleared = false;
     }
 
     private static (float min, float max) GetDistanceRange(string biome) => biome switch
