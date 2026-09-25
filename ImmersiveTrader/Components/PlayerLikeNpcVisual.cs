@@ -110,13 +110,31 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         var equipment = visual.GetComponent<VisEquipment>();
         if (equipment == null) throw new MissingComponentException("Player visual has no VisEquipment.");
 
-        bool helmet = EquipNativeItem(equipment, TraderId, "SetHelmetItem", outfit.Helmet);
-        bool chest = EquipNativeItem(equipment, TraderId, "SetChestItem", outfit.Chest);
-        bool legs = EquipNativeItem(equipment, TraderId, "SetLegItem", outfit.Legs);
+        bool helmet = SetGhostItem(equipment, TraderId, "m_helmetItem", "SetHelmetItem", outfit.Helmet);
+        bool chest = SetGhostItem(equipment, TraderId, "m_chestItem", "SetChestItem", outfit.Chest);
+        bool legs = SetGhostItem(equipment, TraderId, "m_legItem", "SetLegItem", outfit.Legs);
+
+        // On a decorative NPC there is no ZDO on the copied presentation.
+        // Write local appearance hashes and ask VisEquipment to rebuild meshes.
+        try
+        {
+            var refresh = typeof(VisEquipment).GetMethod("UpdateVisuals",
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                null, Type.EmptyTypes, null);
+            if (refresh == null)
+                Plugin.Log.LogWarning($"VisEquipment.UpdateVisuals unavailable for {TraderId}.");
+            else
+                refresh.Invoke(equipment, null);
+        }
+        catch (Exception error)
+        {
+            Plugin.Log.LogWarning($"Outfit refresh failed for {TraderId}: {error}");
+        }
         Plugin.Log.LogInfo($"Native outfit {TraderId}: helmet={helmet}, chest={chest}, legs={legs}.");
     }
 
-    private static bool EquipNativeItem(VisEquipment equipment, string traderId, string methodName, string prefabName)
+    private static bool SetGhostItem(VisEquipment equipment, string traderId,
+        string fieldName, string methodName, string prefabName)
     {
         if (string.IsNullOrWhiteSpace(prefabName)) return false;
         if (ObjectDB.instance?.GetItemPrefab(prefabName) == null)
@@ -124,6 +142,27 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
             Plugin.Log.LogWarning($"Outfit item unavailable for {traderId}: {prefabName}");
             return false;
         }
+        try
+        {
+            var field = typeof(VisEquipment).GetField(fieldName,
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field != null && field.FieldType == typeof(int))
+            {
+                field.SetValue(equipment, StringExtensionMethods.GetStableHashCode(prefabName));
+                return true;
+            }
+            Plugin.Log.LogWarning($"Local appearance field {fieldName} unavailable for {traderId}; using native setter.");
+            return EquipNativeItem(equipment, traderId, methodName, prefabName);
+        }
+        catch (Exception error)
+        {
+            Plugin.Log.LogWarning($"Outfit item failed for {traderId} / {prefabName}: {error}");
+            return false;
+        }
+    }
+
+    private static bool EquipNativeItem(VisEquipment equipment, string traderId, string methodName, string prefabName)
+    {
         try
         {
             var method = typeof(VisEquipment).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
@@ -142,7 +181,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         }
         catch (Exception error)
         {
-            Plugin.Log.LogWarning($"Native outfit equip failed for {traderId} / {prefabName}: {error}");
+            Plugin.Log.LogWarning($"Native outfit setter failed for {traderId} / {prefabName}: {error}");
             return false;
         }
     }
