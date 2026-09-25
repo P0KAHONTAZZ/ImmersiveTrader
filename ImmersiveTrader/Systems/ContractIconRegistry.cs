@@ -23,7 +23,8 @@ internal static class ContractIconRegistry
         [Skills.SkillType.Run]=12, [Skills.SkillType.Swim]=13, [Skills.SkillType.Jump]=14,
         [Skills.SkillType.Sneak]=15, [Skills.SkillType.Fishing]=16, [Skills.SkillType.Cooking]=17,
         [Skills.SkillType.Farming]=18, [Skills.SkillType.Crafting]=19, [Skills.SkillType.BloodMagic]=20,
-        [Skills.SkillType.ElementalMagic]=21
+        [Skills.SkillType.ElementalMagic]=21,
+        [Skills.SkillType.Ride]=22, [Skills.SkillType.Dodge]=23
     };
     private const int Size = 128;
 
