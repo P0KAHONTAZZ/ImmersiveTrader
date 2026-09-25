@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 using ImmersiveTrader.Models;
 
 namespace ImmersiveTrader;
@@ -17,6 +18,36 @@ public static class ProgressionGate
         { 6, "defeated_queen" }
     };
 
+    // Vanilla characters from older worlds often have no personal boss defeat keys.
+    // Known materials are saved on the character; a later-biome material proves
+    // access to all earlier traders without reading this server's world keys.
+    private static readonly Dictionary<int, string[]> MaterialEvidence = new()
+    {
+        { 1, new[] { "CopperOre", "TinOre", "Bronze" } },
+        { 2, new[] { "IronScrap", "Iron" } },
+        { 3, new[] { "SilverOre", "Silver" } },
+        { 4, new[] { "BlackMetalScrap", "BlackMetal" } },
+        { 5, new[] { "Carapace", "Sap", "BlackMarble" } },
+        { 6, new[] { "FlametalOreNew", "Flametal", "Blackwood" } }
+    };
+
+    public static int HighestKnownMaterialTier(Player player)
+    {
+        if (player == null || ObjectDB.instance == null) return 0;
+        for (int tier = 6; tier >= 1; tier--)
+        {
+            if (!MaterialEvidence.TryGetValue(tier, out var prefabs)) continue;
+            foreach (var prefabName in prefabs)
+            {
+                var item = ObjectDB.instance.GetItemPrefab(prefabName)?.GetComponent<ItemDrop>();
+                var materialName = item?.m_itemData?.m_shared?.m_name;
+                if (!string.IsNullOrEmpty(materialName) && player.IsKnownMaterial(materialName))
+                    return tier;
+            }
+        }
+        return 0;
+    }
+
     private static string AccessKey(string traderId) => "ImmersiveTrader_access_" + traderId;
 
     public static bool HasAccess(Player player, string traderId)
@@ -32,7 +63,7 @@ public static class ProgressionGate
     {
         if (rewardTier <= 0 || !Plugin.ProgressionLock.Value) return true;
         return player != null && RequiredPreviousBossKey.TryGetValue(rewardTier, out var key)
-            && player.HaveUniqueKey(key);
+            && (player.HaveUniqueKey(key) || HighestKnownMaterialTier(player) >= rewardTier);
     }
 
     public static bool CanAccessTrader(Player player, TraderDefinition trader)
