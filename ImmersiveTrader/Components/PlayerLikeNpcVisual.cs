@@ -218,7 +218,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         ["ragnar_turnipson"] = "Cultivator",
         ["cmok"] = "MaceGold_FrostFire",
         ["grelka"] = "SwordMistwalker",
-        ["spalony_zenek"] = "SwordMistwalker",
+        ["spalony_zenek"] = "SwordNiedhogg",
         ["skjold_cinderborn"] = "StaffFireball"
     };
 
