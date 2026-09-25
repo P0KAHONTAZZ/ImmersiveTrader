@@ -32,7 +32,7 @@ public sealed class TraderNpc : MonoBehaviour, Hoverable, Interactable
     {
         if (Definition == null) return string.Empty;
         var localPlayer = Player.m_localPlayer;
-        if (!ProgressionGate.IsRewardTierUnlocked(Definition.BiomeTier))
+        if (!ProgressionGate.CanAccessTrader(localPlayer, Definition))
             return $"{Definition.Name}\nTrading locked: defeat the previous biome boss.";
         string reputation = localPlayer == null ? "" : $"\nReputation: {TraderReputation.DescribeStanding(localPlayer, TraderId)}";
         return $"{Definition.Name}\n[<color=yellow><b>E</b></color>] Talk\n{Definition.Theme}{reputation}";
@@ -41,7 +41,7 @@ public sealed class TraderNpc : MonoBehaviour, Hoverable, Interactable
     public bool Interact(Humanoid user, bool hold, bool alt)
     {
         if (hold || user is not Player player || Definition == null) return false;
-        if (!ProgressionGate.IsRewardTierUnlocked(Definition.BiomeTier))
+        if (!ProgressionGate.CanAccessTrader(player, Definition))
         {
             player.Message(MessageHud.MessageType.Center,
                 $"{Definition.Name}: defeat the previous biome boss before trading.");
