@@ -57,10 +57,10 @@ public static class TraderCampRegistry
     private static TraderCampProp Piece(string prefab, float x, float height, float z, float yaw) =>
         new(prefab, new Vector3(x, height, z), new Vector3(0f, yaw, 0f));
 
-    // ponytail: piece pivots were guessed without the game assets (walls/floors at their base,
-    // poles/beams/roof tiles at their centre, roof tiles rising along local +Z). Adjust these
-    // after the first in-game screenshots instead of hand-editing every piece.
-    private const float RoofUphillYaw = 90f;
+    // ponytail: piece pivots are tuned from in-game screenshots, not read from the assets.
+    // Confirmed: woodwall pivots at its centre; roof tiles rise along local -Z.
+    private const float RoofUphillYaw = -90f;
+    private const float WallCenterHeight = 1f;
     private const float PostHeight = .6f;
 
     /// <summary>Trader stands at the origin facing +Z; the village sits behind and beside them.</summary>
@@ -100,12 +100,12 @@ public static class TraderCampRegistry
             yield return At("wood_roof", x, 2.5f, z, x < 0 ? RoofUphillYaw : RoofUphillYaw + 180f);
         }
 
-        yield return At("woodwall", -1f, 0f, -2f, 0f);
-        yield return At("woodwall", 1f, 0f, -2f, 0f);
-        yield return At("woodwall", -1f, 0f, 2f, 180f); // x = +1 stays open as the doorway
+        yield return At("woodwall", -1f, WallCenterHeight, -2f, 0f);
+        yield return At("woodwall", 1f, WallCenterHeight, -2f, 0f);
+        yield return At("woodwall", -1f, WallCenterHeight, 2f, 180f); // x = +1 stays open as the doorway
         foreach (float x in new[] { -2f, 2f })
         foreach (float z in new[] { -1f, 1f })
-            yield return At("woodwall", x, 0f, z, 90f);
+            yield return At("woodwall", x, WallCenterHeight, z, 90f);
     }
 
     /// <summary>Post-and-rail fence along a polyline, one post every ~2 m.</summary>
