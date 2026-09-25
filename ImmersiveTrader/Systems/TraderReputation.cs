@@ -101,18 +101,30 @@ public static class TraderReputation
         }
     }
 
+    public static string DescribeStanding(Player player, string trader)
+    {
+        int level = Level(Get(player, trader));
+        string stars = new string('★', level);
+        string emptyStars = new string('☆', 5 - level);
+        return $"<color=yellow>{stars}</color><color=#888888>{emptyStars}</color> <color=yellow>{LevelName(level)}</color>";
+    }
+
     public static string Describe(Player player, string trader)
     {
         int points = Get(player, trader);
-        int level = points >= 64 ? 5 : points >= 44 ? 4 : points >= 28 ? 3 : points >= 12 ? 2 : 1;
-        string name = level switch
-        {
-            1 => "Skeptical",
-            2 => "Neutral",
-            3 => "Favorable",
-            4 => "Friendly",
-            _ => "Trusted"
-        };
-        return $"{points}/{Maximum} (level {level}/5: {name})";
+        int level = Level(points);
+        return $"{points}/{Maximum} (level {level}/5: {LevelName(level)})";
     }
+
+    private static int Level(int points)
+        => points >= 64 ? 5 : points >= 44 ? 4 : points >= 28 ? 3 : points >= 12 ? 2 : 1;
+
+    private static string LevelName(int level) => level switch
+    {
+        1 => "Skeptical",
+        2 => "Neutral",
+        3 => "Favorable",
+        4 => "Friendly",
+        _ => "Trusted"
+    };
 }
