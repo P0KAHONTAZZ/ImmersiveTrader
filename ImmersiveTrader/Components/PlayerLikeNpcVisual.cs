@@ -105,11 +105,65 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         int attached = 0;
         if (AttachSkin(outfit.Chest, visual, bones)) attached++;
         if (AttachSkin(outfit.Legs, visual, bones)) attached++;
-        // Detached Player visuals have no live VisEquipment/Humanoid owner to equip
-        // helmets. Manual attach meshes use item-drop transforms and rendered bounds,
-        // which put helmets inside or far above the NPC head. Keep the reliable
-        // skinned chest/legs until an owner-driven equipment path is available.
-        Plugin.Log.LogInfo($"Test outfit {TraderId}: {attached}/2 armor pieces ({outfit.Chest}, {outfit.Legs}); helmet mounting disabled.");
+        bool helmet = AttachHelmet(TraderId, bones);
+        Plugin.Log.LogInfo($"Test outfit {TraderId}: {attached}/2 armor pieces, helmet={helmet} ({outfit.Chest}, {outfit.Legs}).");
+    }
+
+    private static readonly Dictionary<string, string> TestHelmets = new()
+    {
+        ["midka"] = "HelmetLeather", ["grimvald"] = "HelmetTrollLeather",
+        ["rudy_warg"] = "HelmetBronze", ["mokra_dzika"] = "HelmetRoot",
+        ["encek"] = "HelmetIron", ["hrothgar"] = "HelmetDrake",
+        ["ylva_frost"] = "HelmetFenring", ["bjarki_goldtooth"] = "HelmetPadded",
+        ["ragnar_turnipson"] = "HelmetPadded", ["cmok"] = "HelmetMage",
+        ["grelka"] = "HelmetCarapace", ["spalony_zenek"] = "HelmetFlametal",
+        ["skjold_cinderborn"] = "HelmetMage_Ashlands"
+    };
+
+    private static bool AttachHelmet(string traderId, Dictionary<string, Transform> bones)
+    {
+        if (!TestHelmets.TryGetValue(traderId, out var name)) return false;
+        if (!bones.TryGetValue("Head", out var head))
+        {
+            Plugin.Log.LogWarning($"Test outfit head bone unavailable for {traderId}.");
+            return false;
+        }
+
+        var item = PrefabManager.Instance.GetPrefab(name);
+        var attachment = item == null ? null : item.GetComponentsInChildren<Transform>(true)
+            .FirstOrDefault(child => child.name == "attach");
+        if (attachment == null)
+        {
+            Plugin.Log.LogWarning($"Test outfit helmet attachment unavailable: {name}");
+            return false;
+        }
+
+        // Native equipment attaches the wearable child to the animated head socket.
+        // The item-drop hierarchy's local transform belongs to its inventory/world
+        // model, so copying that transform or recentering world bounds breaks alignment.
+        var helmet = Object.Instantiate(attachment.gameObject, head, false);
+        helmet.name = $"ImmersiveTrader_Outfit_{name}";
+        helmet.transform.localPosition = Vector3.zero;
+        helmet.transform.localRotation = Quaternion.identity;
+        helmet.transform.localScale = Vector3.one;
+
+        foreach (var part in helmet.GetComponentsInChildren<Transform>(true))
+            part.gameObject.SetActive(true);
+
+        var renderers = helmet.GetComponentsInChildren<Renderer>(true)
+            .Where(renderer => renderer is MeshRenderer || renderer is SkinnedMeshRenderer)
+            .ToArray();
+        if (renderers.Length == 0)
+        {
+            Object.Destroy(helmet);
+            Plugin.Log.LogWarning($"Test helmet has no wearable mesh: {name}");
+            return false;
+        }
+
+        foreach (var renderer in renderers)
+            renderer.enabled = true;
+        Plugin.Log.LogInfo($"Test helmet {traderId}: {name} attached to animated Head bone.");
+        return true;
     }
 
     private static bool AttachSkin(string prefabName, Transform visual,
