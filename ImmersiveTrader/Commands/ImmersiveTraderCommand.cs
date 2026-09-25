@@ -13,7 +13,7 @@ namespace ImmersiveTrader.Commands;
 public sealed class ImmersiveTraderCommand : ConsoleCommand
 {
     public override string Name => "it";
-    public override string Help => "ImmersiveTrader tools: it help | list | find <id> | goto <id> | findall | spawn <id> | look <id> | diagnose | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId> | rep <traderId> [add <points>|reset]";
+    public override string Help => "ImmersiveTrader tools: it help | list | find <id> | goto <id> | findall | spawn <id> | look <id> | diagnose | clearspawned | items | give <treasureId> <sourceTraderId> | route <source> <target> | task <offer|accept|status|turnin> <traderId> | rep <traderId> [add <points>|reset] | access <traderId> [grant|revoke]";
 
     public override void Run(string[] args, Terminal context)
     {
@@ -33,11 +33,12 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             case "route": PrintRoute(args, context); break;
             case "task": TaskCommand(args, context); break;
             case "rep": ReputationCommand(args, context); break;
+            case "access": AccessCommand(args, context); break;
             default: context.AddString($"Unknown ImmersiveTrader command: {args[0]}"); PrintHelp(context); break;
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep", "access" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -59,6 +60,29 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it rep <traderId>  - show this trader reputation");
         c.AddString("  it rep <traderId> add <points>  - add reputation points (max 64)");
         c.AddString("  it rep <traderId> reset  - reset reputation for this trader to 0");
+        c.AddString("  it access <traderId> [grant|revoke]  - view or change this character\u0027s trader access");
+    }
+
+    private static void AccessCommand(string[] args, Terminal c)
+    {
+        var player = Player.m_localPlayer;
+        if (player == null) { c.AddString("Enter a world first."); return; }
+        if (args.Length != 2 && args.Length != 3)
+        {
+            c.AddString("Usage: it access <traderId> [grant|revoke]");
+            return;
+        }
+        var trader = FindTrader(args[1]);
+        if (trader == null || trader.IsLegendary) { c.AddString("Unknown regular trader. Use 'it list'."); return; }
+        if (args.Length == 3)
+        {
+            if (Eq(args[2], "grant")) ProgressionGate.GrantAccess(player, trader.Id);
+            else if (Eq(args[2], "revoke")) ProgressionGate.RevokeAccess(player, trader.Id);
+            else { c.AddString("Usage: it access <traderId> [grant|revoke]"); return; }
+        }
+        bool personalBoss = ProgressionGate.IsRewardTierUnlocked(player, trader.BiomeTier);
+        bool overrideAccess = ProgressionGate.HasAccess(player, trader.Id);
+        c.AddString($"{trader.Name}: access={(personalBoss || overrideAccess ? "open" : "locked")}; boss progression={(personalBoss ? "unlocked" : "locked")}; manual access={(overrideAccess ? "granted" : "none")}.");
     }
 
     private static void ReputationCommand(string[] args, Terminal c)
