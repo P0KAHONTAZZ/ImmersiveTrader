@@ -10,28 +10,32 @@ A Valheim mod with 14 regular traders, hunting contracts, courier shipments and 
 - Hunting contract scrolls track progress in item metadata, even when dropped and recovered. Completing one grants two levels in its specified skill, up to the skill cap.
 - Completing a shipment or contract awards reputation with its issuing trader. Reputation is stored per character, world and trader. The five reputation levels have thresholds of 0, 12, 28, 44 and 64 points.
 - Midka additionally sells Minor Healing Mead for 70 coins. The reputation-unlocked vanilla items listed in the design spreadsheet are not yet implemented in the game.
-- Trader locations, protection domes and the player-like trader visual prototype are under active development. The experimental manual helmet mounting was disabled because it distorted NPC heads.
+- Trader locations and protection domes are available. Human trader outfits use the Player visual equipment system; NPC environments remain under development.
 
 ## Trader outfits
 
-The plugin creates JSON outfit files for all 13 human traders at startup (no world visit required), for example
-`BepInEx/config/ImmersiveTrader/outfits/midka.json`:
+The plugin creates JSON outfit files for all 13 human traders when it starts. Midka's file,
+`BepInEx/config/ImmersiveTrader/outfits/midka.json`, uses these defaults:
 
 ```json
 {
-  "Helmet": "HelmetLeather",
-  "Chest": "ArmorLeatherChest",
-  "Legs": "ArmorLeatherLegs"
+  "Helmet": "HelmetRootCrown",
+  "Chest": "ArmorRootChest",
+  "Legs": "ArmorRootLegs",
+  "RightHand": "StaffGreenRoots"
 }
 ```
 
-Edit prefab names while the game is closed, then restart Valheim. An empty `Helmet`
-hides the helmet. The game renders helmets through the Player visual's native
-`VisEquipment` when available; it never scales an item-drop model onto the
-head. A missing native equipment component leaves the NPC without a helmet and
-writes a warning to `BepInEx/LogOutput.log`. The trader interaction shell and
-world location remain unchanged. On multiplayer clients, copy the same outfit
-files to each player's machine for consistent appearance.
+Midka wears green root equipment and holds a green magic staff. Encek wears the
+Deep North Protector set and carries a Frostfire Sword. The other human traders
+wear biome-based sets. Troldad retains the Troll appearance.
+
+Edit prefab names while Valheim is closed and restart the game. An empty slot
+removes that item. When upgrading from earlier releases, files containing the
+original generated defaults for Midka, Encek and Ragnar are migrated on startup;
+customized armor choices are preserved. RightHand is added to older files.
+Trader clothing is rendered on each client: copy customized JSON files to
+other players' installations if everyone should see the same look.
 
 ## Requirements
 

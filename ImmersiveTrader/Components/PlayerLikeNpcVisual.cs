@@ -92,15 +92,15 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
 
     private static readonly Dictionary<string, (string Chest, string Legs)> TestOutfits = new()
     {
-        ["midka"] = ("ArmorLeatherChest", "ArmorLeatherLegs"),
+        ["midka"] = ("ArmorRootChest", "ArmorRootLegs"),
         ["grimvald"] = ("ArmorTrollLeatherChest", "ArmorTrollLeatherLegs"),
         ["rudy_warg"] = ("ArmorBronzeChest", "ArmorBronzeLegs"),
         ["mokra_dzika"] = ("ArmorRootChest", "ArmorRootLegs"),
-        ["encek"] = ("ArmorIronChest", "ArmorIronLegs"),
+        ["encek"] = ("ArmorDeepNorthHeavyChest", "ArmorDeepNorthHeavylegs"),
         ["hrothgar"] = ("ArmorWolfChest", "ArmorWolfLegs"),
         ["ylva_frost"] = ("ArmorFenringChest", "ArmorFenringLegs"),
         ["bjarki_goldtooth"] = ("ArmorPaddedCuirass", "ArmorPaddedGreaves"),
-        ["ragnar_turnipson"] = ("ArmorFenringChest", "ArmorFenringLegs"),
+        ["ragnar_turnipson"] = ("ArmorPaddedCuirass", "ArmorPaddedGreaves"),
         ["cmok"] = ("ArmorMageChest", "ArmorMageLegs"),
         ["grelka"] = ("ArmorCarapaceChest", "ArmorCarapaceLegs"),
         ["spalony_zenek"] = ("ArmorFlametalChest", "ArmorFlametalLegs"),
@@ -118,6 +118,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         bool helmet = SetGhostItem(equipment, TraderId, "m_helmetItem", "SetHelmetItem", outfit.Helmet);
         bool chest = SetGhostItem(equipment, TraderId, "m_chestItem", "SetChestItem", outfit.Chest);
         bool legs = SetGhostItem(equipment, TraderId, "m_legItem", "SetLegItem", outfit.Legs);
+        bool weapon = SetGhostItem(equipment, TraderId, "m_rightItem", "SetRightItem", outfit.RightHand);
 
         // On a decorative NPC there is no ZDO on the copied presentation.
         // Write local appearance hashes and ask VisEquipment to rebuild meshes.
@@ -135,7 +136,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         {
             throw new InvalidOperationException($"Outfit refresh failed for {TraderId}", error);
         }
-        Plugin.Log.LogInfo($"Native outfit {TraderId}: helmet={helmet}, chest={chest}, legs={legs}.");
+        Plugin.Log.LogInfo($"Native outfit {TraderId}: helmet={helmet}, chest={chest}, legs={legs}, weapon={weapon}.");
     }
 
     private static bool SetGhostItem(VisEquipment equipment, string traderId,
@@ -193,13 +194,19 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
 
     private static readonly Dictionary<string, string> TestHelmets = new()
     {
-        ["midka"] = "HelmetLeather", ["grimvald"] = "HelmetTrollLeather",
+        ["midka"] = "HelmetRootCrown", ["grimvald"] = "HelmetTrollLeather",
         ["rudy_warg"] = "HelmetBronze", ["mokra_dzika"] = "HelmetRoot",
-        ["encek"] = "HelmetIron", ["hrothgar"] = "HelmetDrake",
+        ["encek"] = "HelmetDNHeavy", ["hrothgar"] = "HelmetDrake",
         ["ylva_frost"] = "HelmetFenring", ["bjarki_goldtooth"] = "HelmetPadded",
         ["ragnar_turnipson"] = "HelmetPadded", ["cmok"] = "HelmetMage",
         ["grelka"] = "HelmetCarapace", ["spalony_zenek"] = "HelmetFlametal",
         ["skjold_cinderborn"] = "HelmetMage_Ashlands"
+    };
+
+    private static readonly Dictionary<string, string> TestWeapons = new()
+    {
+        ["midka"] = "StaffGreenRoots",
+        ["encek"] = "SwordGold_FrostFire"
     };
 
     [Serializable]
@@ -208,6 +215,7 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         public string Helmet = "";
         public string Chest = "";
         public string Legs = "";
+        public string RightHand = "";
     }
 
     public static void InitializeOutfitFiles()
@@ -226,7 +234,8 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         {
             Helmet = defaultHelmet ?? "",
             Chest = defaults.Chest,
-            Legs = defaults.Legs
+            Legs = defaults.Legs,
+            RightHand = TestWeapons.TryGetValue(traderId, out var weapon) ? weapon : ""
         };
         try
         {
@@ -242,6 +251,43 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
             var loaded = JsonUtility.FromJson<TraderOutfit>(File.ReadAllText(path));
             if (loaded == null || loaded.Helmet == null || loaded.Chest == null || loaded.Legs == null)
                 throw new InvalidDataException("Outfit must define Helmet, Chest and Legs.");
+
+            // Update only files that still contain our original generated defaults.
+            // Any player-selected gear remains untouched.
+            bool changed = false;
+            if (traderId == "midka" && loaded.Helmet == "HelmetLeather" &&
+                loaded.Chest == "ArmorLeatherChest" && loaded.Legs == "ArmorLeatherLegs")
+            {
+                loaded.Helmet = fallback.Helmet;
+                loaded.Chest = fallback.Chest;
+                loaded.Legs = fallback.Legs;
+                changed = true;
+            }
+            if (traderId == "encek" && loaded.Helmet == "HelmetIron" &&
+                loaded.Chest == "ArmorIronChest" && loaded.Legs == "ArmorIronLegs")
+            {
+                loaded.Helmet = fallback.Helmet;
+                loaded.Chest = fallback.Chest;
+                loaded.Legs = fallback.Legs;
+                changed = true;
+            }
+            if (traderId == "ragnar_turnipson" &&
+                loaded.Chest == "ArmorFenringChest" && loaded.Legs == "ArmorFenringLegs")
+            {
+                loaded.Chest = fallback.Chest;
+                loaded.Legs = fallback.Legs;
+                changed = true;
+            }
+            if (loaded.RightHand == null || (loaded.RightHand.Length == 0 && fallback.RightHand.Length > 0))
+            {
+                loaded.RightHand = fallback.RightHand;
+                changed = true;
+            }
+            if (changed)
+            {
+                File.WriteAllText(path, JsonUtility.ToJson(loaded, true));
+                Plugin.Log.LogInfo($"Updated default trader outfit: {path}");
+            }
             return loaded;
         }
         catch (Exception error)
