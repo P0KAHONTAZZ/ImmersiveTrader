@@ -38,48 +38,53 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         var playerPrefab = PrefabManager.Instance.GetPrefab(NpcPrefabRegistry.PlayerStyleVisualSource);
         if (playerPrefab == null) return;
 
-        // Never instantiate the Player root: it contains input, inventory and player
-        // networking. Copy only its visual child when one can be identified safely.
-        Transform? visual = playerPrefab.transform.Find("Visual");
-        if (visual == null)
+        GameObject? copy = null;
+        try
         {
-            Plugin.Log.LogWarning($"Player visual child not found; player-like look skipped for {TraderId}.");
-            return;
+            // The source Player prefab carries the complete native VisEquipment
+            // configuration. Clone it inactive, strip gameplay before activation,
+            // and leave the existing Hildir shell responsible for interaction.
+            bool sourceActive = playerPrefab.activeSelf;
+            playerPrefab.SetActive(false);
+            try { copy = Object.Instantiate(playerPrefab, transform); }
+            finally { playerPrefab.SetActive(sourceActive); }
+            copy.name = "ImmersiveTrader_PlayerVisual";
+            copy.transform.localPosition = Vector3.zero;
+            copy.transform.localRotation = Quaternion.identity;
+            copy.transform.localScale = Vector3.one;
+
+            foreach (var component in copy.GetComponentsInChildren<Component>(true))
+            {
+                if (component is Transform || component is VisEquipment ||
+                    component is Animator || component is Renderer ||
+                    component is MeshFilter || component is LODGroup)
+                    continue;
+                Object.DestroyImmediate(component);
+            }
+
+            var equipment = copy.GetComponent<VisEquipment>();
+            if (equipment == null) throw new MissingComponentException("Player prefab has no VisEquipment.");
+            foreach (var renderer in copy.GetComponentsInChildren<Renderer>(true))
+                renderer.enabled = true;
+            copy.SetActive(true);
+            ApplyTestOutfit(copy.transform);
+
+            // Hide the shell only after the presentation is built successfully.
+            _playerVisual = copy.transform;
+            foreach (var renderer in GetComponentsInChildren<Renderer>(true))
+                if (!renderer.transform.IsChildOf(_playerVisual))
+                    renderer.enabled = false;
         }
-
-        // Hide only Hildir's renderers; keep her root, colliders, animator and
-        // interaction/network shell alive. This turns NPCLOOK into one visible body
-        // instead of Hildir + Player occupying the same position.
-        foreach (var renderer in GetComponentsInChildren<Renderer>(true))
-            renderer.enabled = false;
-
-        // CharacterAnimEvent expects a complete Character/Humanoid owner during Awake.
-        // It is unsafe on a detached visual hierarchy, so disable/remove those event
-        // components on a temporary inactive template before instantiation.
-        bool sourceActive = visual.gameObject.activeSelf;
-        visual.gameObject.SetActive(false);
-        var copy = Object.Instantiate(visual.gameObject, transform);
-        visual.gameObject.SetActive(sourceActive);
-        copy.name = "ImmersiveTrader_PlayerVisual";
-        _playerVisual = copy.transform;
-        copy.transform.localPosition = Vector3.zero;
-        copy.transform.localRotation = Quaternion.identity;
-        copy.transform.localScale = Vector3.one;
-
-        foreach (var animEvent in copy.GetComponentsInChildren<CharacterAnimEvent>(true))
-            Object.DestroyImmediate(animEvent);
-
-        foreach (var nview in copy.GetComponentsInChildren<ZNetView>(true))
-            Object.DestroyImmediate(nview);
-        foreach (var player in copy.GetComponentsInChildren<Player>(true))
-            Object.DestroyImmediate(player);
-
-        foreach (var renderer in copy.GetComponentsInChildren<Renderer>(true))
-            renderer.enabled = true;
-
-        copy.SetActive(true);
-        ApplyTestOutfit(copy.transform);
+        catch (Exception error)
+        {
+            Plugin.Log.LogWarning($"Player visual failed for {TraderId}; keeping trader shell visible: {error}");
+            if (copy != null) Object.Destroy(copy);
+            _playerVisual = null;
+            foreach (var renderer in GetComponentsInChildren<Renderer>(true))
+                renderer.enabled = true;
+        }
     }
+
     private static readonly Dictionary<string, (string Chest, string Legs)> TestOutfits = new()
     {
         ["midka"] = ("ArmorLeatherChest", "ArmorLeatherLegs"),
@@ -102,15 +107,30 @@ public sealed class PlayerLikeNpcVisual : MonoBehaviour
         if (!TestOutfits.TryGetValue(TraderId, out var defaults)) return;
         var outfit = LoadOutfit(TraderId, defaults);
 
-        var bones = visual.GetComponentsInChildren<Transform>(true)
-            .GroupBy(bone => bone.name, StringComparer.Ordinal)
-            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+        var equipment = visual.GetComponent<VisEquipment>();
+        if (equipment == null) throw new MissingComponentException("Player visual has no VisEquipment.");
 
-        int attached = 0;
-        if (AttachSkin(outfit.Chest, visual, bones)) attached++;
-        if (AttachSkin(outfit.Legs, visual, bones)) attached++;
-        bool helmet = EquipNativeHelmet(visual, TraderId, outfit.Helmet);
-        Plugin.Log.LogInfo($"Test outfit {TraderId}: {attached}/2 armor pieces, helmet={helmet} ({outfit.Chest}, {outfit.Legs}).");
+        // With no Player network view, native VisEquipment uses its local
+        // appearance fields, as it does for preview/ghost NPCs.
+        equipment.m_chestItem = ItemHash(outfit.Chest, TraderId);
+        equipment.m_legItem = ItemHash(outfit.Legs, TraderId);
+        equipment.m_helmetItem = ItemHash(outfit.Helmet, TraderId);
+        var refresh = typeof(VisEquipment).GetMethod("UpdateVisuals",
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+            null, Type.EmptyTypes, null);
+        refresh?.Invoke(equipment, null);
+        Plugin.Log.LogInfo($"Native outfit {TraderId}: helmet={outfit.Helmet}, chest={outfit.Chest}, legs={outfit.Legs}.");
+    }
+
+    private static int ItemHash(string prefabName, string traderId)
+    {
+        if (string.IsNullOrWhiteSpace(prefabName)) return 0;
+        if (ObjectDB.instance?.GetItemPrefab(prefabName) == null)
+        {
+            Plugin.Log.LogWarning($"Outfit item unavailable for {traderId}: {prefabName}");
+            return 0;
+        }
+        return StringExtensionMethods.GetStableHashCode(prefabName);
     }
 
     private static readonly Dictionary<string, string> TestHelmets = new()
