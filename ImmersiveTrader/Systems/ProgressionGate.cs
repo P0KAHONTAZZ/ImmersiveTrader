@@ -19,8 +19,8 @@ public static class ProgressionGate
     };
 
     // Vanilla characters from older worlds often have no personal boss defeat keys.
-    // Known materials are saved on the character; a later-biome material proves
-    // access to all earlier traders without reading this server's world keys.
+    // Known materials are saved on the character; later-biome discoveries serve
+    // as a progression proxy for earlier traders without world-wide keys.
     private static readonly Dictionary<int, string[]> MaterialEvidence = new()
     {
         { 1, new[] { "CopperOre", "TinOre", "Bronze" } },
