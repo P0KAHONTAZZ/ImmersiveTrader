@@ -93,7 +93,8 @@ public static class NativeContractBridge
         }
 
         bool rare = false;
-        int required = sale.Contract.RequiredAmount;
+        int reputationLevel = TraderReputation.GetLevel(player, sale.Source.Id);
+        int required = ContractRequirementScaling.Scale(sale.Contract.RequiredAmount, reputationLevel);
         ContractMetadata.Stamp(created, sale.Contract.Id, sale.Source.Id, TraderActivityService.GetWorldDayPublic(), required, rare, sale.Contract.RewardSkill);
         try { ItemPurchaseCooldown.MarkBought(player, sale.Source.Id, "contract", sale.Contract.Id); }
         catch (System.Exception ex)
