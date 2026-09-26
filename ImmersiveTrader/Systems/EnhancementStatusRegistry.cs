@@ -155,7 +155,7 @@ internal static class EnhancementStatusRegistry
         if (!IconIndex.TryGetValue(id, out int index)) return null;
         IconAtlas ??= LoadTexture("ImmersiveTrader.Assets.EnhancementStatusIcons.png");
         if (IconAtlas == null || IconAtlas.width < (index + 1) * 128 || IconAtlas.height < 128) return null;
-        var sprite = Sprite.Create(IconAtlas, new Rect(index * 128, 0, 128, 128), new Vector2(0.5f, 0.5f), 85f);
+        var sprite = Sprite.Create(IconAtlas, new Rect(index * 128, 0, 128, 128), new Vector2(0.5f, 0.5f));
         sprite.name = "ImmersiveTrader_StatusIcon_" + id;
         return sprite;
     }
@@ -168,31 +168,8 @@ internal static class EnhancementStatusRegistry
         stream.CopyTo(memory);
         var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
         if (!texture.LoadImage(memory.ToArray())) return null;
-        MakeDarkBackgroundTransparent(texture);
         texture.filterMode = FilterMode.Bilinear;
         return texture;
-    }
-
-    private static void MakeDarkBackgroundTransparent(Texture2D texture)
-    {
-        // HUD asset cleanup: keep only the bright/saturated painted symbol.
-        // All captions, preview-board background and soft glow are discarded.
-        var pixels = texture.GetPixels32();
-        for (int i = 0; i < pixels.Length; i++)
-        {
-            var p = pixels[i];
-            int max = Math.Max(p.r, Math.Max(p.g, p.b));
-            int min = Math.Min(p.r, Math.Min(p.g, p.b));
-            int chroma = max - min;
-
-            // Hard alpha cut: the preview halo is dimmer/less saturated than
-            // the painted symbol. No partial alpha is kept.
-            bool symbol = max >= 135 && chroma >= 55;
-            p.a = symbol ? (byte)255 : (byte)0;
-            pixels[i] = p;
-        }
-        texture.SetPixels32(pixels);
-        texture.Apply(false, false);
     }
 
     internal static void SetRemaining(Player player, string id, float seconds)
