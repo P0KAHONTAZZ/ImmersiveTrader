@@ -2,6 +2,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using Jotunn;
 using Jotunn.Managers;
+using Jotunn.Utils;
 using ImmersiveTrader.Commands;
 using HarmonyLib;
 using UnityEngine;
@@ -10,6 +11,7 @@ namespace ImmersiveTrader;
 
 [BepInPlugin(ModGuid, ModName, ModVersion)]
 [BepInDependency(Jotunn.Main.ModGuid)]
+[NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
 public sealed class Plugin : BaseUnityPlugin
 {
     private Harmony? _harmony;
@@ -17,7 +19,7 @@ public sealed class Plugin : BaseUnityPlugin
     internal static BepInEx.Logging.ManualLogSource Log = null!;
     public const string ModGuid = "p0kahontazz.immersivetrader";
     public const string ModName = "ImmersiveTrader";
-    public const string ModVersion = "0.5.0";
+    public const string ModVersion = "0.6.0";
 
     internal static ConfigEntry<float> TreasureWeight = null!;
     internal static ConfigEntry<int> MaxCarriedTreasures = null!;
