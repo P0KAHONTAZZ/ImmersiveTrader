@@ -39,6 +39,6 @@ internal static class ItAintFunnyLaughPatch
         // StartEmote is the vanilla path used by /laugh. Stop it in the same update so
         // movement/combat/building/interactions remain available while its voice is triggered.
         __instance.StartEmote("laugh", false);
-        __instance.StopEmote();
+        AccessTools.Method(typeof(Player), "StopEmote")?.Invoke(__instance, null);
     }
 }
