@@ -17,6 +17,7 @@ internal static class MultiplayerNetwork
     private static CustomRPC? _reputation;
     private static CustomRPC? _cooldown;
     private static CustomRPC? _delivery;
+    private static CustomRPC? _contractTurnIn;
     private static readonly Dictionary<string, int> ReputationCache = new();
     private static readonly Dictionary<string, int> CooldownCache = new();
 
@@ -27,6 +28,7 @@ internal static class MultiplayerNetwork
         _reputation = NetworkManager.Instance.AddRPC("ReputationState", ServerReputation, ClientReputation);
         _cooldown = NetworkManager.Instance.AddRPC("CooldownState", ServerCooldown, ClientCooldown);
         _delivery = NetworkManager.Instance.AddRPC("CargoDelivery", ServerDelivery, ClientDelivery);
+        _contractTurnIn = NetworkManager.Instance.AddRPC("ContractTurnIn", ServerContractTurnIn, ClientContractTurnIn);
         Plugin.Log.LogInfo("Multiplayer RPC layer registered.");
     }
 
@@ -96,6 +98,17 @@ internal static class MultiplayerNetwork
         package.Write(targetTraderId);
         package.Write(targetPosition);
         _delivery.SendPackage(ZRoutedRpc.Everybody, package);
+        return true;
+    }
+
+    internal static bool RequestContractTurnIn(Player player, string traderId)
+    {
+        if (_contractTurnIn == null || ZRoutedRpc.instance == null || ZNet.instance == null || ZNet.instance.IsServer())
+            return false;
+        var package = new ZPackage();
+        package.Write(player.GetPlayerID());
+        package.Write(traderId);
+        _contractTurnIn.SendPackage(ZRoutedRpc.Everybody, package);
         return true;
     }
 
@@ -192,6 +205,31 @@ internal static class MultiplayerNetwork
         string item = package.ReadString();
         int days = package.ReadInt();
         CooldownCache[CooldownKey(playerId, trader, kind, item)] = days;
+        yield return null;
+    }
+
+    private static IEnumerator ServerContractTurnIn(long sender, ZPackage package)
+    {
+        if (!IsServerAuthority) yield break;
+        long playerId = package.ReadLong();
+        string traderId = package.ReadString();
+        Player? player = FindPlayer(playerId);
+        if (player == null) yield break;
+
+        bool handled = TraderActivityService.TryTurnInPhysicalAuthoritative(player, traderId);
+        var response = new ZPackage();
+        response.Write(handled);
+        response.Write(traderId);
+        _contractTurnIn?.SendPackage(sender, response);
+        yield return null;
+    }
+
+    private static IEnumerator ClientContractTurnIn(long sender, ZPackage package)
+    {
+        bool handled = package.ReadBool();
+        string trader = package.ReadString();
+        if (!handled)
+            Player.m_localPlayer?.Message(MessageHud.MessageType.Center, $"{trader}: No completed contract was accepted.");
         yield return null;
     }
 
