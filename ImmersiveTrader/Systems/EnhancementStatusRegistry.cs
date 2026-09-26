@@ -54,7 +54,6 @@ internal static class EnhancementStatusRegistry
 
         var wanderer = AddStats("wanderer", "-15% staminy podczas biegu");
         wanderer.m_runStaminaDrainModifier = -0.15f;
-        wanderer.m_runStaminaUseModifier = -0.15f;
 
         var pathfinder = AddStats("pathfinder", "-15% staminy podczas skoku");
         pathfinder.m_jumpStaminaUseModifier = -0.15f;
@@ -133,6 +132,8 @@ internal static class EnhancementStatusRegistry
 
     internal static void Clear(Player player)
     {
+        if (RestedGrantedByEnhancement)
+            player.GetSEMan().RemoveStatusEffect("Rested".GetStableHashCode(), true);
         RestedGrantedByEnhancement = false;
         foreach (var id in Ids)
         {
@@ -168,6 +169,20 @@ internal static class EnhancementStatusRegistry
         if (!texture.LoadImage(memory.ToArray())) return null;
         texture.filterMode = FilterMode.Bilinear;
         return texture;
+    }
+
+    internal static void SetRemaining(Player player, string id, float seconds)
+    {
+        if (id.Equals("rested", StringComparison.OrdinalIgnoreCase))
+        {
+            var template = ObjectDB.instance?.GetStatusEffect("Rested".GetStableHashCode());
+            var active = template == null ? null : player.GetSEMan().GetStatusEffect(template);
+            if (active != null) { active.m_ttl = seconds; active.m_time = 0f; }
+            return;
+        }
+        var own = Template(id);
+        var effect = own == null ? null : player.GetSEMan().GetStatusEffect(own);
+        if (effect != null) { effect.m_ttl = seconds; effect.m_time = 0f; }
     }
 
     internal static void MarkRestedEnhancement(bool value) => RestedGrantedByEnhancement = value;
