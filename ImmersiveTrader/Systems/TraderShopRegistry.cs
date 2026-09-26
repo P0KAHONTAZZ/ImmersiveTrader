@@ -135,7 +135,7 @@ public static class TraderShopRegistry
             new("spalony_zenek", EnhancementScrollItems.PrefabName("storm"), 1000, 1, 6, "Scroll of Storm", 5),
 
             new("skjold_cinderborn", "VoltureEgg", 100, 1, 6, "Volture Egg", 1),
-            new("skjold_cinderborn", "AsksvinHide", 150, 1, 6, "Asksvin Hide", 2),
+            new("skjold_cinderborn", "AskHide", 150, 1, 6, "Asksvin Hide", 2),
             new("skjold_cinderborn", "CeramicPlate", 180, 1, 6, "Ceramic Plate", 3),
             new("skjold_cinderborn", "MoltenCore", 3000, 1, 6, "Molten Core", 4),
             new("skjold_cinderborn", EnhancementScrollItems.PrefabName("hunter"), 1000, 1, 6, "Scroll of Hunter", 5),
