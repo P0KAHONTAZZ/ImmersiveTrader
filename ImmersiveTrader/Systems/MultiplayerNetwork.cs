@@ -180,7 +180,7 @@ internal static class MultiplayerNetwork
         yield return null;
     }
 
-    private static Player? FindPlayer(long playerId)
+    internal static Player? FindPlayer(long playerId)
     {
         foreach (Player player in Player.GetAllPlayers())
             if (player != null && player.GetPlayerID() == playerId)
