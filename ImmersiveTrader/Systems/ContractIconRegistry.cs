@@ -84,56 +84,32 @@ internal static class ContractIconRegistry
     }
 
     private static Sprite? LoadFinalSkillIcon(Skills.SkillType skill)
-    {
-        if (!FinalArt.TryGetValue(skill, out int index)) return null; // Ride/Dodge use the runtime Valheim-skill fallback until dedicated approved art exists.
-        finalSheet ??= LoadTexture("ImmersiveTrader.Assets.ContractSkillIcons.png");
-        if (finalSheet == null) return null;
-        const int cell = 128;
-        if (finalSheet.width < (index + 1) * cell || finalSheet.height < cell) return null;
+{
+    if (!FinalArt.TryGetValue(skill, out int index))
+        return null;
 
-        // Normalize every atlas cell: trim transparent margins and center the
-        // artwork in the same 112x112 visual box. This removes the uneven
-        // sizing/cropping visible in inventory and trader UI.
-        int x0 = index * cell, minX = cell, minY = cell, maxX = -1, maxY = -1;
-        for (int y = 0; y < cell; y++)
-            for (int x = 0; x < cell; x++)
-                if (finalSheet.GetPixel(x0 + x, y).a > .08f)
-                {
-                    minX = Math.Min(minX, x); minY = Math.Min(minY, y);
-                    maxX = Math.Max(maxX, x); maxY = Math.Max(maxY, y);
-                }
-        if (maxX < minX) return null;
+    finalSheet ??= LoadTexture("ImmersiveTrader.Assets.ContractSkillIcons.png");
 
-        int w = maxX - minX + 1, h = maxY - minY + 1;
-        var source = Sprite.Create(finalSheet, new Rect(x0 + minX, minY, w, h), new Vector2(.5f, .5f));
-        var surface = RenderTexture.GetTemporary(Size, Size, 0, RenderTextureFormat.ARGB32);
-        var previous = RenderTexture.active;
-        try
-        {
-            RenderTexture.active = surface;
-            GL.Clear(true, true, Color.clear);
-            GL.PushMatrix();
-            try
-            {
-                GL.LoadPixelMatrix(0, Size, Size, 0);
-                float scale = Math.Min(112f / w, 112f / h);
-                float dw = w * scale, dh = h * scale;
-                DrawSprite(source, new Rect((Size - dw) / 2f, (Size - dh) / 2f, dw, dh));
-            }
-            finally { GL.PopMatrix(); }
-            var texture = new Texture2D(Size, Size, TextureFormat.RGBA32, false);
-            texture.ReadPixels(new Rect(0, 0, Size, Size), 0, 0);
-            texture.Apply();
-            var sprite = Sprite.Create(texture, new Rect(0, 0, Size, Size), new Vector2(.5f, .5f));
-            sprite.name = $"ImmersiveTrader_FinalContract_{skill}";
-            return sprite;
-        }
-        finally
-        {
-            RenderTexture.active = previous;
-            RenderTexture.ReleaseTemporary(surface);
-        }
-    }
+    if (finalSheet == null)
+        return null;
+
+    const int cell = 128;
+    int x = index * cell;
+
+    if (finalSheet.width < x + cell || finalSheet.height < cell)
+        return null;
+
+    // Atlas jest juz przygotowany jako 24 gotowe pola 128x128.
+    // Nie przycinamy, nie skalujemy i nie usuwamy marginesow.
+    var sprite = Sprite.Create(
+        finalSheet,
+        new Rect(x, 0, cell, cell),
+        new Vector2(0.5f, 0.5f)
+    );
+
+    sprite.name = $"ImmersiveTrader_FinalContract_{skill}";
+    return sprite;
+}
 
     private static Texture2D? LoadTexture(string resource)
     {
