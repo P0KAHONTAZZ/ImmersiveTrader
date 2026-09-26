@@ -19,7 +19,7 @@ public static class TraderShopRegistry
         ["midka"] = "vitality",
         ["troldad"] = "embers",
         ["grimvald"] = "spirit",
-        ["rudy_warg"] = "miner",
+        ["rudy_warg"] = "embers",
         ["mokra_dzika"] = "hunter",
         ["encek"] = "pathfinder",
         ["hrothgar"] = "storm",
@@ -28,8 +28,8 @@ public static class TraderShopRegistry
         ["ragnar_turnipson"] = "burden",
         ["cmok"] = "frost",
         ["grelka"] = "focus",
-        ["spalony_zenek"] = "craftsman",
-        ["skjold_cinderborn"] = "lumberjack",
+        ["spalony_zenek"] = "storm",
+        ["skjold_cinderborn"] = "hunter",
     };
 
     public const double ScrollCooldownDays = 3d;
@@ -65,7 +65,7 @@ public static class TraderShopRegistry
             new("troldad", "LeatherScraps", 20, 1, 0, "Leather Scraps", 1),
             new("troldad", "DeerHide", 30, 1, 0, "Deer Hide", 2),
             new("troldad", "NeckTail", 24, 1, 0, "Neck Tail", 3),
-            new("troldad", "FineWood", 500, 1, 0, "Fine Wood", 4),
+            new("troldad", "FineWood", 100, 1, 0, "Fine Wood", 4),
             new("troldad", EnhancementScrollItems.PrefabName("embers"), 500, 1, 0, "Scroll of Embers", 5),
 
             new("grimvald", "GreydwarfEye", 24, 1, 1, "Greydwarf Eye", 1),
@@ -78,7 +78,7 @@ public static class TraderShopRegistry
             new("rudy_warg", "Blueberries", 24, 1, 1, "Blueberries", 2),
             new("rudy_warg", "BjornHide", 120, 1, 1, "Bear Hide", 3),
             new("rudy_warg", "Copper", 550, 1, 1, "Copper", 4),
-            new("rudy_warg", EnhancementScrollItems.PrefabName("miner"), 580, 1, 1, "Scroll of Miner", 5),
+            new("rudy_warg", EnhancementScrollItems.PrefabName("embers"), 580, 1, 1, "Scroll of Embers", 5),
 
             new("mokra_dzika", "Entrails", 40, 1, 2, "Entrails", 1),
             new("mokra_dzika", "ArrowPoison", 140, 20, 2, "Poison Arrows", 2),
@@ -132,13 +132,24 @@ public static class TraderShopRegistry
             new("spalony_zenek", "SulfurStone", 140, 1, 6, "Sulfur", 2),
             new("spalony_zenek", "MorgenSinew", 220, 1, 6, "Morgen Sinew", 3),
             new("spalony_zenek", "FlametalNew", 1000, 1, 6, "Flametal", 4),
-            new("spalony_zenek", EnhancementScrollItems.PrefabName("craftsman"), 1000, 1, 6, "Scroll of Craftsman", 5),
+            new("spalony_zenek", EnhancementScrollItems.PrefabName("storm"), 1000, 1, 6, "Scroll of Storm", 5),
 
             new("skjold_cinderborn", "VoltureEgg", 100, 1, 6, "Volture Egg", 1),
             new("skjold_cinderborn", "AsksvinHide", 150, 1, 6, "Asksvin Hide", 2),
             new("skjold_cinderborn", "CeramicPlate", 180, 1, 6, "Ceramic Plate", 3),
             new("skjold_cinderborn", "MoltenCore", 3000, 1, 6, "Molten Core", 4),
-            new("skjold_cinderborn", EnhancementScrollItems.PrefabName("lumberjack"), 1000, 1, 6, "Scroll of Lumberjack", 5),
+            new("skjold_cinderborn", EnhancementScrollItems.PrefabName("hunter"), 1000, 1, 6, "Scroll of Hunter", 5),
+
+            // Thematic profession scrolls are secondary level-5 offers. Nine traders therefore have two L5 items.
+            new("troldad", EnhancementScrollItems.PrefabName("lumberjack"), 500, 1, 0, "Scroll of Lumberjack", 5),
+            new("grimvald", EnhancementScrollItems.PrefabName("miner"), 580, 1, 1, "Scroll of Miner", 5),
+            new("encek", EnhancementScrollItems.PrefabName("craftsman"), 660, 1, 2, "Scroll of Craftsman", 5),
+            new("hrothgar", EnhancementScrollItems.PrefabName("miner"), 750, 1, 3, "Scroll of Miner", 5),
+            new("ragnar_turnipson", EnhancementScrollItems.PrefabName("lumberjack"), 830, 1, 4, "Scroll of Lumberjack", 5),
+            new("cmok", EnhancementScrollItems.PrefabName("craftsman"), 920, 1, 5, "Scroll of Craftsman", 5),
+            new("grelka", EnhancementScrollItems.PrefabName("craftsman"), 920, 1, 5, "Scroll of Craftsman", 5),
+            new("spalony_zenek", EnhancementScrollItems.PrefabName("lumberjack"), 1000, 1, 6, "Scroll of Lumberjack", 5),
+            new("skjold_cinderborn", EnhancementScrollItems.PrefabName("miner"), 1000, 1, 6, "Scroll of Miner", 5),
         };
         return list;
     }
