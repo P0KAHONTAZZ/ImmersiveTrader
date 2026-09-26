@@ -18,7 +18,8 @@ Mechanizmu kontraktów nie używać do scrolli.
 - 15 buffów = 1800 s. Rested = natywny status i ikona Valheima, 1200 s.
 - Vitality = aktualne Max HP × 1.10, Focus = aktualne Max Eitr × 1.15 (dynamicznie, reaguje na jedzenie).
   Wygaśnięcie tylko przycina HP/Eitr do nowego maksimum — nigdy nie zadaje obrażeń.
-  UWAGA: na 3c8560e dynamiczne Vitality/Focus NIE są jeszcze zaimplementowane.
+  Implementacja: prefiks na Character.SetMaxHealth(float) i Player.SetMaxEitr (tam gra zapisuje maks. z jedzenia,
+  ~1×/s); po wygaśnięciu vanilla sama przycina HP/Eitr. NIE mnożyć GetMaxHealth (SetMaxHealth by przycinał HP).
 
 ## Etap bieżący: 16 fizycznych Enhancement Scrolls
 Scroll w inventory → użycie → zużycie 1 szt. → status → ikona HUD → 30 min (Rested 20 min).
@@ -27,6 +28,9 @@ Scroll w inventory → użycie → zużycie 1 szt. → status → ikona HUD → 
   Focus, Craftsman, Wanderer, Pathfinder, Hunter, Rested.
 - Na ziemi: tymczasowo model 3D kontraktu (klon, nie modyfikacja oryginału).
 - Użycie przez natywny flow Consumable (`m_consumeStatusEffect`), bez patchowania `UseItem`.
+- Ponowne użycie aktywnego buffa odświeża czas do pełna (bez kumulacji) — EnhancementScrollConsumePatch;
+  tamże Scroll of Rested (natywny Rested, stałe 1200 s). Świeże użycie zwykłego scrolla = czysty vanilla.
+- Test: `it scroll all`, `it scroll <id> [n]`, `it buff list|clear`.
 
 ## Lekcja z poprzedniej awarii
 Log: tysiące `IndexOutOfRangeException` w `ItemDrop.ItemData.GetIcon` ← `InventoryGrid.UpdateGui`,

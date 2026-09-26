@@ -64,7 +64,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it rep <traderId> reset  - reset reputation for this trader to 0");
         c.AddString("  it access <traderId> [grant|revoke]  - view or change this character\u0027s trader access");
         c.AddString("  it buff list | it buff <id> [seconds] | it buff clear");
-        c.AddString("  it scroll list | it scroll <id> [count]  - give physical enhancement scrolls");
+        c.AddString("  it scroll list | it scroll all | it scroll <id> [count]  - give physical enhancement scrolls");
     }
 
     private static void ScrollCommand(string[] args, Terminal c)
@@ -74,6 +74,17 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         if (args.Length < 2 || Eq(args[1], "list"))
         {
             c.AddString("Registered enhancement scrolls: " + string.Join(", ", EnhancementScrollItems.RegisteredIds));
+            return;
+        }
+        if (Eq(args[1], "all"))
+        {
+            int given = 0;
+            foreach (string sid in EnhancementScrollItems.RegisteredIds.ToList())
+            {
+                var p = ObjectDB.instance?.GetItemPrefab(EnhancementScrollItems.PrefabName(sid));
+                if (p != null && player.GetInventory().CanAddItem(p, 1) && player.GetInventory().AddItem(p, 1)) given++;
+            }
+            c.AddString($"Given {given} enhancement scrolls (one of each).");
             return;
         }
         string id = args[1].ToLowerInvariant();

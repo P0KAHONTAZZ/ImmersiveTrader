@@ -10,8 +10,9 @@ namespace ImmersiveTrader;
 
 /// <summary>
 /// Physical enhancement scrolls (v2, built from 3c8560e).
-/// Uses Valheim's native Consumable flow: using the item consumes exactly one scroll
-/// and applies m_consumeStatusEffect. No UseItem/ConsumeItem patches.
+/// Fresh use goes through Valheim's native Consumable flow (m_consumeStatusEffect).
+/// EnhancementScrollConsumePatch only handles two cases vanilla cannot: refreshing an active
+/// buff (reset to full duration, no stacking) and Scroll of Rested (fixed 20 minutes).
 /// Independent of the contract system; only the static ContractWorldModel builder is reused
 /// for the temporary ground model.
 /// </summary>
@@ -28,12 +29,15 @@ internal static class EnhancementScrollItems
         "vitality","endurance","focus","craftsman","wanderer","pathfinder","hunter","rested"
     };
 
-    // Stage 1: only Embers. Add ids here once Embers is verified in game.
-    internal static readonly string[] Enabled = { "embers" };
+    // All 16 scrolls (stage 1 verified Embers in game).
+    internal static readonly string[] Enabled = AtlasOrder;
 
     private static Texture2D? atlas;
     private static bool atlasLoaded;
     private static readonly HashSet<string> Registered = new(StringComparer.OrdinalIgnoreCase);
+    // SharedData is one object per item prefab (ItemData.Clone keeps the reference), so it
+    // identifies a scroll in inventory, stores and tooltips without relying on m_dropPrefab.
+    private static readonly Dictionary<ItemDrop.ItemData.SharedData, string> ByShared = new();
 
     internal static string PrefabName(string id) => PrefabPrefix + id.ToLowerInvariant();
     internal static bool IsRegistered(string id) => Registered.Contains(id);
@@ -55,10 +59,18 @@ internal static class EnhancementScrollItems
     private static void RegisterOne(string id, GameObject source)
     {
         id = id.ToLowerInvariant();
-        if (id == "rested") { Plugin.Log.LogWarning("Scroll of Rested is not part of stage 1."); return; }
-
-        var status = EnhancementStatusRegistry.Template(id);
-        if (status == null) { Plugin.Log.LogError($"Enhancement scroll '{id}': status effect not registered; skipping."); return; }
+        StatusEffect? status;
+        if (id == "rested")
+        {
+            // Native Rested. May be unresolved this early; the consume patch resolves it at use time.
+            status = EnhancementStatusRegistry.RestedTemplate();
+            if (status == null) Plugin.Log.LogWarning("Scroll of Rested: native Rested not resolved yet; will resolve on use.");
+        }
+        else
+        {
+            status = EnhancementStatusRegistry.Template(id);
+            if (status == null) { Plugin.Log.LogError($"Enhancement scroll '{id}': status effect not registered; skipping."); return; }
+        }
 
         // Icon must never be missing: an empty m_icons array crashes InventoryGrid every frame.
         var icon = InventoryIcon(id) ?? FallbackIcon();
@@ -97,6 +109,7 @@ internal static class EnhancementScrollItems
             return;
         }
         Registered.Add(id);
+        ByShared[shared] = id;
     }
 
     private static string Description(string id) =>
@@ -120,15 +133,13 @@ internal static class EnhancementScrollItems
         ["wanderer"] = "-15% run stamina",
         ["pathfinder"] = "-15% jump stamina",
         ["hunter"] = "-10% bow stamina",
-        ["rested"] = "Rested (native)"
+        ["rested"] = "Rested: faster regeneration and skill gain"
     };
 
-    internal static string? IdFor(ItemDrop.ItemData item)
+    internal static string? IdFor(ItemDrop.ItemData? item)
     {
-        var se = item?.m_shared?.m_consumeStatusEffect;
-        if (se == null || se.name == null || !se.name.StartsWith("ImmersiveTrader_", StringComparison.Ordinal)) return null;
-        string id = se.name.Substring("ImmersiveTrader_".Length);
-        return Registered.Contains(id) ? id : null;
+        var shared = item?.m_shared;
+        return shared != null && ByShared.TryGetValue(shared, out var id) ? id : null;
     }
 
     internal static string TooltipLines(string id)
@@ -139,7 +150,7 @@ internal static class EnhancementScrollItems
         return $"Effect: <color=yellow>{effect}</color>" +
                $"\nDuration: <color=yellow>{minutes} min</color>" +
                $"\nUse: <color=yellow>consumes 1 scroll</color>" +
-               $"\nStacking: <color=yellow>cannot be read while {name} is active</color>";
+               $"\nStacking: <color=yellow>reading again refreshes to {minutes} min, does not stack</color>";
     }
 
     private static Sprite? InventoryIcon(string id)

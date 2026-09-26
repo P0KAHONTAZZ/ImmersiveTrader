@@ -20,7 +20,7 @@ internal static class EnhancementStatusSession
             if (id == "rested")
             {
                 if (!EnhancementStatusRegistry.RestedGrantedByEnhancement) continue;
-                var restedTemplate = ObjectDB.instance?.GetStatusEffect("Rested".GetStableHashCode());
+                var restedTemplate = EnhancementStatusRegistry.RestedTemplate();
                 var rested = restedTemplate == null ? null : player.GetSEMan().GetStatusEffect(restedTemplate);
                 if (rested != null) Pending[id] = Math.Max(0.1f, EnhancementStatusTime.Remaining(rested));
                 continue;
