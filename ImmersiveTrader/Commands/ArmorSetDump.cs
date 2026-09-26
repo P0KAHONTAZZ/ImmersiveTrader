@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using BepInEx;
+using Jotunn.Managers;
 
 namespace ImmersiveTrader.Commands;
 
