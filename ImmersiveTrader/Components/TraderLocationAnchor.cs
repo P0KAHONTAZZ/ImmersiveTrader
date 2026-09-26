@@ -73,7 +73,10 @@ public sealed class TraderLocationAnchor : MonoBehaviour
         if (view != null)
             view.m_persistent = false;
         _npc.SetActive(true);
-        (_npc.GetComponent<NpcStayOnLand>() ?? _npc.AddComponent<NpcStayOnLand>()).SetHome(transform.position);
+        var npcLand = _npc.GetComponent<NpcStayOnLand>() ?? _npc.AddComponent<NpcStayOnLand>();
+        if (string.Equals(TraderId, "troldad", StringComparison.OrdinalIgnoreCase))
+            npcLand.LeashRadius = 5f;
+        npcLand.SetHome(transform.position);
 
         // Troldad keeps the current human-sized Troll scale, but uses the visual/state
         // of a two-star Troll. Valheim levels are 1-based: level 3 renders two stars.
