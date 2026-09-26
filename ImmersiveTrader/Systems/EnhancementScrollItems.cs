@@ -20,12 +20,13 @@ internal static class EnhancementScrollItems
     internal const string PrefabPrefix = "ImmersiveTrader_EnhancementScroll_";
     private const string AtlasResource = "ImmersiveTrader.Assets.EnhancementScrollInventoryIcons.png";
     private const int Cell = 128;
+    private const string LaughIconResource = "ImmersiveTrader.Assets.ItAintFunny_Scroll.png";
 
     // Order matches Assets/enhancement-scroll-inventory-icons.png (16 cells).
     private static readonly string[] AtlasOrder =
     {
         "embers","frost","storm","venom","spirit","lumberjack","miner","burden",
-        "vitality","endurance","focus","craftsman","wanderer","pathfinder","hunter","rested"
+        "vitality","endurance","focus","craftsman","wanderer","pathfinder","hunter","rested","laugh"
     };
 
     // All 16 scrolls (stage 1 verified Embers in game).
@@ -112,7 +113,9 @@ internal static class EnhancementScrollItems
     }
 
     private static string Description(string id) =>
-        "Enhancement scroll. Read it to call upon a blessing of the old gods.";
+        id.Equals("laugh", StringComparison.OrdinalIgnoreCase)
+            ? "There is nothing funny about this scroll."
+            : "Enhancement scroll. Read it to call upon a blessing of the old gods.";
 
     // Effect lines for all 16 scrolls (only enabled ones are registered).
     private static readonly Dictionary<string, string> EffectText = new(StringComparer.OrdinalIgnoreCase)
@@ -145,7 +148,7 @@ internal static class EnhancementScrollItems
     {
         string name = EnhancementStatusRegistry.DisplayName(id);
         string effect = EffectText.TryGetValue(id, out var text) ? text : name;
-        string minutes = id == "rested" ? "20" : "30";
+        string minutes = id == "rested" || id == "laugh" ? "20" : "30";
         return $"Effect: <color=yellow>{effect}</color>" +
                $"\nDuration: <color=yellow>{minutes} min</color>" +
                $"\nUse: <color=yellow>consumes 1 scroll</color>" +
@@ -154,6 +157,8 @@ internal static class EnhancementScrollItems
 
     private static Sprite? InventoryIcon(string id)
     {
+        if (id.Equals("laugh", StringComparison.OrdinalIgnoreCase))
+            return LoadStandaloneIcon(LaughIconResource, "ImmersiveTrader_ScrollIcon_laugh");
         int index = Array.IndexOf(AtlasOrder, id);
         if (index < 0) return null;
         if (!atlasLoaded) { atlas = LoadAtlas(); atlasLoaded = true; }
@@ -164,6 +169,21 @@ internal static class EnhancementScrollItems
         }
         var sprite = Sprite.Create(atlas, new Rect(index * Cell, 0, Cell, Cell), new Vector2(0.5f, 0.5f));
         sprite.name = "ImmersiveTrader_ScrollIcon_" + id;
+        return sprite;
+    }
+
+    private static Sprite? LoadStandaloneIcon(string resource, string name)
+    {
+        using Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource);
+        if (stream == null) { Plugin.Log.LogError("Standalone scroll icon missing from DLL: " + resource); return null; }
+        using var memory = new MemoryStream();
+        stream.CopyTo(memory);
+        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, true);
+        if (!texture.LoadImage(memory.ToArray())) return null;
+        texture.filterMode = FilterMode.Trilinear;
+        texture.wrapMode = TextureWrapMode.Clamp;
+        var sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+        sprite.name = name;
         return sprite;
     }
 
