@@ -74,26 +74,3 @@ internal static class EnhancementScrollRegistry
         return PrefabToEffect.TryGetValue(name, out effect!);
     }
 }
-
-[HarmonyPatch(typeof(Humanoid), nameof(Humanoid.UseItem))]
-internal static class EnhancementScrollUsePatch
-{
-    private static bool Prefix(Humanoid __instance, Inventory inventory, ItemDrop.ItemData item, bool fromInventoryGui, ref bool __result)
-    {
-        if (__instance is not Player player || !EnhancementScrollRegistry.TryGetEffect(item, out string id))
-            return true;
-
-        float duration = id.Equals("rested", StringComparison.OrdinalIgnoreCase) ? 1200f : EnhancementStatusRegistry.DefaultDuration;
-        if (!EnhancementStatusRegistry.Apply(player, id, duration, out string message))
-        {
-            player.Message(MessageHud.MessageType.Center, message);
-            __result = false;
-            return false;
-        }
-
-        inventory.RemoveOneItem(item);
-        player.Message(MessageHud.MessageType.Center, message);
-        __result = true;
-        return false;
-    }
-}
