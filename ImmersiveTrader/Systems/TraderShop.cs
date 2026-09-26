@@ -15,6 +15,13 @@ public static class TraderShop
 
     public static bool TryBuy(Player player, TraderOfferDefinition offer)
     {
+        // Legacy alternate-interact purchase path mutates inventory directly. Keep it
+        // available for single-player/host, but never let a remote client self-authorize it.
+        if (!MultiplayerAuthority.CanMutatePersistentState())
+        {
+            player.Message(MessageHud.MessageType.Center, "Multiplayer purchase is being validated by the server.");
+            return false;
+        }
         if (!ProgressionGate.CanAccessOffer(player, offer) ||
             TraderReputation.GetLevel(player, offer.TraderId) < offer.RequiredReputationLevel)
         {
