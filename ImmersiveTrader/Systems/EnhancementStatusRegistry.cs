@@ -97,7 +97,7 @@ internal static class EnhancementStatusRegistry
         se.m_icon = LoadIcon(id);
         se.m_ttl = DefaultDuration;
         se.m_flashIcon = false;
-        se.m_cooldownIcon = true;
+        se.m_cooldownIcon = false;
     }
 
     internal static bool Apply(Player player, string id, float seconds, out string message)
@@ -167,8 +167,37 @@ internal static class EnhancementStatusRegistry
         stream.CopyTo(memory);
         var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
         if (!texture.LoadImage(memory.ToArray())) return null;
+        MakeDarkBackgroundTransparent(texture);
         texture.filterMode = FilterMode.Bilinear;
         return texture;
+    }
+
+    private static void MakeDarkBackgroundTransparent(Texture2D texture)
+    {
+        // Approved source art was supplied on a dark preview board. HUD sprites must
+        // behave like vanilla Valheim icons: only the painted symbol remains visible.
+        var pixels = texture.GetPixels32();
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            var p = pixels[i];
+            int max = Math.Max(p.r, Math.Max(p.g, p.b));
+            int min = Math.Min(p.r, Math.Min(p.g, p.b));
+            int chroma = max - min;
+
+            // Neutral/near-neutral dark preview background -> transparent.
+            // Saturated coloured strokes are deliberately preserved even when dark.
+            if (max <= 58 && chroma <= 18)
+            {
+                p.a = 0;
+            }
+            else if (max <= 82 && chroma <= 14)
+            {
+                p.a = (byte)Mathf.Clamp((max - 58) * 10, 0, 255);
+            }
+            pixels[i] = p;
+        }
+        texture.SetPixels32(pixels);
+        texture.Apply(false, false);
     }
 
     internal static void SetRemaining(Player player, string id, float seconds)
