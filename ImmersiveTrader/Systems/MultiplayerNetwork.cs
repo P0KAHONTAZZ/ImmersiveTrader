@@ -30,7 +30,8 @@ internal static class MultiplayerNetwork
     internal static bool IsServerAuthority => ZNet.instance != null && ZNet.instance.IsServer();
     internal static bool IsDedicatedServer => ZNet.instance != null && ZNet.instance.IsDedicated();
 
-    private static string ReputationKey(long playerId, string trader) => playerId + "|" + trader;
+    private static string ReputationKey(long playerId, string trader)
+        => MultiplayerPlayerState.WorldId() + "|" + playerId + "|" + trader;
 
     internal static bool TryGetCachedReputation(Player player, string trader, out int value)
         => ReputationCache.TryGetValue(ReputationKey(player.GetPlayerID(), trader), out value);
@@ -61,7 +62,7 @@ internal static class MultiplayerNetwork
     }
 
     private static string CooldownKey(long playerId, string trader, string kind, string item)
-        => playerId + "|" + trader + "|" + kind + "|" + item;
+        => MultiplayerPlayerState.WorldId() + "|" + playerId + "|" + trader + "|" + kind + "|" + item;
 
     internal static bool TryGetCachedCooldown(Player player, string trader, string kind, string item, out int days)
         => CooldownCache.TryGetValue(CooldownKey(player.GetPlayerID(), trader, kind, item), out days);
