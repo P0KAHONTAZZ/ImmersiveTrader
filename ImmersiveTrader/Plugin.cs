@@ -33,13 +33,21 @@ public sealed class Plugin : BaseUnityPlugin
     {
         Log = Logger;
         Components.PlayerLikeNpcVisual.InitializeOutfitFiles();
-        TreasureWeight = Config.Bind("Treasures", "Weight", 80f, "Weight of each quest treasure.");
-        MaxCarriedTreasures = Config.Bind("Treasures", "MaxCarried", 2, "Maximum number of active quest treasures.");
-        MidkaHealingMeadPrice = Config.Bind("Midka", "MinorHealingMeadPrice", 70, "Legacy configuration value. Midka's native shop always sells Minor Healing Mead for 70 coins.");
-        ProgressionLock = Config.Bind("Progression", "Enabled", true, "Prevent rewards from biomes not unlocked by boss progression.");
-        TraderCooldownWorldDays = Config.Bind("Quests", "TraderCooldownWorldDays", 3, "World days before the same trader can issue another shipment to a player.");
-        MietegActiveWorldDays = Config.Bind("LegendaryMieteg", "ActiveWorldDays", 2, "How many world days Mieteg remains active.");
-        MietegRevealDistance = Config.Bind("LegendaryMieteg", "RevealDistance", 600f, "Distance in metres at which Mieteg becomes discoverable.");
+        var serverSynced = new ConfigurationManagerAttributes { IsAdminOnly = true };
+        TreasureWeight = Config.Bind("Treasures", "Weight", 80f,
+            new ConfigDescription("Weight of each quest treasure.", null, serverSynced));
+        MaxCarriedTreasures = Config.Bind("Treasures", "MaxCarried", 2,
+            new ConfigDescription("Maximum number of active quest treasures.", null, serverSynced));
+        MidkaHealingMeadPrice = Config.Bind("Midka", "MinorHealingMeadPrice", 70,
+            new ConfigDescription("Legacy configuration value. Midka's native shop always sells Minor Healing Mead for 70 coins.", null, serverSynced));
+        ProgressionLock = Config.Bind("Progression", "Enabled", true,
+            new ConfigDescription("Prevent rewards from biomes not unlocked by boss progression.", null, serverSynced));
+        TraderCooldownWorldDays = Config.Bind("Quests", "TraderCooldownWorldDays", 3,
+            new ConfigDescription("World days before the same trader can issue another shipment to a player.", null, serverSynced));
+        MietegActiveWorldDays = Config.Bind("LegendaryMieteg", "ActiveWorldDays", 2,
+            new ConfigDescription("How many world days Mieteg remains active.", null, serverSynced));
+        MietegRevealDistance = Config.Bind("LegendaryMieteg", "RevealDistance", 600f,
+            new ConfigDescription("Distance in metres at which Mieteg becomes discoverable.", null, serverSynced));
 
         _harmony = new Harmony(ModGuid);
         _harmony.PatchAll();
