@@ -8,6 +8,8 @@ public static class TraderActivityService
 {
     public static bool TryTurnInPhysical(Player player, string traderId)
     {
+        // Skill reward + scroll removal + reputation must be one authoritative transaction.
+        if (!MultiplayerAuthority.CanMutatePersistentState()) return false;
         foreach (var item in player.GetInventory().GetAllItems().ToArray())
         {
             if (!ContractMetadata.TryRead(item, out string contractId, out string issuer, out int progress) || issuer != traderId)
