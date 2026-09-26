@@ -7,11 +7,10 @@ using BepInEx;
 
 namespace ImmersiveTrader;
 
-/// <summary>Seven complete Valheim days per world, character, merchant and item.</summary>
+/// <summary>Purchase cooldown per world, character, merchant and item (7 Valheim days by default; scrolls 3).</summary>
 public static class ItemPurchaseCooldown
 {
     private const double DaySeconds = 1800d;
-    private const double CooldownSeconds = 7d * DaySeconds;
     private static readonly object Sync = new();
     private static readonly Dictionary<string, double> LastPurchase = new();
     private static bool loaded;
@@ -51,15 +50,19 @@ public static class ItemPurchaseCooldown
     }
 
     public static bool CanBuy(Player player, string trader, string kind, string item, out int daysRemaining)
+        => CanBuy(player, trader, kind, item, 7d, out daysRemaining);
+
+    public static bool CanBuy(Player player, string trader, string kind, string item, double cooldownDays, out int daysRemaining)
     {
+        double cooldownSeconds = cooldownDays * DaySeconds;
         lock (Sync)
         {
             Load();
             string key = Key(player, trader, kind, item);
             double now = ZNet.instance.GetTimeSeconds();
-            if (LastPurchase.TryGetValue(key, out double issued) && now - issued < CooldownSeconds)
+            if (LastPurchase.TryGetValue(key, out double issued) && now - issued < cooldownSeconds)
             {
-                daysRemaining = Math.Max(1, (int)Math.Ceiling((CooldownSeconds - (now - issued)) / DaySeconds));
+                daysRemaining = Math.Max(1, (int)Math.Ceiling((cooldownSeconds - (now - issued)) / DaySeconds));
                 return false;
             }
             daysRemaining = 0;

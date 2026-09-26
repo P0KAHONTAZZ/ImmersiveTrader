@@ -16,7 +16,7 @@ internal static class NativeOrdinaryPurchaseBanterPatch
         if (!NativeTraderWindow.TryGetOrdinarySale(row, out var offer)) return true;
         var player = Player.m_localPlayer;
         if (player == null || TraderReputation.GetLevel(player, offer.TraderId) < offer.RequiredReputationLevel ||
-            !ProgressionGate.IsRewardTierUnlocked(offer.RequiredTier))
+            !ProgressionGate.CanAccessOffer(player, offer))
         {
             player?.Message(MessageHud.MessageType.Center,
                 $"Requires {offer.RequiredReputationLevel} reputation stars and biome progression.");

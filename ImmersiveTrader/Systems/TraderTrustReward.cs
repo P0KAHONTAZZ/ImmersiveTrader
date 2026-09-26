@@ -29,7 +29,10 @@ public static class TraderTrustReward
         ["hrothgar"] = new[] { new Gift("SaddleLox", "Lox Saddle") },
         ["ylva_frost"] = new[] { new Gift("BlackMetalScrap", "Black Metal Scrap", 30) },
         ["bjarki_goldtooth"] = new[] { new Gift("GrapplingHook", "Grappling Hook") },
-        ["ragnar_turnipson"] = new[] { new Gift("SaddleLox", "Lox Saddle") },
+        // Three Mistlands dishes (next biome up).
+        ["ragnar_turnipson"] = new[] { new Gift("MeatPlatter", "Meat Platter"),
+                                       new Gift("HoneyGlazedChicken", "Honey Glazed Chicken"),
+                                       new Gift("MushroomOmelette", "Mushroom Omelette") },
         ["cmok"] = new[] { new Gift("MoltenCore", "Molten Core", 5) },
         ["grelka"] = new[] { new Gift("FlametalOreNew", "Flametal Ore", 10) },
         ["spalony_zenek"] = new[] { new Gift("SaddleAsksvin", "Asksvin Saddle") },

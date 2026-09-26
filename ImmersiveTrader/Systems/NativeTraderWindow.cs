@@ -137,6 +137,7 @@ public static class NativeTraderWindow
             };
 
             trader.m_items.Add(tradeItem);
+            OrdinarySales[tradeItem] = offer;
             Plugin.Log.LogInfo($"Native shop {definition.Id}: {offer.ItemPrefab}, configured={offer.Price}, native={tradeItem.m_price}, stack={tradeItem.m_stack}");
         }
 
