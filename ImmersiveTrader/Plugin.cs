@@ -82,6 +82,7 @@ public sealed class Plugin : BaseUnityPlugin
             return;
 
         RewardRegistry.Validate();
+        TraderShopRegistry.Validate();
         _rewardValidationPending = false;
     }
 
