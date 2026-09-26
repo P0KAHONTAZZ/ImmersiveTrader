@@ -75,7 +75,7 @@ public sealed class TraderLocationAnchor : MonoBehaviour
         _npc.SetActive(true);
         var npcLand = _npc.GetComponent<NpcStayOnLand>() ?? _npc.AddComponent<NpcStayOnLand>();
         if (string.Equals(TraderId, "troldad", StringComparison.OrdinalIgnoreCase))
-            npcLand.LeashRadius = 5f;
+            npcLand.LeashRadius = 7f;
         npcLand.SetHome(transform.position);
 
         // Troldad keeps the current human-sized Troll scale, but uses the visual/state
