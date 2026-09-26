@@ -34,6 +34,9 @@
     <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(ValheimManaged)\UnityEngine.PhysicsModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.ImageConversionModule"><HintPath>$(ValheimManaged)\UnityEngine.ImageConversionModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.JSONSerializeModule"><HintPath>$(ValheimManaged)\UnityEngine.JSONSerializeModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.AudioModule"><HintPath>$(ValheimManaged)\UnityEngine.AudioModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule"><HintPath>$(ValheimManaged)\UnityEngine.UnityWebRequestModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UnityWebRequestAudioModule"><HintPath>$(ValheimManaged)\UnityEngine.UnityWebRequestAudioModule.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\Assets\contract-scroll-simple.png" LogicalName="ImmersiveTrader.Assets.ContractScroll.png" />
@@ -45,5 +48,7 @@
     <EmbeddedResource Include="..\Assets\cargo-containers.png" LogicalName="ImmersiveTrader.Assets.CargoContainers.png" />
     <EmbeddedResource Include="..\Assets\ItAintFunny_Scroll.png" LogicalName="ImmersiveTrader.Assets.ItAintFunny_Scroll.png" Condition="Exists('..\Assets\ItAintFunny_Scroll.png')" />
     <EmbeddedResource Include="..\Assets\ItAintFunny_Status.png" LogicalName="ImmersiveTrader.Assets.ItAintFunny_Status.png" Condition="Exists('..\Assets\ItAintFunny_Status.png')" />
+    <EmbeddedResource Include="..\Assets\ItAintFunny_Male.ogg" LogicalName="ImmersiveTrader.Assets.ItAintFunny_Male.ogg" Condition="Exists('..\Assets\ItAintFunny_Male.ogg')" />
+    <EmbeddedResource Include="..\Assets\ItAintFunny_Female.ogg" LogicalName="ImmersiveTrader.Assets.ItAintFunny_Female.ogg" Condition="Exists('..\Assets\ItAintFunny_Female.ogg')" />
 </ItemGroup>
 </Project>
