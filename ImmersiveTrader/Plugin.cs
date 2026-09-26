@@ -49,6 +49,8 @@ public sealed class Plugin : BaseUnityPlugin
         MietegRevealDistance = Config.Bind("LegendaryMieteg", "RevealDistance", 600f,
             new ConfigDescription("Distance in metres at which Mieteg becomes discoverable.", null, serverSynced));
 
+        MultiplayerNetwork.Register();
+
         _harmony = new Harmony(ModGuid);
         _harmony.PatchAll();
 
