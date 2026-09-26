@@ -14,13 +14,16 @@ internal static class MultiplayerNetwork
 {
     private static CustomRPC? _handshake;
     private static CustomRPC? _reputation;
+    private static CustomRPC? _cooldown;
     private static readonly Dictionary<string, int> ReputationCache = new();
+    private static readonly Dictionary<string, int> CooldownCache = new();
 
     internal static void Register()
     {
         if (_handshake != null) return;
         _handshake = NetworkManager.Instance.AddRPC("MultiplayerHandshake", ServerHandshake, ClientHandshake);
         _reputation = NetworkManager.Instance.AddRPC("ReputationState", ServerReputation, ClientReputation);
+        _cooldown = NetworkManager.Instance.AddRPC("CooldownState", ServerCooldown, ClientCooldown);
         Plugin.Log.LogInfo("Multiplayer RPC layer registered.");
     }
 
@@ -56,6 +59,29 @@ internal static class MultiplayerNetwork
         package.Write(value);
         _reputation.SendPackage(peer, package);
     }
+
+    private static string CooldownKey(long playerId, string trader, string kind, string item)
+        => playerId + "|" + trader + "|" + kind + "|" + item;
+
+    internal static bool TryGetCachedCooldown(Player player, string trader, string kind, string item, out int days)
+        => CooldownCache.TryGetValue(CooldownKey(player.GetPlayerID(), trader, kind, item), out days);
+
+    internal static void RequestCooldown(Player player, string trader, string kind, string item, double cooldownDays)
+    {
+        if (_cooldown == null || ZRoutedRpc.instance == null || ZNet.instance == null || ZNet.instance.IsServer())
+            return;
+        var package = new ZPackage();
+        package.Write((byte)0);
+        package.Write(player.GetPlayerID());
+        package.Write(trader);
+        package.Write(kind);
+        package.Write(item);
+        package.Write(cooldownDays);
+        _cooldown.SendPackage(ZRoutedRpc.Everybody, package);
+    }
+
+    internal static void InvalidateCooldown(Player player, string trader, string kind, string item)
+        => CooldownCache.Remove(CooldownKey(player.GetPlayerID(), trader, kind, item));
 
     internal static void SendHandshake()
     {
@@ -113,6 +139,43 @@ internal static class MultiplayerNetwork
         string trader = package.ReadString();
         int value = package.ReadInt();
         CacheReputation(playerId, trader, value);
+        yield return null;
+    }
+
+    private static IEnumerator ServerCooldown(long sender, ZPackage package)
+    {
+        byte operation = package.ReadByte();
+        if (operation != 0 || !IsServerAuthority) yield break;
+        long playerId = package.ReadLong();
+        string trader = package.ReadString();
+        string kind = package.ReadString();
+        string item = package.ReadString();
+        double cooldownDays = package.ReadDouble();
+
+        Player? player = FindPlayer(playerId);
+        if (player == null) yield break;
+
+        bool canBuy = ItemPurchaseCooldown.CanBuyAuthoritative(player, trader, kind, item, cooldownDays, out int days);
+        var response = new ZPackage();
+        response.Write((byte)1);
+        response.Write(playerId);
+        response.Write(trader);
+        response.Write(kind);
+        response.Write(item);
+        response.Write(canBuy ? 0 : days);
+        _cooldown?.SendPackage(sender, response);
+        yield return null;
+    }
+
+    private static IEnumerator ClientCooldown(long sender, ZPackage package)
+    {
+        if (package.ReadByte() != 1) yield break;
+        long playerId = package.ReadLong();
+        string trader = package.ReadString();
+        string kind = package.ReadString();
+        string item = package.ReadString();
+        int days = package.ReadInt();
+        CooldownCache[CooldownKey(playerId, trader, kind, item)] = days;
         yield return null;
     }
 
