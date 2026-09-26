@@ -46,6 +46,18 @@ public static class TraderReputation
 
     public static int Get(Player player, string trader)
     {
+        if (ZNet.instance != null && !ZNet.instance.IsServer())
+        {
+            if (MultiplayerNetwork.TryGetCachedReputation(player, trader, out int cached))
+                return cached;
+            MultiplayerNetwork.RequestReputation(player, trader);
+            return 0;
+        }
+        return GetAuthoritative(player, trader);
+    }
+
+    internal static int GetAuthoritative(Player player, string trader)
+    {
         lock (Sync)
         {
             Load();
@@ -75,6 +87,7 @@ public static class TraderReputation
                 Points[key] = next;
             }
         }
+        MultiplayerNetwork.CacheReputation(player.GetPlayerID(), trader, next);
         return next;
     }
 
