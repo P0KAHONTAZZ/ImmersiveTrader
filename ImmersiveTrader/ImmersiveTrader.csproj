@@ -40,5 +40,6 @@
     <EmbeddedResource Include="..\Assets\cargo-packages.png" LogicalName="ImmersiveTrader.Assets.CargoPackages.png" />
     <EmbeddedResource Include="..\Assets\contract-skill-icons.png" LogicalName="ImmersiveTrader.Assets.ContractSkillIcons.png" Condition="Exists('..\Assets\contract-skill-icons.png')" />
     <EmbeddedResource Include="..\Assets\cargo-icons.png" LogicalName="ImmersiveTrader.Assets.CargoFinalIcons.png" Condition="Exists('..\Assets\cargo-icons.png')" />
-  </ItemGroup>
+    <EmbeddedResource Include="..\Assets\enhancement-status-icons-approved.png" LogicalName="ImmersiveTrader.Assets.EnhancementStatusIcons.png" Condition="Exists('..\Assets\enhancement-status-icons-approved.png')" />
+</ItemGroup>
 </Project>
