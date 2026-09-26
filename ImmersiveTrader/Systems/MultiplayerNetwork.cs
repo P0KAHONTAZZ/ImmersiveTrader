@@ -35,7 +35,9 @@ internal static class MultiplayerNetwork
 
         var package = new ZPackage();
         package.Write(Plugin.ModVersion);
-        _handshake.SendPackage(ZRoutedRpc.instance.GetServerPeerID(), package);
+        // Valheim routes RPCs sent to Everybody to the server too. The server handler
+        // is the authority and replies directly to the sender.
+        _handshake.SendPackage(ZRoutedRpc.Everybody, package);
     }
 
     private static IEnumerator ServerHandshake(long sender, ZPackage package)
