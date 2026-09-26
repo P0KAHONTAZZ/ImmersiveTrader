@@ -80,6 +80,7 @@ public static class LegendaryMietegRegistry
             var presence = npc.GetComponent<LegendaryMietegPresence>() ?? npc.AddComponent<LegendaryMietegPresence>();
             presence.SiteIndex = currentSite;
             presence.SiteCount = totalSites;
+            if (npc.GetComponent<Components.NpcStayOnLand>() == null) npc.AddComponent<Components.NpcStayOnLand>();
 
             var config = new LocationConfig
             {
@@ -89,6 +90,7 @@ public static class LegendaryMietegRegistry
                 Priotized = false,
                 ClearArea = false,
                 ExteriorRadius = 5f,
+                MinAltitude = 3f, // never in water
                 MinDistance = 2500f,
                 MaxDistance = 8000f,
                 MinDistanceFromSimilar = 2500f,

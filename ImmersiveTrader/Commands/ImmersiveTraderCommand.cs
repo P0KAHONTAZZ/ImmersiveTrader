@@ -36,11 +36,12 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             case "access": AccessCommand(args, context); break;
             case "buff": BuffCommand(args, context); break;
             case "scroll": ScrollCommand(args, context); break;
+            case "placement": foreach (var line in TraderPlacementCheck.Report()) context.AddString(line); break;
             default: context.AddString($"Unknown ImmersiveTrader command: {args[0]}"); PrintHelp(context); break;
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep", "access", "buff", "scroll" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep", "access", "buff", "scroll", "placement" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -64,6 +65,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it rep <traderId> reset  - reset reputation for this trader to 0");
         c.AddString("  it access <traderId> [grant|revoke]  - view or change this character\u0027s trader access");
         c.AddString("  it buff list | it buff <id> [seconds] | it buff clear");
+        c.AddString("  it placement  - check Midka/Troldad distances and dry camps");
         c.AddString("  it scroll list | it scroll all | it scroll <id> [count]  - give physical enhancement scrolls");
     }
 

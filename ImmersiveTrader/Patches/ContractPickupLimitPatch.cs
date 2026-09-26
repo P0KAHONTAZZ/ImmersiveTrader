@@ -9,6 +9,8 @@ namespace ImmersiveTrader.Patches;
 [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.Pickup), new[] { typeof(GameObject), typeof(bool), typeof(bool) })]
 internal static class ContractPickupLimitPatch
 {
+    private static float _nextMessage;
+
     private static bool Prefix(Humanoid __instance, GameObject go, ref bool __result)
     {
         if (__instance is not Player player || go == null) return true;
@@ -37,9 +39,14 @@ internal static class ContractPickupLimitPatch
         }
 
         if (TraderActivityService.CountPhysicalContracts(player, issuer) < 2) return true;
-        var trader = TraderRegistry.Traders.FirstOrDefault(x => x.Id == issuer);
-        player.Message(MessageHud.MessageType.Center,
-            $"You already have two contracts from {trader?.Name ?? issuer}. Turn one in before picking up another.");
+        // Auto-pickup retries every frame; show the message at most every 3 s.
+        if (Time.time >= _nextMessage)
+        {
+            _nextMessage = Time.time + 3f;
+            var trader = TraderRegistry.Traders.FirstOrDefault(x => x.Id == issuer);
+            player.Message(MessageHud.MessageType.Center,
+                $"You already have two contracts from {trader?.Name ?? issuer}. Turn one in before picking up another.");
+        }
         __result = false;
         return false;
     }

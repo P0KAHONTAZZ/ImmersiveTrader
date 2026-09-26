@@ -73,6 +73,7 @@ public sealed class TraderLocationAnchor : MonoBehaviour
         if (view != null)
             view.m_persistent = false;
         _npc.SetActive(true);
+        (_npc.GetComponent<NpcStayOnLand>() ?? _npc.AddComponent<NpcStayOnLand>()).SetHome(transform.position);
 
         // Troldad keeps the current human-sized Troll scale, but uses the visual/state
         // of a two-star Troll. Valheim levels are 1-based: level 3 renders two stars.
@@ -108,6 +109,9 @@ public sealed class TraderLocationAnchor : MonoBehaviour
         if (view != null) view.m_persistent = false;
         _jackie.SetActive(true);
 
+        var land = _jackie.GetComponent<NpcStayOnLand>() ?? _jackie.AddComponent<NpcStayOnLand>();
+        land.LeashRadius = 14f;
+        land.SetHome(transform.position);
         var companion = _jackie.GetComponent<JackieCompanion>() ?? _jackie.AddComponent<JackieCompanion>();
         companion.SetHome(transform);
         Plugin.Log.LogInfo($"Location anchor created Jackie for Troldad at {transform.position.x:0},{transform.position.z:0}");

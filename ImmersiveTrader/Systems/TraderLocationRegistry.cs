@@ -41,7 +41,10 @@ public static class TraderLocationRegistry
                 anchor.AddComponent<TraderSanctuary>();
             }
 
-            var range = GetDistanceRange(trader.Biome);
+            // Midka and Troldad share one location group so MinDistanceFromSimilar keeps them
+            // >= 1000 m apart, both within 1000 m of the world spawn (StartTemple at the centre).
+            bool starter = trader.Id == "midka" || trader.Id == "troldad";
+            var range = starter ? (min: 250f, max: TraderPlacementCheck.StarterMaxFromSpawn) : GetDistanceRange(trader.Biome);
             var config = new LocationConfig
             {
                 Biome = ToBiome(trader.Biome),
@@ -54,8 +57,8 @@ public static class TraderLocationRegistry
                 MinAltitude = 3f,
                 MinDistance = range.min,
                 MaxDistance = range.max,
-                MinDistanceFromSimilar = 900f,
-                Group = $"ImmersiveTrader_{trader.Id}",
+                MinDistanceFromSimilar = starter ? TraderPlacementCheck.StarterMinApart : 900f,
+                Group = starter ? "ImmersiveTrader_MeadowsStarters" : $"ImmersiveTrader_{trader.Id}",
                 IconPlaced = true,
                 IconAlways = true
             };
