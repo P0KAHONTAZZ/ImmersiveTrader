@@ -19,23 +19,15 @@ internal static class TraderActivityKillPatch
         if (__instance == null || __instance.IsPlayer() || __instance.IsBoss())
             return;
 
-        // The peer that owns the dead network character is the single source of the
-        // death event. Each nearby player's own client updates its physical contract
-        // when it observes that same network death; server-side transaction validation
-        // remains responsible for final turn-in/rewards.
+        // Each client owns its own physical contract scroll. When that client observes
+        // the network death, it only evaluates its local character. This gives the same
+        // 100 m participation semantics as boss progression without ever editing another
+        // player's inventory from the wrong peer.
+        var player = Player.m_localPlayer;
+        if (player == null || Vector3.Distance(player.transform.position, __instance.transform.position) > ParticipationRadius)
+            return;
+
         string prefabName = Utils.GetPrefabName(__instance.gameObject);
-        foreach (Player player in Player.GetAllPlayers())
-        {
-            if (player == null || Vector3.Distance(player.transform.position, __instance.transform.position) > ParticipationRadius)
-                continue;
-
-            // A remote player's inventory is not authoritative on this client. Only
-            // mutate the locally owned character's physical scroll; all peers observe
-            // the same death and therefore independently evaluate their own holder.
-            if (player != Player.m_localPlayer)
-                continue;
-
-            TraderActivityService.RegisterKillOnPhysicalContracts(player, prefabName);
-        }
+        TraderActivityService.RegisterKillOnPhysicalContracts(player, prefabName);
     }
 }
