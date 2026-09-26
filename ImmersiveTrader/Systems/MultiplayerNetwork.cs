@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Jotunn.Entities;
 using Jotunn.Managers;
+using ImmersiveTrader.Models;
 using UnityEngine;
 
 namespace ImmersiveTrader;
