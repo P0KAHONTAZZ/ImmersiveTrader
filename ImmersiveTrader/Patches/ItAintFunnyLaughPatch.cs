@@ -18,7 +18,7 @@ internal static class ItAintFunnyLaughPatch
     {
         if (__instance != Player.m_localPlayer) return;
 
-        bool active = EnhancementStatusRegistry.Has(__instance, "laugh");
+        bool active = EnhancementStatusRegistry.Has(__instance, "nokidding");
         if (!active)
         {
             _wasActive = false;
