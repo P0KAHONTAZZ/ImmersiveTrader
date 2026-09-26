@@ -122,5 +122,8 @@ internal static class EnhancementStatusRegistry
     internal static bool Has(Character character, string id) =>
         Effects.TryGetValue(id, out var se) && character.GetSEMan().HaveStatusEffect(se.NameHash());
 
+    internal static StatusEffect? Template(string id) =>
+        Effects.TryGetValue(id, out var se) ? se : null;
+
     internal static string DisplayName(string id) => char.ToUpperInvariant(id[0]) + id.Substring(1);
 }
