@@ -18,7 +18,7 @@ Development branch: `feature/multiplayer`.
 1. **Compatibility gate** — DONE. Prevent mixed mod/no-mod sessions and incompatible minor versions.
    - Central Jötunn RPC layer registered during plugin startup.
    - Gameplay-affecting BepInEx config entries are server-synchronized/admin-only.
-2. **Persistence authority** — REQUIRED. `TraderReputation`, `ItemPurchaseCooldown`, and `TraderTrustReward` currently persist to local files under `BepInEx/config`. In multiplayer this can diverge per machine. Move authoritative writes/validation to the server and key records by world + player + trader/item.
+2. **Persistence authority** — IN PROGRESS. Reputation and purchase-cooldown identities are explicitly keyed by world + character PlayerID + trader/item. Mutating reputation/cooldown state is now server-only. This deliberately preserves reputation **per player/character**, never shared across the party/server. Trusted rewards and remote-client request/response paths still need migration.
 3. **Quest state** — REQUIRED. `QuestState.ActiveByPlayer` is process-local memory. Cargo/contract issuance, completion and rewards need server validation and reconnect-safe state where applicable.
 4. **Transactions** — REQUIRED. Trader purchases, cargo delivery, contract completion, reputation awards and one-time Trusted rewards must use request -> server validation -> authoritative result. Client UI must not be the authority.
 5. **World NPC/location ownership** — IN PROGRESS. TraderLocationAnchor now instantiates/destroys trader NPCs and Jackie only on the server/host; clients must receive the network objects instead of creating local duplicates. Runtime host+client verification still required.
