@@ -110,7 +110,7 @@ internal static class EnhancementStatusRegistry
             var active = player.GetSEMan().AddStatusEffect(rested, true);
             if (active == null) { message = "Could not apply Rested."; return false; }
             active.m_ttl = 1200f;
-            active.m_time = 0f;
+            EnhancementStatusTime.Reset(active);
             RestedGrantedByEnhancement = true;
             message = "Rested applied for 20 minutes.";
             return true;
@@ -125,7 +125,7 @@ internal static class EnhancementStatusRegistry
         var applied = player.GetSEMan().AddStatusEffect(template, true);
         if (applied == null) { message = "Could not apply buff."; return false; }
         applied.m_ttl = seconds > 0f ? seconds : DefaultDuration;
-        applied.m_time = 0f;
+        EnhancementStatusTime.Reset(applied);
         message = $"{DisplayName(id)} applied for {Mathf.RoundToInt(applied.m_ttl)} seconds.";
         return true;
     }
@@ -177,12 +177,12 @@ internal static class EnhancementStatusRegistry
         {
             var template = ObjectDB.instance?.GetStatusEffect("Rested".GetStableHashCode());
             var active = template == null ? null : player.GetSEMan().GetStatusEffect(template);
-            if (active != null) { active.m_ttl = seconds; active.m_time = 0f; }
+            if (active != null) { active.m_ttl = seconds; EnhancementStatusTime.Reset(active); }
             return;
         }
         var own = Template(id);
         var effect = own == null ? null : player.GetSEMan().GetStatusEffect(own);
-        if (effect != null) { effect.m_ttl = seconds; effect.m_time = 0f; }
+        if (effect != null) { effect.m_ttl = seconds; EnhancementStatusTime.Reset(effect); }
     }
 
     internal static void MarkRestedEnhancement(bool value) => RestedGrantedByEnhancement = value;
