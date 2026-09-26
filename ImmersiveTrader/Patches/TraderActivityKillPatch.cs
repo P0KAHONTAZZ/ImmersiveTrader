@@ -1,45 +1,41 @@
 using HarmonyLib;
-using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace ImmersiveTrader.Patches;
 
 /// <summary>
-/// Hunt tracking hook. Damage attribution is captured when Character.Damage still has
-/// the attacking Player available; OnDeath then consumes that attribution. This avoids
-/// relying on a GetLastAttacker API that is not exposed by the current Valheim assembly.
+/// Contract participation follows the same proximity model as personal boss progression:
+/// when a valid contract target dies, every player within 100 m who carries a matching
+/// contract receives one kill. The killer does not need to be the contract holder.
 /// </summary>
-[HarmonyPatch]
+[HarmonyPatch(typeof(Character), "OnDeath")]
 internal static class TraderActivityKillPatch
 {
-    // Destroyed or despawned creatures must not be kept alive by the tracking table.
-    private sealed class Attribution { internal long PlayerId; }
-    private static readonly ConditionalWeakTable<Character, Attribution> LastPlayerHit = new();
+    private const float ParticipationRadius = 100f;
 
-    [HarmonyPatch(typeof(Character), nameof(Character.Damage))]
     [HarmonyPrefix]
-    private static void DamagePrefix(Character __instance, HitData hit)
+    private static void Prefix(Character __instance)
     {
-        if (__instance == null || hit == null || __instance.IsPlayer()) return;
-        var attacker = hit.GetAttacker();
-        if (attacker is Player player)
-            LastPlayerHit.GetValue(__instance, _ => new Attribution()).PlayerId = player.GetPlayerID();
-    }
-
-    [HarmonyPatch(typeof(Character), "OnDeath")]
-    [HarmonyPrefix]
-    private static void DeathPrefix(Character __instance)
-    {
-        if (__instance == null || __instance.IsPlayer()) return;
-
-        if (!LastPlayerHit.TryGetValue(__instance, out var attribution))
+        if (__instance == null || __instance.IsPlayer() || __instance.IsBoss())
             return;
 
-        // Explicitly clear dead creatures even while no local player exists.
-        LastPlayerHit.Remove(__instance);
-        var local = Player.m_localPlayer;
-        if (local == null || attribution.PlayerId != local.GetPlayerID())
-            return;
+        // The peer that owns the dead network character is the single source of the
+        // death event. Each nearby player's own client updates its physical contract
+        // when it observes that same network death; server-side transaction validation
+        // remains responsible for final turn-in/rewards.
         string prefabName = Utils.GetPrefabName(__instance.gameObject);
-        TraderActivityService.RegisterKillOnPhysicalContracts(local, prefabName);
+        foreach (Player player in Player.GetAllPlayers())
+        {
+            if (player == null || Vector3.Distance(player.transform.position, __instance.transform.position) > ParticipationRadius)
+                continue;
+
+            // A remote player's inventory is not authoritative on this client. Only
+            // mutate the locally owned character's physical scroll; all peers observe
+            // the same death and therefore independently evaluate their own holder.
+            if (player != Player.m_localPlayer)
+                continue;
+
+            TraderActivityService.RegisterKillOnPhysicalContracts(player, prefabName);
+        }
     }
 }
