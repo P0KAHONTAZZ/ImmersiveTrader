@@ -38,13 +38,6 @@ internal static class ScrollWorldModel
 
     internal static void Attach(GameObject prefab, string id)
     {
-        if (prefab.GetComponent<Rigidbody>() == null)
-        {
-            var body = prefab.AddComponent<Rigidbody>();
-            body.mass = 0.1f;
-            body.interpolation = RigidbodyInterpolation.Interpolate;
-        }
-
         foreach (var renderer in prefab.GetComponentsInChildren<Renderer>(true))
             renderer.enabled = false;
 
@@ -52,7 +45,11 @@ internal static class ScrollWorldModel
         if (shader == null) { Plugin.Log.LogWarning("Scroll world model: shader unavailable; keeping base model."); Restore(prefab); return; }
 
         var paperColor = PaperColor.TryGetValue(id, out var c) ? c : new Color(0.6f, 0.2f, 0.15f);
+        var glowColor = GlowColor(paperColor);
+        // Paper glows faintly by itself: always visible, even when the engine drops point
+        // lights beyond its per-pixel light limit.
         var paper = Mat("ImmersiveTrader_ScrollPaper_" + id, paperColor, 0.15f);
+        Emit(paper, glowColor * 0.45f);
         var roller = Mat("ImmersiveTrader_ScrollRoller_" + id, paperColor * 0.72f + new Color(0, 0, 0, 0.28f), 0.25f);
         gold ??= Mat("ImmersiveTrader_ScrollGold", new Color(0.83f, 0.62f, 0.20f), 0.65f, 0.7f);
         wood ??= Mat("ImmersiveTrader_ScrollWood", new Color(0.23f, 0.13f, 0.07f), 0.1f);
@@ -81,13 +78,8 @@ internal static class ScrollWorldModel
         }
 
         // Glow in the scroll's colour: emissive emblem + small pulsing point light.
-        var glowColor = GlowColor(paperColor);
         var emblem = Mat("ImmersiveTrader_ScrollEmblem_" + id, new Color(0.83f, 0.62f, 0.20f), 0.65f, 0.7f);
-        if (emblem.HasProperty("_EmissionColor"))
-        {
-            emblem.EnableKeyword("_EMISSION");
-            emblem.SetColor("_EmissionColor", glowColor * 1.6f);
-        }
+        Emit(emblem, glowColor * 2.5f);
         Part(root, PrimitiveType.Cylinder, "ScrollEmblem", new Vector3(0f, 0.017f, 0f), Vector3.zero,
              new Vector3(0.075f, 0.002f, 0.075f), emblem);
 
@@ -97,24 +89,30 @@ internal static class ScrollWorldModel
         var light = lightGo.AddComponent<Light>();
         light.type = LightType.Point;
         light.color = glowColor;
-        light.range = 1.8f;
-        light.intensity = 1.1f;
+        light.range = 3.2f;
+        // Blue/purple read darker to the eye: compensate by perceived luminance.
+        float luma = 0.2126f * glowColor.r + 0.7152f * glowColor.g + 0.0722f * glowColor.b;
+        light.intensity = 2.2f * Mathf.Clamp(0.55f / Mathf.Max(0.05f, luma), 1f, 2.2f);
         light.shadows = LightShadows.None;
-        light.renderMode = LightRenderMode.Auto;
+        light.renderMode = LightRenderMode.ForcePixel;
         lightGo.AddComponent<Components.ScrollGlowPulse>();
 
-        foreach (var collider in prefab.GetComponents<Collider>())
-            UnityEngine.Object.Destroy(collider);
-        var box = prefab.AddComponent<BoxCollider>();
-        box.size = new Vector3(0.42f, 0.09f, 0.30f) * Scale;
-        box.center = new Vector3(0f, 0.045f + 0.035f * Scale, 0f);
+        WorldItemPhysics.Setup(prefab, new Vector3(0.42f, 0.09f, 0.30f) * Scale, 0.045f);
     }
 
     /// <summary>Same hue as the icon paper, brighter and more saturated so it reads as light.</summary>
     private static Color GlowColor(Color paper)
     {
         Color.RGBToHSV(paper, out float h, out float sat, out _);
-        return Color.HSVToRGB(h, Mathf.Clamp(sat, 0.55f, 0.85f), 1f);
+        return Color.HSVToRGB(h, Mathf.Clamp(sat, 0.5f, 0.8f), 1f);
+    }
+
+    private static void Emit(Material m, Color color)
+    {
+        if (!m.HasProperty("_EmissionColor")) return;
+        m.EnableKeyword("_EMISSION");
+        m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+        m.SetColor("_EmissionColor", color);
     }
 
     private static Material Mat(string name, Color color, float smoothness, float metallic = 0f)
