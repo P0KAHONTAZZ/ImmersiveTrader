@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using BepInEx;
-using Jotunn.Managers;
 
 namespace ImmersiveTrader.Commands;
 
@@ -19,7 +18,7 @@ internal static class ArmorSetDump
     {
         var db = ObjectDB.instance;
         if (db == null) return "Enter a world first.";
-        string L(string s) => Localization.instance != null ? Localization.instance.Localize(s) : s;
+        string L(string s) => global::Localization.instance != null ? global::Localization.instance.Localize(s) : s;
 
         var recipes = new Dictionary<string, Recipe>();
         foreach (var r in db.m_recipes)
