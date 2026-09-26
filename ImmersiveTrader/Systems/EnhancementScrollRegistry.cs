@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using HarmonyLib;
 using Jotunn.Entities;
 using Jotunn.Managers;
@@ -11,6 +13,13 @@ internal static class EnhancementScrollRegistry
 {
     internal const string Prefix = "ImmersiveTrader_EnhancementScroll_";
     private static readonly Dictionary<string, string> PrefabToEffect = new(StringComparer.OrdinalIgnoreCase);
+    private static Texture2D? InventoryAtlas;
+    private static readonly Dictionary<string, int> IconIndex = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["embers"]=0, ["frost"]=1, ["storm"]=2, ["venom"]=3, ["spirit"]=4,
+        ["lumberjack"]=5, ["miner"]=6, ["burden"]=7, ["vitality"]=8, ["endurance"]=9,
+        ["focus"]=10, ["craftsman"]=11, ["wanderer"]=12, ["pathfinder"]=13, ["hunter"]=14, ["rested"]=15
+    };
 
     private static readonly Dictionary<string, string> Descriptions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -44,16 +53,15 @@ internal static class EnhancementScrollRegistry
             var custom = new CustomItem(prefabName, source);
             var shared = custom.ItemDrop.m_itemData.m_shared;
 
-            Sprite? icon = id.Equals("rested", StringComparison.OrdinalIgnoreCase)
-                ? ObjectDB.instance?.GetStatusEffect("Rested".GetStableHashCode())?.m_icon
-                : EnhancementStatusRegistry.Template(id)?.m_icon;
-
+            Sprite? icon = LoadInventoryIcon(id);
             if (icon != null) shared.m_icons = new[] { icon };
             shared.m_name = $"Scroll of {EnhancementStatusRegistry.DisplayName(id)}";
             shared.m_description = Descriptions[id];
             shared.m_weight = 0.1f;
             shared.m_maxStackSize = 1;
             shared.m_teleportable = true;
+            shared.m_itemType = ItemDrop.ItemData.ItemType.Consumable;
+            shared.m_consumeStatusEffect = EnhancementStatusRegistry.Template(id);
 
             // Temporary shared 3D model. It intentionally matches hunting contracts for now.
             ContractWorldModel.Attach(custom.ItemPrefab, icon);
@@ -62,6 +70,29 @@ internal static class EnhancementScrollRegistry
         }
 
         Plugin.Log.LogInfo($"Enhancement scrolls registered: {PrefabToEffect.Count}.");
+    }
+
+
+    private static Sprite? LoadInventoryIcon(string id)
+    {
+        if (!IconIndex.TryGetValue(id, out int index)) return null;
+        InventoryAtlas ??= LoadTexture("ImmersiveTrader.Assets.EnhancementScrollInventoryIcons.png");
+        if (InventoryAtlas == null || InventoryAtlas.width < (index + 1) * 128 || InventoryAtlas.height < 128) return null;
+        var sprite = Sprite.Create(InventoryAtlas, new Rect(index * 128, 0, 128, 128), new Vector2(0.5f, 0.5f));
+        sprite.name = "ImmersiveTrader_ScrollInventoryIcon_" + id;
+        return sprite;
+    }
+
+    private static Texture2D? LoadTexture(string resource)
+    {
+        using Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource);
+        if (stream == null) { Plugin.Log.LogWarning("Enhancement scroll inventory icon atlas missing."); return null; }
+        using var memory = new MemoryStream();
+        stream.CopyTo(memory);
+        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        if (!texture.LoadImage(memory.ToArray())) return null;
+        texture.filterMode = FilterMode.Bilinear;
+        return texture;
     }
 
     internal static bool TryGetEffect(ItemDrop.ItemData item, out string effect)
