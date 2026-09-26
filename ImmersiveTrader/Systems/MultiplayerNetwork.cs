@@ -15,6 +15,7 @@ internal static class MultiplayerNetwork
     private static CustomRPC? _handshake;
     private static CustomRPC? _reputation;
     private static CustomRPC? _cooldown;
+    private static CustomRPC? _delivery;
     private static readonly Dictionary<string, int> ReputationCache = new();
     private static readonly Dictionary<string, int> CooldownCache = new();
 
@@ -24,6 +25,7 @@ internal static class MultiplayerNetwork
         _handshake = NetworkManager.Instance.AddRPC("MultiplayerHandshake", ServerHandshake, ClientHandshake);
         _reputation = NetworkManager.Instance.AddRPC("ReputationState", ServerReputation, ClientReputation);
         _cooldown = NetworkManager.Instance.AddRPC("CooldownState", ServerCooldown, ClientCooldown);
+        _delivery = NetworkManager.Instance.AddRPC("CargoDelivery", ServerDelivery, ClientDelivery);
         Plugin.Log.LogInfo("Multiplayer RPC layer registered.");
     }
 
@@ -83,6 +85,18 @@ internal static class MultiplayerNetwork
 
     internal static void InvalidateCooldown(Player player, string trader, string kind, string item)
         => CooldownCache.Remove(CooldownKey(player.GetPlayerID(), trader, kind, item));
+
+    internal static bool RequestCargoDelivery(Player player, string targetTraderId, Vector3 targetPosition)
+    {
+        if (_delivery == null || ZRoutedRpc.instance == null || ZNet.instance == null || ZNet.instance.IsServer())
+            return false;
+        var package = new ZPackage();
+        package.Write(player.GetPlayerID());
+        package.Write(targetTraderId);
+        package.Write(targetPosition);
+        _delivery.SendPackage(ZRoutedRpc.Everybody, package);
+        return true;
+    }
 
     internal static void SendHandshake()
     {
