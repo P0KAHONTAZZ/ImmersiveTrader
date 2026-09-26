@@ -38,6 +38,21 @@ public static class ItemPurchaseCooldown
 
     public static bool CanBuy(Player player, string trader, string kind, string item, double cooldownDays, out int daysRemaining)
     {
+        if (ZNet.instance != null && !ZNet.instance.IsServer())
+        {
+            if (MultiplayerNetwork.TryGetCachedCooldown(player, trader, kind, item, out daysRemaining))
+                return daysRemaining <= 0;
+            MultiplayerNetwork.RequestCooldown(player, trader, kind, item, cooldownDays);
+            // Unknown state is fail-closed until the server answers. This prevents a
+            // remote client from treating missing local config as permission to buy.
+            daysRemaining = 1;
+            return false;
+        }
+        return CanBuyAuthoritative(player, trader, kind, item, cooldownDays, out daysRemaining);
+    }
+
+    internal static bool CanBuyAuthoritative(Player player, string trader, string kind, string item, double cooldownDays, out int daysRemaining)
+    {
         double cooldownSeconds = cooldownDays * DaySeconds;
         lock (Sync)
         {
@@ -65,6 +80,7 @@ public static class ItemPurchaseCooldown
             Directory.CreateDirectory(Paths.ConfigPath);
             File.AppendAllText(FilePath, key + "\t" + now.ToString("R", CultureInfo.InvariantCulture) + Environment.NewLine);
             LastPurchase[key] = now;
+            MultiplayerNetwork.InvalidateCooldown(player, trader, kind, item);
         }
     }
 }
