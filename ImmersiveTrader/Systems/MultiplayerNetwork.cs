@@ -18,6 +18,7 @@ internal static class MultiplayerNetwork
     private static CustomRPC? _cooldown;
     private static CustomRPC? _delivery;
     private static CustomRPC? _contractTurnIn;
+    private static CustomRPC? _cargoPurchase;
     private static readonly Dictionary<string, int> ReputationCache = new();
     private static readonly Dictionary<string, int> CooldownCache = new();
 
@@ -29,6 +30,7 @@ internal static class MultiplayerNetwork
         _cooldown = NetworkManager.Instance.AddRPC("CooldownState", ServerCooldown, ClientCooldown);
         _delivery = NetworkManager.Instance.AddRPC("CargoDelivery", ServerDelivery, ClientDelivery);
         _contractTurnIn = NetworkManager.Instance.AddRPC("ContractTurnIn", ServerContractTurnIn, ClientContractTurnIn);
+        _cargoPurchase = NetworkManager.Instance.AddRPC("CargoPurchase", ServerCargoPurchase, ClientCargoPurchase);
         Plugin.Log.LogInfo("Multiplayer RPC layer registered.");
     }
 
@@ -98,6 +100,19 @@ internal static class MultiplayerNetwork
         package.Write(targetTraderId);
         package.Write(targetPosition);
         _delivery.SendPackage(ZRoutedRpc.Everybody, package);
+        return true;
+    }
+
+    internal static bool RequestCargoPurchase(Player player, string sourceTraderId, string treasureId, int price)
+    {
+        if (_cargoPurchase == null || ZRoutedRpc.instance == null || ZNet.instance == null || ZNet.instance.IsServer())
+            return false;
+        var package = new ZPackage();
+        package.Write(player.GetPlayerID());
+        package.Write(sourceTraderId);
+        package.Write(treasureId);
+        package.Write(price);
+        _cargoPurchase.SendPackage(ZRoutedRpc.Everybody, package);
         return true;
     }
 
@@ -205,6 +220,40 @@ internal static class MultiplayerNetwork
         string item = package.ReadString();
         int days = package.ReadInt();
         CooldownCache[CooldownKey(playerId, trader, kind, item)] = days;
+        yield return null;
+    }
+
+    private static IEnumerator ServerCargoPurchase(long sender, ZPackage package)
+    {
+        if (!IsServerAuthority) yield break;
+        long playerId = package.ReadLong();
+        string sourceTraderId = package.ReadString();
+        string treasureId = package.ReadString();
+        package.ReadInt(); // client price is never trusted
+
+        Player? player = FindPlayer(playerId);
+        TraderDefinition? source = null;
+        foreach (var candidate in TraderRegistry.Traders)
+            if (candidate.Id == sourceTraderId) { source = candidate; break; }
+
+        bool handled = player != null && source != null &&
+            QuestIssuing.TryBuyTreasureAuthoritative(player, source, player.transform.position, treasureId, 10);
+
+        var response = new ZPackage();
+        response.Write(handled);
+        response.Write(sourceTraderId);
+        response.Write(treasureId);
+        _cargoPurchase?.SendPackage(sender, response);
+        yield return null;
+    }
+
+    private static IEnumerator ClientCargoPurchase(long sender, ZPackage package)
+    {
+        bool handled = package.ReadBool();
+        string trader = package.ReadString();
+        string treasure = package.ReadString();
+        if (!handled)
+            Player.m_localPlayer?.Message(MessageHud.MessageType.Center, $"{trader}: Shipment {treasure} was not issued.");
         yield return null;
     }
 
