@@ -208,6 +208,37 @@ internal static class MultiplayerNetwork
         yield return null;
     }
 
+    private static IEnumerator ServerDelivery(long sender, ZPackage package)
+    {
+        if (!IsServerAuthority) yield break;
+        long playerId = package.ReadLong();
+        string targetTraderId = package.ReadString();
+        package.ReadVector3(); // legacy client position; intentionally ignored
+
+        Player? player = FindPlayer(playerId);
+        TraderDefinition? target = null;
+        foreach (var candidate in TraderRegistry.Traders)
+            if (candidate.Id == targetTraderId) { target = candidate; break; }
+
+        if (player == null || target == null) yield break;
+
+        bool handled = QuestDelivery.TryDeliverAnyAuthoritative(player, target, player.transform.position);
+        var response = new ZPackage();
+        response.Write(handled);
+        response.Write(targetTraderId);
+        _delivery?.SendPackage(sender, response);
+        yield return null;
+    }
+
+    private static IEnumerator ClientDelivery(long sender, ZPackage package)
+    {
+        bool handled = package.ReadBool();
+        string trader = package.ReadString();
+        if (!handled)
+            Player.m_localPlayer?.Message(MessageHud.MessageType.Center, $"{trader}: No deliverable shipment was accepted.");
+        yield return null;
+    }
+
     private static IEnumerator ServerContractTurnIn(long sender, ZPackage package)
     {
         if (!IsServerAuthority) yield break;
