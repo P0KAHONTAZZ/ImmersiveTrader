@@ -52,7 +52,7 @@ internal static class EnhancementScrollRegistry
             shared.m_name = $"Scroll of {EnhancementStatusRegistry.DisplayName(id)}";
             shared.m_description = Descriptions[id];
             shared.m_weight = 0.1f;
-            shared.m_maxStackSize = 10;
+            shared.m_maxStackSize = 1;
             shared.m_teleportable = true;
 
             // Temporary shared 3D model. It intentionally matches hunting contracts for now.
