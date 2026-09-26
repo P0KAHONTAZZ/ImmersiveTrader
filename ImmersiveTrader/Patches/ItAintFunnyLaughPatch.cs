@@ -3,6 +3,7 @@ using System.Collections;
 using System.IO;
 using System.Reflection;
 using HarmonyLib;
+using BepInEx;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -62,7 +63,7 @@ internal sealed class ItAintFunnyAudio : MonoBehaviour
         using var stream = asm.GetManifestResourceStream(resource);
         if (stream == null)
         {
-            ImmersiveTraderPlugin.Log.LogError($"Missing embedded audio resource: {resource}");
+            UnityEngine.Debug.LogError($"Missing embedded audio resource: {resource}");
             yield break;
         }
 
@@ -76,7 +77,7 @@ internal sealed class ItAintFunnyAudio : MonoBehaviour
         yield return req.SendWebRequest();
         if (req.result != UnityWebRequest.Result.Success)
         {
-            ImmersiveTraderPlugin.Log.LogError($"Failed loading {resource}: {req.error}");
+            UnityEngine.Debug.LogError($"Failed loading {resource}: {req.error}");
             yield break;
         }
 
