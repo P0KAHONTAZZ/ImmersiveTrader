@@ -66,7 +66,8 @@ internal static class ContractWorldModel
         Part(root, PrimitiveType.Sphere, "ContractSealDrop", new Vector3(0.028f, r + 0.004f, 0.022f), Vector3.zero,
              new Vector3(0.018f, 0.008f, 0.018f), wax);
 
-        WorldItemPhysics.Setup(prefab, new Vector3(len + 0.02f, r * 2f + 0.02f, r * 2f + 0.20f), 0f);
+        WorldItemPhysics.Setup(prefab, new Vector3(len + 0.02f, r * 2f + 0.02f, r * 2f + 0.20f), 0f,
+            "ImmersiveTrader_ContractScrollWorld", -r);
     }
 
     private static Material Mat(string name, Color color, float smoothness)

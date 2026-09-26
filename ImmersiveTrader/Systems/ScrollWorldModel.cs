@@ -97,7 +97,7 @@ internal static class ScrollWorldModel
         light.renderMode = LightRenderMode.ForcePixel;
         lightGo.AddComponent<Components.ScrollGlowPulse>();
 
-        WorldItemPhysics.Setup(prefab, new Vector3(0.42f, 0.09f, 0.30f) * Scale, 0.045f);
+        WorldItemPhysics.Setup(prefab, new Vector3(0.42f, 0.09f, 0.30f) * Scale, 0.045f, "ImmersiveTrader_ScrollWorld", 0f);
     }
 
     /// <summary>Same hue as the icon paper, brighter and more saturated so it reads as light.</summary>
