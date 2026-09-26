@@ -45,6 +45,7 @@ internal static class EnhancementStatusRegistry
 
         var endurance = AddStats("endurance", "+20% regeneracji staminy; -10% staminy na ataki melee");
         endurance.m_staminaRegenMultiplier = 1.20f;
+        endurance.m_attackStaminaUseModifier = -0.10f;
 
         var focus = AddStats("focus", "+15% regeneracji Eitr");
         focus.m_eitrRegenMultiplier = 1.15f;
@@ -174,8 +175,8 @@ internal static class EnhancementStatusRegistry
 
     private static void MakeDarkBackgroundTransparent(Texture2D texture)
     {
-        // Approved source art was supplied on a dark preview board. HUD sprites must
-        // behave like vanilla Valheim icons: only the painted symbol remains visible.
+        // Keep only the actual painted symbol. The approved source atlas contains
+        // a dark square/glow around every icon; HUD icons must have transparent BG.
         var pixels = texture.GetPixels32();
         for (int i = 0; i < pixels.Length; i++)
         {
@@ -184,15 +185,16 @@ internal static class EnhancementStatusRegistry
             int min = Math.Min(p.r, Math.Min(p.g, p.b));
             int chroma = max - min;
 
-            // Neutral/near-neutral dark preview background -> transparent.
-            // Saturated coloured strokes are deliberately preserved even when dark.
-            if (max <= 58 && chroma <= 18)
+            // Remove dark board and soft halo. Preserve saturated icon strokes.
+            if (max < 72 || (max < 105 && chroma < 28))
             {
                 p.a = 0;
             }
-            else if (max <= 82 && chroma <= 14)
+            else
             {
-                p.a = (byte)Mathf.Clamp((max - 58) * 10, 0, 255);
+                // Fade the remaining edge instead of leaving a hard square.
+                int alpha = Mathf.Clamp((max - 72) * 8, 0, 255);
+                p.a = (byte)Math.Min(p.a, alpha);
             }
             pixels[i] = p;
         }
