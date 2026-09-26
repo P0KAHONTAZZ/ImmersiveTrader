@@ -48,7 +48,7 @@ internal static class ContractIconRegistry
 
         try
         {
-            var texture = new Texture2D(Size, Size, TextureFormat.RGBA32, false);
+            var texture = new Texture2D(Size, Size, TextureFormat.RGBA32, true);
             var previous = RenderTexture.active;
             var surface = RenderTexture.GetTemporary(Size, Size, 0, RenderTextureFormat.ARGB32);
             try
@@ -64,7 +64,7 @@ internal static class ContractIconRegistry
                 }
                 finally { GL.PopMatrix(); }
                 texture.ReadPixels(new Rect(0, 0, Size, Size), 0, 0);
-                texture.Apply();
+                texture.Apply(true);
             }
             finally
             {
@@ -117,9 +117,9 @@ internal static class ContractIconRegistry
         if (stream == null) return null;
         using var memory = new MemoryStream();
         stream.CopyTo(memory);
-        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, true);
         if (!texture.LoadImage(memory.ToArray())) return null;
-        texture.filterMode = FilterMode.Bilinear;
+        texture.filterMode = FilterMode.Trilinear;
         return texture;
     }
 
@@ -138,9 +138,9 @@ internal static class ContractIconRegistry
         if (stream == null) { Plugin.Log.LogWarning("Contract parchment resource missing."); return null; }
         using var memory = new MemoryStream();
         stream.CopyTo(memory);
-        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, true);
         if (!texture.LoadImage(memory.ToArray())) return null;
-        texture.filterMode = FilterMode.Bilinear;
+        texture.filterMode = FilterMode.Trilinear;
         var sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
         sprite.name = "ImmersiveTrader_ContractParchment";
         return sprite;

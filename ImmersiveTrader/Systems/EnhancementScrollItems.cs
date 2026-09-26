@@ -99,11 +99,48 @@ internal static class EnhancementScrollItems
         Registered.Add(id);
     }
 
-    private static string Description(string id) => id switch
+    private static string Description(string id) =>
+        "Enhancement scroll. Read it to call upon a blessing of the old gods.";
+
+    // Effect lines for all 16 scrolls (only enabled ones are registered).
+    private static readonly Dictionary<string, string> EffectText = new(StringComparer.OrdinalIgnoreCase)
     {
-        "embers" => "Use to gain Embers for 30 minutes: +5-10 Fire damage on hit.",
-        _ => "Use to gain this enhancement for 30 minutes."
+        ["embers"] = "+5-10 Fire damage on hit",
+        ["frost"] = "+5-10 Frost damage on hit",
+        ["storm"] = "+5-10 Lightning damage on hit",
+        ["venom"] = "+5-10 Poison damage on hit",
+        ["spirit"] = "+5-10 Spirit damage on hit",
+        ["lumberjack"] = "+20% Chop damage",
+        ["miner"] = "+20% Pickaxe damage",
+        ["burden"] = "+10% max carry weight",
+        ["vitality"] = "+10% max Health (scales with food)",
+        ["endurance"] = "+20% Stamina regen, -10% melee attack stamina",
+        ["focus"] = "+15% max Eitr (scales with food)",
+        ["craftsman"] = "-20% tool stamina",
+        ["wanderer"] = "-15% run stamina",
+        ["pathfinder"] = "-15% jump stamina",
+        ["hunter"] = "-10% bow stamina",
+        ["rested"] = "Rested (native)"
     };
+
+    internal static string? IdFor(ItemDrop.ItemData item)
+    {
+        var se = item?.m_shared?.m_consumeStatusEffect;
+        if (se == null || se.name == null || !se.name.StartsWith("ImmersiveTrader_", StringComparison.Ordinal)) return null;
+        string id = se.name.Substring("ImmersiveTrader_".Length);
+        return Registered.Contains(id) ? id : null;
+    }
+
+    internal static string TooltipLines(string id)
+    {
+        string name = EnhancementStatusRegistry.DisplayName(id);
+        string effect = EffectText.TryGetValue(id, out var text) ? text : name;
+        string minutes = id == "rested" ? "20" : "30";
+        return $"Effect: <color=yellow>{effect}</color>" +
+               $"\nDuration: <color=yellow>{minutes} min</color>" +
+               $"\nUse: <color=yellow>consumes 1 scroll</color>" +
+               $"\nStacking: <color=yellow>cannot be read while {name} is active</color>";
+    }
 
     private static Sprite? InventoryIcon(string id)
     {
@@ -134,9 +171,11 @@ internal static class EnhancementScrollItems
         if (stream == null) { Plugin.Log.LogError("Enhancement scroll inventory atlas missing from DLL: " + AtlasResource); return null; }
         using var memory = new MemoryStream();
         stream.CopyTo(memory);
-        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        // Mipmaps: the 128 px cells are shown at ~50-70 px in inventory slots. Without mipmaps the
+        // downscale samples single bright grain texels, which read as white specks around the scroll.
+        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, true);
         if (!texture.LoadImage(memory.ToArray())) { Plugin.Log.LogError("Enhancement scroll inventory atlas could not be decoded."); return null; }
-        texture.filterMode = FilterMode.Bilinear;
+        texture.filterMode = FilterMode.Trilinear;
         texture.wrapMode = TextureWrapMode.Clamp;
         texture.name = "ImmersiveTrader_EnhancementScrollAtlas";
         return texture;

@@ -50,13 +50,21 @@ internal static class CargoPresentation
         var approved = FinalIcon(id);
         if (approved != null) return Icons[id] = approved;
 
-        // Complete coverage for cargo without dedicated approved artwork.
-        var chest = PrefabManager.Instance.GetPrefab(HildirChestFor(id));
-        var chestIcons = chest?.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_icons;
-        var baseIcon = chestIcons != null && chestIcons.Length > 0 ? chestIcons[0] : null;
+        // Cargo without dedicated art: painted container (matching the approved cargo style)
+        // chosen from the display name + a gold-rimmed plate with the native resource icon.
         var resource = ResourcePrefab(id);
         var resourceIcons = resource?.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_icons;
         var badge = resourceIcons != null && resourceIcons.Length > 0 ? resourceIcons[0] : null;
+        var container = ContainerSprite(ContainerFor(displayName));
+        var plate = ContainerSprite(PlateCell);
+        Sprite? baseIcon = container;
+        if (baseIcon == null)
+        {
+            // Fallback: previous Hildir chest look.
+            var chest = PrefabManager.Instance.GetPrefab(HildirChestFor(id));
+            var chestIcons = chest?.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_icons;
+            baseIcon = chestIcons != null && chestIcons.Length > 0 ? chestIcons[0] : null;
+        }
         if (baseIcon == null) return badge;
 
         const int size = 128;
@@ -70,13 +78,25 @@ internal static class CargoPresentation
             try
             {
                 GL.LoadPixelMatrix(0, size, size, 0);
-                Draw(baseIcon, new Rect(8, 8, 112, 112));
-                if (badge != null) Draw(badge, new Rect(76, 72, 46, 46));
+                if (container != null)
+                {
+                    Draw(baseIcon, new Rect(2, 2, 108, 108));
+                    if (badge != null)
+                    {
+                        if (plate != null) Draw(plate, new Rect(74, 74, 52, 52));
+                        Draw(badge, new Rect(83, 83, 34, 34));
+                    }
+                }
+                else
+                {
+                    Draw(baseIcon, new Rect(8, 8, 112, 112));
+                    if (badge != null) Draw(badge, new Rect(76, 72, 46, 46));
+                }
             }
             finally { GL.PopMatrix(); }
-            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, true);
             tex.ReadPixels(new Rect(0, 0, size, size), 0, 0);
-            tex.Apply();
+            tex.Apply(true);
             var sprite = Sprite.Create(tex, new Rect(0,0,size,size), new Vector2(.5f,.5f));
             sprite.name = $"ImmersiveTrader_Cargo_{id}";
             return Icons[id] = sprite;
@@ -86,6 +106,30 @@ internal static class CargoPresentation
             RenderTexture.active = previous;
             RenderTexture.ReleaseTemporary(rt);
         }
+    }
+
+    // Assets/cargo-containers.png: 0 crate, 1 barrel, 2 sack, 3 parcel, 4 basket, 5 badge plate.
+    private const int PlateCell = 5;
+    private static Texture2D? containers;
+    private static bool containersLoaded;
+
+    private static int ContainerFor(string displayName)
+    {
+        string n = displayName.ToLowerInvariant();
+        if (n.Contains("basket")) return 4;
+        if (n.Contains("barrel") || n.Contains("container")) return 1;
+        if (n.Contains("sack")) return 2;
+        if (n.Contains("bundle") || n.Contains("provisions")) return 3;
+        return 0; // crate
+    }
+
+    private static Sprite? ContainerSprite(int cell)
+    {
+        if (!containersLoaded) { containers = LoadEmbedded("ImmersiveTrader.Assets.CargoContainers.png"); containersLoaded = true; }
+        if (containers == null || containers.width < (cell + 1) * 128) return null;
+        var sprite = Sprite.Create(containers, new Rect(cell * 128, 0, 128, 128), new Vector2(.5f, .5f));
+        sprite.name = "ImmersiveTrader_CargoContainer_" + cell;
+        return sprite;
     }
 
     private static Sprite? FinalIcon(string id)
@@ -125,8 +169,8 @@ internal static class CargoPresentation
                 Draw(src,new Rect((size-dw)/2f,(size-dh)/2f,dw,dh));
             }
             finally { GL.PopMatrix(); }
-            var tex=new Texture2D(size,size,TextureFormat.RGBA32,false);
-            tex.ReadPixels(new Rect(0,0,size,size),0,0); tex.Apply();
+            var tex=new Texture2D(size,size,TextureFormat.RGBA32,true);
+            tex.ReadPixels(new Rect(0,0,size,size),0,0); tex.Apply(true);
             var result=Sprite.Create(tex,new Rect(0,0,size,size),new Vector2(.5f,.5f));
             result.name=$"ImmersiveTrader_FinalCargo_{id}";
             return result;
@@ -139,9 +183,9 @@ internal static class CargoPresentation
         using var stream=Assembly.GetExecutingAssembly().GetManifestResourceStream(resource);
         if(stream==null) return null;
         using var memory=new MemoryStream(); stream.CopyTo(memory);
-        var texture=new Texture2D(2,2,TextureFormat.RGBA32,false);
+        var texture=new Texture2D(2,2,TextureFormat.RGBA32,true);
         if(!texture.LoadImage(memory.ToArray())) return null;
-        texture.filterMode=FilterMode.Bilinear;
+        texture.filterMode=FilterMode.Trilinear;
         return texture;
     }
 

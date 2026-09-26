@@ -42,5 +42,6 @@
     <EmbeddedResource Include="..\Assets\cargo-icons.png" LogicalName="ImmersiveTrader.Assets.CargoFinalIcons.png" Condition="Exists('..\Assets\cargo-icons.png')" />
     <EmbeddedResource Include="..\Assets\enhancement-status-icons-approved.png" LogicalName="ImmersiveTrader.Assets.EnhancementStatusIcons.png" />
     <EmbeddedResource Include="..\Assets\enhancement-scroll-inventory-icons.png" LogicalName="ImmersiveTrader.Assets.EnhancementScrollInventoryIcons.png" />
+    <EmbeddedResource Include="..\Assets\cargo-containers.png" LogicalName="ImmersiveTrader.Assets.CargoContainers.png" />
 </ItemGroup>
 </Project>
