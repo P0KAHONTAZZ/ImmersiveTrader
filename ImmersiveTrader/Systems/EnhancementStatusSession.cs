@@ -36,7 +36,10 @@ internal static class EnhancementStatusSession
     {
         if (Pending.Count == 0) return;
         foreach (var pair in Pending)
+        {
             EnhancementStatusRegistry.Apply(player, pair.Key, pair.Value, out _);
+            EnhancementStatusRegistry.SetRemaining(player, pair.Key, pair.Value);
+        }
         Pending.Clear();
     }
 
