@@ -78,6 +78,7 @@ public sealed class TraderLocationAnchor : MonoBehaviour
         {
             npcLand.LeashRadius = 4f;
             npcLand.DisableDistanceTeleport = true;
+            npcLand.HoldAtHome = true;
         }
         npcLand.SetHome(transform.position);
 
