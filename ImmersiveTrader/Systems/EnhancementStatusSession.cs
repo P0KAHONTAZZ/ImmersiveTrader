@@ -22,13 +22,13 @@ internal static class EnhancementStatusSession
                 if (!EnhancementStatusRegistry.RestedGrantedByEnhancement) continue;
                 var restedTemplate = ObjectDB.instance?.GetStatusEffect("Rested".GetStableHashCode());
                 var rested = restedTemplate == null ? null : player.GetSEMan().GetStatusEffect(restedTemplate);
-                if (rested != null) Pending[id] = Math.Max(0.1f, rested.m_ttl - rested.m_time);
+                if (rested != null) Pending[id] = Math.Max(0.1f, EnhancementStatusTime.Remaining(rested));
                 continue;
             }
 
             var template = EnhancementStatusRegistry.Template(id);
             var active = template == null ? null : player.GetSEMan().GetStatusEffect(template);
-            if (active != null) Pending[id] = Math.Max(0.1f, active.m_ttl - active.m_time);
+            if (active != null) Pending[id] = Math.Max(0.1f, EnhancementStatusTime.Remaining(active));
         }
     }
 
