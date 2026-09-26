@@ -11,6 +11,7 @@ internal static class EnhancementStatusRegistry
     internal const float DefaultDuration = 1800f;
     private static readonly Dictionary<string, StatusEffect> Effects = new(StringComparer.OrdinalIgnoreCase);
     private static Texture2D? IconAtlas;
+    internal static bool RestedGrantedByEnhancement { get; private set; }
     private static readonly Dictionary<string, int> IconIndex = new(StringComparer.OrdinalIgnoreCase)
     {
         ["embers"]=0, ["frost"]=1, ["storm"]=2, ["venom"]=3, ["spirit"]=4,
@@ -111,6 +112,7 @@ internal static class EnhancementStatusRegistry
             if (active == null) { message = "Could not apply Rested."; return false; }
             active.m_ttl = 1200f;
             active.m_time = 0f;
+            RestedGrantedByEnhancement = true;
             message = "Rested applied for 20 minutes.";
             return true;
         }
@@ -131,6 +133,7 @@ internal static class EnhancementStatusRegistry
 
     internal static void Clear(Player player)
     {
+        RestedGrantedByEnhancement = false;
         foreach (var id in Ids)
         {
             if (id == "rested") continue;
@@ -166,6 +169,8 @@ internal static class EnhancementStatusRegistry
         texture.filterMode = FilterMode.Bilinear;
         return texture;
     }
+
+    internal static void MarkRestedEnhancement(bool value) => RestedGrantedByEnhancement = value;
 
     internal static string DisplayName(string id) => char.ToUpperInvariant(id[0]) + id.Substring(1);
 }
