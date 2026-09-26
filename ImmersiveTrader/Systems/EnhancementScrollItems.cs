@@ -64,7 +64,7 @@ internal static class EnhancementScrollItems
         {
             // Native Rested. May be unresolved this early; the consume patch resolves it at use time.
             status = EnhancementStatusRegistry.RestedTemplate();
-            if (status == null) Plugin.Log.LogWarning("Scroll of Rested: native Rested not resolved yet; will resolve on use.");
+            if (status == null) Plugin.Log.LogInfo("Scroll of Rested: native Rested resolves on use (not in ObjectDB at registration).");
         }
         else
         {
