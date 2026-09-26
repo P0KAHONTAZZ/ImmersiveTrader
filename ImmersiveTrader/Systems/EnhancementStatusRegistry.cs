@@ -45,7 +45,6 @@ internal static class EnhancementStatusRegistry
 
         var endurance = AddStats("endurance", "+20% regeneracji staminy; -10% staminy na ataki melee");
         endurance.m_staminaRegenMultiplier = 1.20f;
-        endurance.m_attackStaminaUseModifier = -0.10f;
 
         var focus = AddStats("focus", "+15% regeneracji Eitr");
         focus.m_eitrRegenMultiplier = 1.15f;
