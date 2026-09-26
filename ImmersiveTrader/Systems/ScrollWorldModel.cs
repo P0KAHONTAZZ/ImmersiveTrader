@@ -80,15 +80,41 @@ internal static class ScrollWorldModel
                      new Vector3(0.05f, 0.018f, 0.05f), wood);
         }
 
-        // Small gold emblem plate in the middle of the sheet.
+        // Glow in the scroll's colour: emissive emblem + small pulsing point light.
+        var glowColor = GlowColor(paperColor);
+        var emblem = Mat("ImmersiveTrader_ScrollEmblem_" + id, new Color(0.83f, 0.62f, 0.20f), 0.65f, 0.7f);
+        if (emblem.HasProperty("_EmissionColor"))
+        {
+            emblem.EnableKeyword("_EMISSION");
+            emblem.SetColor("_EmissionColor", glowColor * 1.6f);
+        }
         Part(root, PrimitiveType.Cylinder, "ScrollEmblem", new Vector3(0f, 0.017f, 0f), Vector3.zero,
-             new Vector3(0.075f, 0.002f, 0.075f), gold);
+             new Vector3(0.075f, 0.002f, 0.075f), emblem);
+
+        var lightGo = new GameObject("ScrollGlowLight");
+        lightGo.transform.SetParent(root.transform, false);
+        lightGo.transform.localPosition = new Vector3(0f, 0.25f, 0f);
+        var light = lightGo.AddComponent<Light>();
+        light.type = LightType.Point;
+        light.color = glowColor;
+        light.range = 1.8f;
+        light.intensity = 1.1f;
+        light.shadows = LightShadows.None;
+        light.renderMode = LightRenderMode.Auto;
+        lightGo.AddComponent<Components.ScrollGlowPulse>();
 
         foreach (var collider in prefab.GetComponents<Collider>())
             UnityEngine.Object.Destroy(collider);
         var box = prefab.AddComponent<BoxCollider>();
         box.size = new Vector3(0.42f, 0.09f, 0.30f) * Scale;
         box.center = new Vector3(0f, 0.045f + 0.035f * Scale, 0f);
+    }
+
+    /// <summary>Same hue as the icon paper, brighter and more saturated so it reads as light.</summary>
+    private static Color GlowColor(Color paper)
+    {
+        Color.RGBToHSV(paper, out float h, out float sat, out _);
+        return Color.HSVToRGB(h, Mathf.Clamp(sat, 0.55f, 0.85f), 1f);
     }
 
     private static Material Mat(string name, Color color, float smoothness, float metallic = 0f)
