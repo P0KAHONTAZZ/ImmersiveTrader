@@ -8,7 +8,7 @@ namespace ImmersiveTrader;
 /// at a fresh random interval of 2-5 seconds after each laugh. The emote is stopped immediately
 /// so it contributes its vanilla voice without locking the player into the laugh animation.
 /// </summary>
-[HarmonyPatch(typeof(Player), nameof(Player.Update))]
+[HarmonyPatch(typeof(Player), "FixedUpdate")]
 internal static class ItAintFunnyLaughPatch
 {
     private static float _nextLaugh;
