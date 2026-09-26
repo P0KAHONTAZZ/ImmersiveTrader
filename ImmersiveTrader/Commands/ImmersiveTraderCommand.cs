@@ -35,11 +35,12 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             case "rep": ReputationCommand(args, context); break;
             case "access": AccessCommand(args, context); break;
             case "buff": BuffCommand(args, context); break;
+            case "bufftest": BuffTestCommand(context); break;
             default: context.AddString($"Unknown ImmersiveTrader command: {args[0]}"); PrintHelp(context); break;
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep", "access", "buff" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep", "access", "buff", "bufftest" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -63,6 +64,7 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it rep <traderId> reset  - reset reputation for this trader to 0");
         c.AddString("  it access <traderId> [grant|revoke]  - view or change this character\u0027s trader access");
         c.AddString("  it buff list | it buff <id> [seconds] | it buff clear");
+        c.AddString("  it bufftest        - diagnostic snapshot of enhancement effects");
     }
 
     private static void BuffCommand(string[] args, Terminal c)
@@ -91,6 +93,35 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         EnhancementStatusRegistry.Apply(player, args[1], seconds, out string message);
         c.AddString(message);
     }
+
+    private static void BuffTestCommand(Terminal c)
+    {
+        var p = Player.m_localPlayer;
+        if (p == null) { c.AddString("Enter a world first."); return; }
+
+        c.AddString("=== ImmersiveTrader Buff Diagnostic ===");
+        float hpWith = p.GetMaxHealth();
+        float eitrWith = p.GetMaxEitr();
+        float hpBase = EnhancementStatusRegistry.Has(p, "vitality") ? hpWith / 1.10f : hpWith;
+        float eitrBase = EnhancementStatusRegistry.Has(p, "focus") ? eitrWith / 1.15f : eitrWith;
+
+        c.AddString($"Vitality: {(EnhancementStatusRegistry.Has(p, "vitality") ? "ACTIVE" : "off")} | dynamic base MaxHP={hpBase:0.0} | final={hpWith:0.0} | expected x1.10");
+        c.AddString($"Focus: {(EnhancementStatusRegistry.Has(p, "focus") ? "ACTIVE" : "off")} | dynamic base MaxEitr={eitrBase:0.0} | final={eitrWith:0.0} | expected x1.15");
+
+        float carry = 300f;
+        p.GetSEMan().ModifyMaxCarryWeight(300f, ref carry);
+        c.AddString($"Burden: {(EnhancementStatusRegistry.Has(p, "burden") ? "ACTIVE" : "off")} | diagnostic carry 300 -> {carry:0.0}");
+
+        c.AddString($"Endurance: {(EnhancementStatusRegistry.Has(p, "endurance") ? "ACTIVE" : "off")} | stamina regen x1.20; melee attack stamina x0.90");
+        c.AddString($"Wanderer: {(EnhancementStatusRegistry.Has(p, "wanderer") ? "ACTIVE" : "off")} | run stamina x0.85");
+        c.AddString($"Pathfinder: {(EnhancementStatusRegistry.Has(p, "pathfinder") ? "ACTIVE" : "off")} | jump stamina x0.85");
+        c.AddString($"Hunter: {(EnhancementStatusRegistry.Has(p, "hunter") ? "ACTIVE" : "off")} | bow stamina x0.90");
+        c.AddString($"Craftsman: {(EnhancementStatusRegistry.Has(p, "craftsman") ? "ACTIVE" : "off")} | tool stamina x0.80");
+        c.AddString($"Damage: embers={On(p,"embers")} frost={On(p,"frost")} storm={On(p,"storm")} venom={On(p,"venom")} spirit={On(p,"spirit")}");
+        c.AddString($"Gathering: lumberjack={On(p,"lumberjack")} (chop x1.20) miner={On(p,"miner")} (pickaxe x1.20)");
+    }
+
+    private static string On(Player p, string id) => EnhancementStatusRegistry.Has(p, id) ? "ON" : "off";
 
     private static void AccessCommand(string[] args, Terminal c)
     {
