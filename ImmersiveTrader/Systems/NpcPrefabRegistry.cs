@@ -117,7 +117,6 @@ public static class NpcPrefabRegistry
         if (traderId == "troldad")
         {
             shell.transform.localScale = Vector3.one * visualScale;
-            shell.AddComponent<TroldadVisualProps>();
             MakePassive(shell);
             PrepareCreatureTrader(shell, npc);
         }
