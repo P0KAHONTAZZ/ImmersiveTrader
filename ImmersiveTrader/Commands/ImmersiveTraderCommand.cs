@@ -36,11 +36,12 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             case "access": AccessCommand(args, context); break;
             case "buff": BuffCommand(args, context); break;
             case "bufftest": BuffTestCommand(context); break;
+            case "scroll": ScrollCommand(args, context); break;
             default: context.AddString($"Unknown ImmersiveTrader command: {args[0]}"); PrintHelp(context); break;
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep", "access", "buff", "bufftest" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep", "access", "buff", "bufftest", "scroll" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -65,6 +66,39 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it access <traderId> [grant|revoke]  - view or change this character\u0027s trader access");
         c.AddString("  it buff list | it buff <id> [seconds] | it buff clear");
         c.AddString("  it bufftest        - diagnostic snapshot of enhancement effects");
+        c.AddString("  it scroll <id|all> - give physical enhancement scroll item(s) for testing");
+    }
+
+    private static void ScrollCommand(string[] args, Terminal c)
+    {
+        var player = Player.m_localPlayer;
+        if (player == null) { c.AddString("Enter a world first."); return; }
+        if (args.Length != 2)
+        {
+            c.AddString("Usage: it scroll <id|all>");
+            c.AddString(string.Join(", ", EnhancementStatusRegistry.Ids));
+            return;
+        }
+
+        var ids = Eq(args[1], "all") ? EnhancementStatusRegistry.Ids : new[] { args[1].ToLowerInvariant() };
+        int added = 0;
+        foreach (string id in ids)
+        {
+            if (!EnhancementStatusRegistry.Ids.Any(x => Eq(x, id)))
+            {
+                c.AddString($"Unknown enhancement scroll: {id}");
+                continue;
+            }
+            var prefab = ObjectDB.instance?.GetItemPrefab(EnhancementScrollRegistry.Prefix + id);
+            if (prefab == null) { c.AddString($"Missing scroll prefab: {id}"); continue; }
+            if (!player.GetInventory().AddItem(prefab, 1))
+            {
+                c.AddString($"No inventory room for: {id}");
+                continue;
+            }
+            added++;
+        }
+        c.AddString($"Added {added} enhancement scroll item(s).");
     }
 
     private static void BuffCommand(string[] args, Terminal c)
