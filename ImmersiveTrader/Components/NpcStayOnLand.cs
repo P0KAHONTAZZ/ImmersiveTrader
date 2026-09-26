@@ -16,6 +16,8 @@ public sealed class NpcStayOnLand : MonoBehaviour
     private Character? _character;
     private ZNetView? _view;
     private Rigidbody? _body;
+    private Vector3 _shopPosition;
+    private bool _shopHeld;
 
     public void SetHome(Vector3 home) { _home = home; _homeSet = true; }
 
@@ -36,13 +38,15 @@ public sealed class NpcStayOnLand : MonoBehaviour
 
         if (shopOpen)
         {
-            if (_body != null)
+            if (!_shopHeld)
             {
-                _body.velocity = Vector3.zero;
-                _body.angularVelocity = Vector3.zero;
+                _shopPosition = transform.position;
+                _shopHeld = true;
             }
+            HoldAt(_shopPosition);
             return;
         }
+        _shopHeld = false;
 
         if (Time.time < _next) return;
         _next = Time.time + 0.5f;
@@ -72,6 +76,11 @@ public sealed class NpcStayOnLand : MonoBehaviour
         }
 
         target.y += 0.2f;
+        HoldAt(target);
+    }
+
+    private void HoldAt(Vector3 target)
+    {
         transform.position = target;
         if (_body != null)
         {
