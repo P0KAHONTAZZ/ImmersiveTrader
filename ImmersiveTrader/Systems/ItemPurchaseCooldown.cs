@@ -16,24 +16,8 @@ public static class ItemPurchaseCooldown
     private static bool loaded;
     private static string FilePath => Path.Combine(Paths.ConfigPath, "ImmersiveTrader-item-cooldowns.txt");
 
-    private static string WorldId()
-    {
-        var net = ZNet.instance ?? throw new InvalidOperationException("World is not loaded.");
-        foreach (string method in new[] { "GetWorldUID", "GetWorldName" })
-        {
-            var info = net.GetType().GetMethod(method, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (info == null || info.GetParameters().Length != 0) continue;
-            var value = info.Invoke(net, null)?.ToString();
-            if (!string.IsNullOrEmpty(value)) return value;
-        }
-        throw new InvalidOperationException("Cannot identify the current world for purchase cooldowns.");
-    }
-
     private static string Key(Player player, string trader, string kind, string item)
-    {
-        var plain = $"{WorldId()}|{player.GetPlayerID()}|{trader}|{kind}|{item}";
-        return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(plain));
-    }
+        => MultiplayerPlayerState.Key(player, trader, kind, item);
 
     private static void Load()
     {
@@ -72,6 +56,7 @@ public static class ItemPurchaseCooldown
 
     public static void MarkBought(Player player, string trader, string kind, string item)
     {
+        MultiplayerAuthority.RequireServer("purchase cooldown mutation");
         lock (Sync)
         {
             Load();
