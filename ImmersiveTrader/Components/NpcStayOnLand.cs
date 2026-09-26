@@ -17,6 +17,8 @@ public sealed class NpcStayOnLand : MonoBehaviour
     private Character? _character;
     private ZNetView? _view;
     private Rigidbody? _body;
+    private MonsterAI? _monsterAi;
+    private bool _shopFreeze;
 
     public void SetHome(Vector3 home) { _home = home; _homeSet = true; }
 
@@ -25,12 +27,25 @@ public sealed class NpcStayOnLand : MonoBehaviour
         _character = GetComponent<Character>();
         _view = GetComponent<ZNetView>();
         _body = GetComponent<Rigidbody>();
+        _monsterAi = GetComponent<MonsterAI>();
         if (!_homeSet) SetHome(transform.position);
         _next = Time.time + 1f;
     }
 
     private void Update()
     {
+        bool shopOpen = NativeTraderWindow.ActiveNpc == gameObject;
+        if (shopOpen != _shopFreeze)
+        {
+            _shopFreeze = shopOpen;
+            if (_monsterAi != null) _monsterAi.enabled = !shopOpen;
+        }
+        if (shopOpen)
+        {
+            if (_body != null) _body.velocity = Vector3.zero;
+            return;
+        }
+
         if (Time.time < _next) return;
         _next = Time.time + 2f;
         if (_view != null && _view.IsValid() && !_view.IsOwner()) return;
@@ -50,6 +65,12 @@ public sealed class NpcStayOnLand : MonoBehaviour
             _body.position = target;
             _body.velocity = Vector3.zero;
         }
+    }
+
+    private void OnDisable()
+    {
+        if (_shopFreeze && _monsterAi != null) _monsterAi.enabled = true;
+        _shopFreeze = false;
     }
 
     private static Vector3 Flat(Vector3 v) => new(v.x, 0f, v.z);
