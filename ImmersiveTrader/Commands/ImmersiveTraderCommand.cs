@@ -34,11 +34,12 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             case "task": TaskCommand(args, context); break;
             case "rep": ReputationCommand(args, context); break;
             case "access": AccessCommand(args, context); break;
+            case "buff": BuffCommand(args, context); break;
             default: context.AddString($"Unknown ImmersiveTrader command: {args[0]}"); PrintHelp(context); break;
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep", "access" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep", "access", "buff" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -61,6 +62,34 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it rep <traderId> add <points>  - add reputation points (max 64)");
         c.AddString("  it rep <traderId> reset  - reset reputation for this trader to 0");
         c.AddString("  it access <traderId> [grant|revoke]  - view or change this character\u0027s trader access");
+        c.AddString("  it buff list | it buff <id> [seconds] | it buff clear");
+    }
+
+    private static void BuffCommand(string[] args, Terminal c)
+    {
+        var player = Player.m_localPlayer;
+        if (player == null) { c.AddString("Enter a world first."); return; }
+        if (args.Length < 2 || Eq(args[1], "list"))
+        {
+            c.AddString("Enhancement buffs (default 1800s; Rested always 1200s):");
+            c.AddString(string.Join(", ", EnhancementStatusRegistry.Ids));
+            return;
+        }
+        if (Eq(args[1], "clear"))
+        {
+            EnhancementStatusRegistry.Clear(player);
+            c.AddString("ImmersiveTrader enhancement buffs cleared.");
+            return;
+        }
+        float seconds = EnhancementStatusRegistry.DefaultDuration;
+        if (args.Length >= 3 && (!float.TryParse(args[2], System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out seconds) || seconds <= 0f))
+        {
+            c.AddString("Usage: it buff <id> [seconds]");
+            return;
+        }
+        EnhancementStatusRegistry.Apply(player, args[1], seconds, out string message);
+        c.AddString(message);
     }
 
     private static void AccessCommand(string[] args, Terminal c)
