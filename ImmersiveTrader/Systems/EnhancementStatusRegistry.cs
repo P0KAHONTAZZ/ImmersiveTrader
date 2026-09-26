@@ -40,14 +40,12 @@ internal static class EnhancementStatusRegistry
         var burden = AddStats("burden", "+10% maks. udźwigu");
         burden.m_addMaxCarryWeight = 0f; // true 10% is calculated dynamically by EnhancementCarryPatch
 
-        var vitality = AddStats("vitality", "+10% regeneracji HP");
-        vitality.m_healthRegenMultiplier = 1.10f;
+        AddStats("vitality", "+10% maksymalnego HP");
 
         var endurance = AddStats("endurance", "+20% regeneracji staminy; -10% staminy na ataki melee");
         endurance.m_staminaRegenMultiplier = 1.20f;
 
-        var focus = AddStats("focus", "+15% regeneracji Eitr");
-        focus.m_eitrRegenMultiplier = 1.15f;
+        AddStats("focus", "+15% maksymalnego Eitr");
 
         var craftsman = AddStats("craftsman", "-20% staminy przy używaniu narzędzi");
         craftsman.m_homeItemStaminaUseModifier = -0.20f;
