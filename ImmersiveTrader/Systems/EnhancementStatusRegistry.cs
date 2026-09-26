@@ -155,7 +155,7 @@ internal static class EnhancementStatusRegistry
         if (!IconIndex.TryGetValue(id, out int index)) return null;
         IconAtlas ??= LoadTexture("ImmersiveTrader.Assets.EnhancementStatusIcons.png");
         if (IconAtlas == null || IconAtlas.width < (index + 1) * 128 || IconAtlas.height < 128) return null;
-        var sprite = Sprite.Create(IconAtlas, new Rect(index * 128, 0, 128, 128), new Vector2(0.5f, 0.5f));
+        var sprite = Sprite.Create(IconAtlas, new Rect(index * 128, 0, 128, 128), new Vector2(0.5f, 0.5f), 85f);
         sprite.name = "ImmersiveTrader_StatusIcon_" + id;
         return sprite;
     }
@@ -185,16 +185,10 @@ internal static class EnhancementStatusRegistry
             int min = Math.Min(p.r, Math.Min(p.g, p.b));
             int chroma = max - min;
 
-            bool symbol = max >= 105 && chroma >= 35;
-            if (!symbol)
-            {
-                p.a = 0;
-            }
-            else
-            {
-                // Saturated symbol pixels only; no semi-transparent halo.
-                p.a = 255;
-            }
+            // Hard alpha cut: the preview halo is dimmer/less saturated than
+            // the painted symbol. No partial alpha is kept.
+            bool symbol = max >= 135 && chroma >= 55;
+            p.a = symbol ? (byte)255 : (byte)0;
             pixels[i] = p;
         }
         texture.SetPixels32(pixels);
