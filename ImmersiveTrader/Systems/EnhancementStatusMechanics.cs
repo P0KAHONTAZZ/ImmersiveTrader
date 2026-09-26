@@ -59,3 +59,24 @@ internal static class EnhancementAttackStaminaPatch
         skill == Skills.SkillType.Swords || skill == Skills.SkillType.Unarmed ||
         skill == Skills.SkillType.Spears;
 }
+
+
+[HarmonyPatch(typeof(Player), "GetMaxHealth")]
+internal static class EnhancementMaxHealthPatch
+{
+    private static void Postfix(Player __instance, ref float __result)
+    {
+        if (EnhancementStatusRegistry.Has(__instance, "vitality"))
+            __result *= 1.10f;
+    }
+}
+
+[HarmonyPatch(typeof(Player), "GetMaxEitr")]
+internal static class EnhancementMaxEitrPatch
+{
+    private static void Postfix(Player __instance, ref float __result)
+    {
+        if (EnhancementStatusRegistry.Has(__instance, "focus"))
+            __result *= 1.15f;
+    }
+}
