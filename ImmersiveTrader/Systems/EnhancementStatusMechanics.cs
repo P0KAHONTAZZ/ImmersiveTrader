@@ -61,22 +61,22 @@ internal static class EnhancementAttackStaminaPatch
 }
 
 
-[HarmonyPatch(typeof(Player), "GetMaxHealth")]
+[HarmonyPatch(typeof(Character), "GetMaxHealth")]
 internal static class EnhancementMaxHealthPatch
 {
-    private static void Postfix(Player __instance, ref float __result)
+    private static void Postfix(Character __instance, ref float __result)
     {
-        if (EnhancementStatusRegistry.Has(__instance, "vitality"))
+        if (__instance is Player player && EnhancementStatusRegistry.Has(player, "vitality"))
             __result *= 1.10f;
     }
 }
 
-[HarmonyPatch(typeof(Player), "GetMaxEitr")]
+[HarmonyPatch(typeof(Character), "GetMaxEitr")]
 internal static class EnhancementMaxEitrPatch
 {
-    private static void Postfix(Player __instance, ref float __result)
+    private static void Postfix(Character __instance, ref float __result)
     {
-        if (EnhancementStatusRegistry.Has(__instance, "focus"))
+        if (__instance is Player player && EnhancementStatusRegistry.Has(player, "focus"))
             __result *= 1.15f;
     }
 }
