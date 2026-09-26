@@ -26,7 +26,7 @@ internal static class EnhancementScrollItems
     private static readonly string[] AtlasOrder =
     {
         "embers","frost","storm","venom","spirit","lumberjack","miner","burden",
-        "vitality","endurance","focus","craftsman","wanderer","pathfinder","hunter","rested","laugh"
+        "vitality","endurance","focus","craftsman","wanderer","pathfinder","hunter","rested","nokidding"
     };
 
     // All 16 scrolls (stage 1 verified Embers in game).
@@ -113,7 +113,7 @@ internal static class EnhancementScrollItems
     }
 
     private static string Description(string id) =>
-        id.Equals("laugh", StringComparison.OrdinalIgnoreCase)
+        id.Equals("nokidding", StringComparison.OrdinalIgnoreCase)
             ? "There is nothing funny about this scroll."
             : "Enhancement scroll. Read it to call upon a blessing of the old gods.";
 
@@ -148,7 +148,7 @@ internal static class EnhancementScrollItems
     {
         string name = EnhancementStatusRegistry.DisplayName(id);
         string effect = EffectText.TryGetValue(id, out var text) ? text : name;
-        string minutes = id == "rested" || id == "laugh" ? "20" : "30";
+        string minutes = id == "rested" || id == "nokidding" ? "20" : "30";
         return $"Effect: <color=yellow>{effect}</color>" +
                $"\nDuration: <color=yellow>{minutes} min</color>" +
                $"\nUse: <color=yellow>consumes 1 scroll</color>" +
@@ -157,8 +157,8 @@ internal static class EnhancementScrollItems
 
     private static Sprite? InventoryIcon(string id)
     {
-        if (id.Equals("laugh", StringComparison.OrdinalIgnoreCase))
-            return LoadStandaloneIcon(LaughIconResource, "ImmersiveTrader_ScrollIcon_laugh");
+        if (id.Equals("nokidding", StringComparison.OrdinalIgnoreCase))
+            return LoadStandaloneIcon(LaughIconResource, "ImmersiveTrader_ScrollIcon_nokidding");
         int index = Array.IndexOf(AtlasOrder, id);
         if (index < 0) return null;
         if (!atlasLoaded) { atlas = LoadAtlas(); atlasLoaded = true; }
