@@ -35,11 +35,12 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
             case "rep": ReputationCommand(args, context); break;
             case "access": AccessCommand(args, context); break;
             case "buff": BuffCommand(args, context); break;
+            case "scroll": ScrollCommand(args, context); break;
             default: context.AddString($"Unknown ImmersiveTrader command: {args[0]}"); PrintHelp(context); break;
         }
     }
 
-    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep", "access", "buff" };
+    public override List<string> CommandOptionList() => new() { "help", "list", "find", "goto", "findall", "spawn", "look", "diagnose", "clearspawned", "items", "give", "route", "task", "rep", "access", "buff", "scroll" };
 
     private static bool Eq(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
@@ -63,6 +64,31 @@ public sealed class ImmersiveTraderCommand : ConsoleCommand
         c.AddString("  it rep <traderId> reset  - reset reputation for this trader to 0");
         c.AddString("  it access <traderId> [grant|revoke]  - view or change this character\u0027s trader access");
         c.AddString("  it buff list | it buff <id> [seconds] | it buff clear");
+        c.AddString("  it scroll list | it scroll <id> [count]  - give physical enhancement scrolls");
+    }
+
+    private static void ScrollCommand(string[] args, Terminal c)
+    {
+        var player = Player.m_localPlayer;
+        if (player == null) { c.AddString("Enter a world first."); return; }
+        if (args.Length < 2 || Eq(args[1], "list"))
+        {
+            c.AddString("Registered enhancement scrolls: " + string.Join(", ", EnhancementScrollItems.RegisteredIds));
+            return;
+        }
+        string id = args[1].ToLowerInvariant();
+        if (!EnhancementScrollItems.IsRegistered(id)) { c.AddString("Scroll not registered. Use: it scroll list"); return; }
+        int count = 1;
+        if (args.Length >= 3 && (!int.TryParse(args[2], out count) || count < 1 || count > 10))
+        {
+            c.AddString("Usage: it scroll <id> [count 1-10]");
+            return;
+        }
+        var prefab = ObjectDB.instance?.GetItemPrefab(EnhancementScrollItems.PrefabName(id));
+        if (prefab == null) { c.AddString("Scroll prefab not found in ObjectDB."); return; }
+        if (!player.GetInventory().CanAddItem(prefab, count)) { c.AddString("Not enough inventory space."); return; }
+        if (!player.GetInventory().AddItem(prefab, count)) { c.AddString("Could not add scroll."); return; }
+        c.AddString($"Given {count}x Scroll of {EnhancementStatusRegistry.DisplayName(id)}.");
     }
 
     private static void BuffCommand(string[] args, Terminal c)
