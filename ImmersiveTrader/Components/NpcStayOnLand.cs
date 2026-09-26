@@ -10,6 +10,7 @@ namespace ImmersiveTrader.Components;
 public sealed class NpcStayOnLand : MonoBehaviour
 {
     public float LeashRadius = 10f;
+    public bool DisableDistanceTeleport;
     private Vector3 _home;
     private bool _homeSet;
     private float _next;
@@ -61,6 +62,11 @@ public sealed class NpcStayOnLand : MonoBehaviour
         float distance = flatDelta.magnitude;
         bool inWater = (_character != null && _character.InWater()) || current.y < water + 0.2f;
 
+        // Troldad uses his native Troll wandering. Do not snap him back when he crosses
+        // a radius: that looks like a visible teleport. Distance control for him is
+        // intentionally disabled until a bounded wander controller replaces Troll AI.
+        // Water rescue remains active.
+        if (DisableDistanceTeleport && !inWater) return;
         if (!inWater && distance <= LeashRadius) return;
 
         Vector3 target;
