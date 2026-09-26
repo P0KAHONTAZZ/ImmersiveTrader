@@ -26,24 +26,8 @@ public static class TraderReputation
     private static bool loaded;
     private static string FilePath => Path.Combine(Paths.ConfigPath, "ImmersiveTrader-reputation.txt");
 
-    private static string WorldId()
-    {
-        var net = ZNet.instance ?? throw new InvalidOperationException("World is not loaded.");
-        foreach (string method in new[] { "GetWorldUID", "GetWorldName" })
-        {
-            var info = net.GetType().GetMethod(method, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (info == null || info.GetParameters().Length != 0) continue;
-            var value = info.Invoke(net, null)?.ToString();
-            if (!string.IsNullOrEmpty(value)) return value;
-        }
-        throw new InvalidOperationException("Cannot identify the current world for reputation.");
-    }
-
     private static string Key(Player player, string trader)
-    {
-        string plain = $"{WorldId()}|{player.GetPlayerID()}|{trader}";
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes(plain));
-    }
+        => MultiplayerPlayerState.Key(player, trader);
 
     private static void Load()
     {
@@ -75,6 +59,7 @@ public static class TraderReputation
 
     public static int Add(Player player, string trader, int amount)
     {
+        MultiplayerAuthority.RequireServer("reputation mutation");
         if (amount <= 0) return Get(player, trader);
         int next;
         lock (Sync)
@@ -95,6 +80,7 @@ public static class TraderReputation
 
     public static int Reset(Player player, string trader)
     {
+        MultiplayerAuthority.RequireServer("reputation reset");
         lock (Sync)
         {
             Load();
