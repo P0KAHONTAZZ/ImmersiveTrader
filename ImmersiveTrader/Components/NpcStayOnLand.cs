@@ -3,10 +3,9 @@ using UnityEngine;
 namespace ImmersiveTrader.Components;
 
 /// <summary>
-/// Keeps a trader/companion NPC on dry land near its camp. Every 2 s (owner only):
-/// if the NPC is in water, below sea level, or farther than LeashRadius from home,
-/// it is moved back home. If home itself is wet (old worlds), the nearest dry ground
-/// within 40 m is used as the new home.
+/// Keeps a trader/companion NPC on dry land near its camp.
+/// Movement is clamped to the leash edge instead of teleporting to the camp centre.
+/// While this NPC owns the currently open trader window, its movement is held in place.
 /// </summary>
 public sealed class NpcStayOnLand : MonoBehaviour
 {
@@ -17,8 +16,6 @@ public sealed class NpcStayOnLand : MonoBehaviour
     private Character? _character;
     private ZNetView? _view;
     private Rigidbody? _body;
-    private MonsterAI? _monsterAi;
-    private bool _shopFreeze;
 
     public void SetHome(Vector3 home) { _home = home; _homeSet = true; }
 
@@ -27,50 +24,61 @@ public sealed class NpcStayOnLand : MonoBehaviour
         _character = GetComponent<Character>();
         _view = GetComponent<ZNetView>();
         _body = GetComponent<Rigidbody>();
-        _monsterAi = GetComponent<MonsterAI>();
         if (!_homeSet) SetHome(transform.position);
-        _next = Time.time + 1f;
+        _next = Time.time + 0.5f;
     }
 
     private void Update()
     {
-        bool shopOpen = NativeTraderWindow.ActiveNpc == gameObject;
-        if (shopOpen != _shopFreeze)
-        {
-            _shopFreeze = shopOpen;
-            if (_monsterAi != null) _monsterAi.enabled = !shopOpen;
-        }
+        var active = NativeTraderWindow.ActiveNpc;
+        bool shopOpen = active != null &&
+            (active == gameObject || active.transform.IsChildOf(transform) || transform.IsChildOf(active.transform));
+
         if (shopOpen)
         {
-            if (_body != null) _body.velocity = Vector3.zero;
+            if (_body != null)
+            {
+                _body.velocity = Vector3.zero;
+                _body.angularVelocity = Vector3.zero;
+            }
             return;
         }
 
         if (Time.time < _next) return;
-        _next = Time.time + 2f;
+        _next = Time.time + 0.5f;
         if (_view != null && _view.IsValid() && !_view.IsOwner()) return;
         if (ZoneSystem.instance == null) return;
 
         float water = ZoneSystem.instance.m_waterLevel;
         if (IsWet(_home, water) && TryFindDry(_home, water, out var dry)) _home = dry;
 
-        bool inWater = (_character != null && _character.InWater()) || transform.position.y < water + 0.2f;
-        bool tooFar = Vector3.Distance(Flat(transform.position), Flat(_home)) > LeashRadius;
-        if (!inWater && !tooFar) return;
+        Vector3 current = transform.position;
+        Vector3 flatDelta = Flat(current) - Flat(_home);
+        float distance = flatDelta.magnitude;
+        bool inWater = (_character != null && _character.InWater()) || current.y < water + 0.2f;
 
-        var target = _home + Vector3.up * 0.2f;
+        if (!inWater && distance <= LeashRadius) return;
+
+        Vector3 target;
+        if (inWater || distance < 0.01f)
+        {
+            target = _home;
+        }
+        else
+        {
+            Vector3 edge = Flat(_home) + flatDelta.normalized * Mathf.Max(0.5f, LeashRadius - 0.5f);
+            float ground = ZoneSystem.instance.GetGroundHeight(edge);
+            target = new Vector3(edge.x, ground, edge.z);
+        }
+
+        target.y += 0.2f;
         transform.position = target;
         if (_body != null)
         {
             _body.position = target;
             _body.velocity = Vector3.zero;
+            _body.angularVelocity = Vector3.zero;
         }
-    }
-
-    private void OnDisable()
-    {
-        if (_shopFreeze && _monsterAi != null) _monsterAi.enabled = true;
-        _shopFreeze = false;
     }
 
     private static Vector3 Flat(Vector3 v) => new(v.x, 0f, v.z);
