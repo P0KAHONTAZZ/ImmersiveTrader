@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using UnityEngine;
 
 namespace ImmersiveTrader;
@@ -8,6 +10,13 @@ internal static class EnhancementStatusRegistry
 {
     internal const float DefaultDuration = 1800f;
     private static readonly Dictionary<string, StatusEffect> Effects = new(StringComparer.OrdinalIgnoreCase);
+    private static Texture2D? IconAtlas;
+    private static readonly Dictionary<string, int> IconIndex = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["embers"]=0, ["frost"]=1, ["storm"]=2, ["venom"]=3, ["spirit"]=4,
+        ["lumberjack"]=5, ["miner"]=6, ["burden"]=7, ["vitality"]=8, ["endurance"]=9,
+        ["focus"]=10, ["craftsman"]=11, ["wanderer"]=12, ["pathfinder"]=13, ["hunter"]=14
+    };
 
     internal static readonly string[] Ids =
     {
@@ -85,6 +94,7 @@ internal static class EnhancementStatusRegistry
         se.name = "ImmersiveTrader_" + id;
         se.m_name = DisplayName(id);
         se.m_tooltip = tooltip;
+        se.m_icon = LoadIcon(id);
         se.m_ttl = DefaultDuration;
         se.m_flashIcon = false;
         se.m_cooldownIcon = true;
@@ -134,6 +144,28 @@ internal static class EnhancementStatusRegistry
 
     internal static StatusEffect? Template(string id) =>
         Effects.TryGetValue(id, out var se) ? se : null;
+
+    private static Sprite? LoadIcon(string id)
+    {
+        if (!IconIndex.TryGetValue(id, out int index)) return null;
+        IconAtlas ??= LoadTexture("ImmersiveTrader.Assets.EnhancementStatusIcons.png");
+        if (IconAtlas == null || IconAtlas.width < (index + 1) * 128 || IconAtlas.height < 128) return null;
+        var sprite = Sprite.Create(IconAtlas, new Rect(index * 128, 0, 128, 128), new Vector2(0.5f, 0.5f));
+        sprite.name = "ImmersiveTrader_StatusIcon_" + id;
+        return sprite;
+    }
+
+    private static Texture2D? LoadTexture(string resource)
+    {
+        using Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource);
+        if (stream == null) { Plugin.Log.LogWarning("Enhancement status icon atlas missing."); return null; }
+        using var memory = new MemoryStream();
+        stream.CopyTo(memory);
+        var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        if (!texture.LoadImage(memory.ToArray())) return null;
+        texture.filterMode = FilterMode.Bilinear;
+        return texture;
+    }
 
     internal static string DisplayName(string id) => char.ToUpperInvariant(id[0]) + id.Substring(1);
 }
