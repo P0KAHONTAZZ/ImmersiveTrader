@@ -13,8 +13,7 @@ namespace ImmersiveTrader;
 /// Fresh use goes through Valheim's native Consumable flow (m_consumeStatusEffect).
 /// EnhancementScrollConsumePatch only handles two cases vanilla cannot: refreshing an active
 /// buff (reset to full duration, no stacking) and Scroll of Rested (fixed 20 minutes).
-/// Independent of the contract system; only the static ContractWorldModel builder is reused
-/// for the temporary ground model.
+/// Independent of the contract system; ground model is ScrollWorldModel.
 /// </summary>
 internal static class EnhancementScrollItems
 {
@@ -100,8 +99,8 @@ internal static class EnhancementScrollItems
         shared.m_setStatusEffect = null;
         drop.m_itemData.m_variant = 0;
 
-        // Temporary ground model: same look as contracts (built on this clone only).
-        ContractWorldModel.Attach(custom.ItemPrefab, ContractIconRegistry.Parchment);
+        // Shared scroll ground model (contracts keep their own ContractWorldModel).
+        ScrollWorldModel.Attach(custom.ItemPrefab, id);
 
         if (!ItemManager.Instance.AddItem(custom))
         {

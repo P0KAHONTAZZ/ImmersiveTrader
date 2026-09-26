@@ -26,7 +26,8 @@ Scroll w inventory → użycie → zużycie 1 szt. → status → ikona HUD → 
 - Ikona inventory ≠ ikona HUD. Inventory: `Assets/enhancement-scroll-inventory-icons.png` (2048×128, 16 × 128 px).
   Kolejność: Embers, Frost, Storm, Venom, Spirit, Lumberjack, Miner, Burden, Vitality, Endurance,
   Focus, Craftsman, Wanderer, Pathfinder, Hunter, Rested.
-- Na ziemi: tymczasowo model 3D kontraktu (klon, nie modyfikacja oryginału).
+- Na ziemi: ScrollWorldModel — 1 wspólny model dla 16 scrolli (arkusz między wałkami, złote opaski),
+  kolor pergaminu z ikony. Kontrakty mają swój 1 wspólny ContractWorldModel. Bez modeli per item.
 - Użycie przez natywny flow Consumable (`m_consumeStatusEffect`), bez patchowania `UseItem`.
 - Ponowne użycie aktywnego buffa odświeża czas do pełna (bez kumulacji) — EnhancementScrollConsumePatch;
   tamże Scroll of Rested (natywny Rested, stałe 1200 s). Świeże użycie zwykłego scrolla = czysty vanilla.
