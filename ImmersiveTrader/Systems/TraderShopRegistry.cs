@@ -150,6 +150,11 @@ public static class TraderShopRegistry
             new("grelka", EnhancementScrollItems.PrefabName("craftsman"), 920, 1, 5, "Scroll of Craftsman", 5),
             new("spalony_zenek", EnhancementScrollItems.PrefabName("lumberjack"), 1000, 1, 6, "Scroll of Lumberjack", 5),
             new("skjold_cinderborn", EnhancementScrollItems.PrefabName("miner"), 1000, 1, 6, "Scroll of Miner", 5),
+
+            // Craftsman specialists also get an offensive option useful beyond their home biome.
+            // cmok already sells Frost, so only Encek and Grelka need an extra attack scroll.
+            new("encek", EnhancementScrollItems.PrefabName("embers"), 660, 1, 2, "Scroll of Embers", 5),
+            new("grelka", EnhancementScrollItems.PrefabName("storm"), 920, 1, 5, "Scroll of Storm", 5),
         };
         return list;
     }
