@@ -25,5 +25,8 @@ public static class TraderCooldown
     }
 
     public static void MarkIssued(Player player, string traderId)
-        => LastIssueDay[(player.GetPlayerID(), traderId)] = CurrentWorldDay();
+    {
+        MultiplayerAuthority.RequireServer("trader issue cooldown mutation");
+        LastIssueDay[(player.GetPlayerID(), traderId)] = CurrentWorldDay();
+    }
 }
