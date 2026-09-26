@@ -94,7 +94,7 @@ internal static class EnhancementStatusRegistry
     {
         se.name = "ImmersiveTrader_" + id;
         se.m_name = DisplayName(id);
-        se.m_tooltip = tooltip;
+        se.m_tooltip = "";
         se.m_icon = LoadIcon(id);
         se.m_ttl = DefaultDuration;
         se.m_flashIcon = false;
@@ -175,8 +175,8 @@ internal static class EnhancementStatusRegistry
 
     private static void MakeDarkBackgroundTransparent(Texture2D texture)
     {
-        // Keep only the actual painted symbol. The approved source atlas contains
-        // a dark square/glow around every icon; HUD icons must have transparent BG.
+        // HUD asset cleanup: keep only the bright/saturated painted symbol.
+        // All captions, preview-board background and soft glow are discarded.
         var pixels = texture.GetPixels32();
         for (int i = 0; i < pixels.Length; i++)
         {
@@ -185,16 +185,15 @@ internal static class EnhancementStatusRegistry
             int min = Math.Min(p.r, Math.Min(p.g, p.b));
             int chroma = max - min;
 
-            // Remove dark board and soft halo. Preserve saturated icon strokes.
-            if (max < 72 || (max < 105 && chroma < 28))
+            bool symbol = max >= 105 && chroma >= 35;
+            if (!symbol)
             {
                 p.a = 0;
             }
             else
             {
-                // Fade the remaining edge instead of leaving a hard square.
-                int alpha = Mathf.Clamp((max - 72) * 8, 0, 255);
-                p.a = (byte)Math.Min(p.a, alpha);
+                // Saturated symbol pixels only; no semi-transparent halo.
+                p.a = 255;
             }
             pixels[i] = p;
         }
