@@ -41,6 +41,12 @@ public sealed class TraderLocationAnchor : MonoBehaviour
         if (_npc != null || string.IsNullOrEmpty(TraderId) || ZNetScene.instance == null)
             return;
 
+        // Multiplayer: only the server/host may instantiate location-owned network
+        // characters. Clients receive the resulting ZNetView objects from the server.
+        // Without this guard every peer independently creates the same trader/Jackie.
+        if (!MultiplayerNetwork.IsServerAuthority)
+            return;
+
         const float radius = 8f;
         foreach (var npc in UnityEngine.Object.FindObjectsByType<TraderNpc>(FindObjectsSortMode.None))
         {
@@ -126,6 +132,8 @@ public sealed class TraderLocationAnchor : MonoBehaviour
 
     private void OnDestroy()
     {
+        // Clients do not own location NPC lifecycle in multiplayer.
+        if (!MultiplayerNetwork.IsServerAuthority) return;
         DestroyOwned(_jackie);
         _jackie = null;
         DestroyOwned(_npc);
