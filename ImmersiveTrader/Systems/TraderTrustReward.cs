@@ -20,7 +20,8 @@ public static class TraderTrustReward
     public static readonly IReadOnlyDictionary<string, Gift[]> Gifts = new Dictionary<string, Gift[]>
     {
         ["midka"] = new[] { new Gift("MeadHealthMajor", "Major Healing Mead", 5) },
-        ["troldad"] = new[] { new Gift("MeadTamer", "Brew of Animal Whispers") },
+        ["troldad"] = new[] { new Gift("MeadTamer", "Brew of Animal Whispers"),
+                              new Gift(EnhancementScrollItems.PrefabName("laugh"), "It ain't funny") },
         ["grimvald"] = new[] { new Gift("IronScrap", "Scrap Iron", 30) },
         ["rudy_warg"] = Array.Empty<Gift>(), // scrolls only
         ["mokra_dzika"] = new[] { new Gift("SilverOre", "Silver Ore", 30) },
@@ -45,7 +46,7 @@ public static class TraderTrustReward
         var bundle = new List<Gift> { new(EnhancementScrollItems.PrefabName("rested"), "Scroll of Rested") };
         TraderShopRegistry.ScrollOffer.TryGetValue(trader, out var sold);
         var pool = EnhancementScrollItems.RegisteredIds
-            .Where(id => id != "rested" && id != sold).ToList();
+            .Where(id => id != "rested" && id != "laugh" && id != sold).ToList();
         if (pool.Count > 0)
         {
             string pick = pool[UnityEngine.Random.Range(0, pool.Count)];
