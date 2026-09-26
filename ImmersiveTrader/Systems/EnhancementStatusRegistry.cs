@@ -18,17 +18,17 @@ internal static class EnhancementStatusRegistry
     internal static void Register()
     {
         if (ObjectDB.instance == null) return;
-        Add("embers", "+5-10 Fire do trafienia");
-        Add("frost", "+5-10 Frost do trafienia");
-        Add("storm", "+5-10 Lightning do trafienia");
-        Add("venom", "+5-10 Poison do trafienia");
-        Add("spirit", "+5-10 Spirit do trafienia");
+        AddDamage("embers", "+5-10 Fire do trafienia", SE_EnhancementDamage.Kind.Fire);
+        AddDamage("frost", "+5-10 Frost do trafienia", SE_EnhancementDamage.Kind.Frost);
+        AddDamage("storm", "+5-10 Lightning do trafienia", SE_EnhancementDamage.Kind.Lightning);
+        AddDamage("venom", "+5-10 Poison do trafienia", SE_EnhancementDamage.Kind.Poison);
+        AddDamage("spirit", "+5-10 Spirit do trafienia", SE_EnhancementDamage.Kind.Spirit);
 
-        AddStats("lumberjack", "+20% Chop");
-        AddStats("miner", "+20% Pickaxe");
+        AddDamage("lumberjack", "+20% Chop", SE_EnhancementDamage.Kind.Chop);
+        AddDamage("miner", "+20% Pickaxe", SE_EnhancementDamage.Kind.Pickaxe);
 
         var burden = AddStats("burden", "+10% maks. udźwigu");
-        burden.m_addMaxCarryWeight = 30f; // patched below to be true 10% dynamically
+        burden.m_addMaxCarryWeight = 0f; // true 10% is calculated dynamically by EnhancementCarryPatch
 
         var vitality = AddStats("vitality", "+10% regeneracji HP");
         vitality.m_healthRegenMultiplier = 1.10f;
@@ -50,6 +50,16 @@ internal static class EnhancementStatusRegistry
         pathfinder.m_jumpStaminaUseModifier = -0.15f;
 
         AddStats("hunter", "-10% staminy przy użyciu łuku");
+    }
+
+    private static SE_EnhancementDamage AddDamage(string id, string tooltip, SE_EnhancementDamage.Kind kind)
+    {
+        var se = ScriptableObject.CreateInstance<SE_EnhancementDamage>();
+        se.DamageKind = kind;
+        Setup(se, id, tooltip);
+        ObjectDB.instance.m_StatusEffects.Add(se);
+        Effects[id] = se;
+        return se;
     }
 
     private static StatusEffect Add(string id, string tooltip)
