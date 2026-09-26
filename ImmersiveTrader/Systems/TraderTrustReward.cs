@@ -72,6 +72,9 @@ public static class TraderTrustReward
 
     public static void TryGrant(Player player, string trader)
     {
+        // Trusted rewards are persistent, one-time gameplay state. Remote clients must
+        // never mint them from their local files; server transaction RPC will own this path.
+        if (!MultiplayerAuthority.CanMutatePersistentState()) return;
         if (TraderReputation.GetLevel(player, trader) < 5 || !Gifts.ContainsKey(trader))
             return;
         // Gift access follows the same character-based gate as this trader's shop.
