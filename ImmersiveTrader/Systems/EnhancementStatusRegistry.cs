@@ -57,6 +57,23 @@ internal static class EnhancementStatusRegistry
         pathfinder.m_jumpStaminaUseModifier = -0.15f;
 
         AddStats("hunter", "-10% staminy przy użyciu łuku");
+        AddRested();
+    }
+
+    private static void AddRested()
+    {
+        var vanilla = ObjectDB.instance?.GetStatusEffect("Rested".GetStableHashCode());
+        if (vanilla == null) { Plugin.Log.LogWarning("Vanilla Rested status was not found."); return; }
+        var se = UnityEngine.Object.Instantiate(vanilla);
+        se.name = "ImmersiveTrader_rested";
+        se.m_name = vanilla.m_name;
+        se.m_tooltip = "";
+        se.m_icon = vanilla.m_icon;
+        se.m_ttl = 1200f;
+        se.m_flashIcon = false;
+        se.m_cooldownIcon = false;
+        ObjectDB.instance!.m_StatusEffects.Add(se);
+        Effects["rested"] = se;
     }
 
     private static SE_EnhancementDamage AddDamage(string id, string tooltip, SE_EnhancementDamage.Kind kind)
@@ -101,19 +118,6 @@ internal static class EnhancementStatusRegistry
     internal static bool Apply(Player player, string id, float seconds, out string message)
     {
         id = id.ToLowerInvariant();
-        if (id == "rested")
-        {
-            var rested = ObjectDB.instance?.GetStatusEffect("Rested".GetStableHashCode());
-            if (rested == null) { message = "Vanilla Rested status was not found."; return false; }
-            var active = player.GetSEMan().AddStatusEffect(rested, true);
-            if (active == null) { message = "Could not apply Rested."; return false; }
-            active.m_ttl = 1200f;
-            EnhancementStatusTime.Reset(active);
-            RestedGrantedByEnhancement = true;
-            message = "Rested applied for 20 minutes.";
-            return true;
-        }
-
         if (!Effects.TryGetValue(id, out var template))
         {
             message = "Unknown buff. Use: it buff list";
@@ -122,23 +126,19 @@ internal static class EnhancementStatusRegistry
 
         var applied = player.GetSEMan().AddStatusEffect(template, true);
         if (applied == null) { message = "Could not apply buff."; return false; }
-        applied.m_ttl = seconds > 0f ? seconds : DefaultDuration;
+        applied.m_ttl = id == "rested" ? 1200f : (seconds > 0f ? seconds : DefaultDuration);
         EnhancementStatusTime.Reset(applied);
+        if (id == "rested") RestedGrantedByEnhancement = true;
         message = $"{DisplayName(id)} applied for {Mathf.RoundToInt(applied.m_ttl)} seconds.";
         return true;
     }
 
     internal static void Clear(Player player)
     {
-        if (RestedGrantedByEnhancement)
-            player.GetSEMan().RemoveStatusEffect("Rested".GetStableHashCode(), true);
-        RestedGrantedByEnhancement = false;
         foreach (var id in Ids)
-        {
-            if (id == "rested") continue;
             if (Effects.TryGetValue(id, out var se))
                 player.GetSEMan().RemoveStatusEffect(se.NameHash(), true);
-        }
+        RestedGrantedByEnhancement = false;
     }
 
     internal static bool Has(Character character, string id) =>
@@ -171,13 +171,6 @@ internal static class EnhancementStatusRegistry
 
     internal static void SetRemaining(Player player, string id, float seconds)
     {
-        if (id.Equals("rested", StringComparison.OrdinalIgnoreCase))
-        {
-            var template = ObjectDB.instance?.GetStatusEffect("Rested".GetStableHashCode());
-            var active = template == null ? null : player.GetSEMan().GetStatusEffect(template);
-            if (active != null) { active.m_ttl = seconds; EnhancementStatusTime.Reset(active); }
-            return;
-        }
         var own = Template(id);
         var effect = own == null ? null : player.GetSEMan().GetStatusEffect(own);
         if (effect != null) { effect.m_ttl = seconds; EnhancementStatusTime.Reset(effect); }
