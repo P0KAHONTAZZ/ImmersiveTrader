@@ -142,6 +142,7 @@ public static class TraderShopRegistry
 
             // Thematic profession scrolls are secondary level-5 offers. Nine traders therefore have two L5 items.
             new("troldad", EnhancementScrollItems.PrefabName("lumberjack"), 500, 1, 0, "Scroll of Lumberjack", 5),
+            new("troldad", EnhancementScrollItems.PrefabName("laugh"), 500, 1, 0, "It ain't funny", 5),
             new("grimvald", EnhancementScrollItems.PrefabName("miner"), 580, 1, 1, "Scroll of Miner", 5),
             new("encek", EnhancementScrollItems.PrefabName("craftsman"), 660, 1, 2, "Scroll of Craftsman", 5),
             new("hrothgar", EnhancementScrollItems.PrefabName("miner"), 750, 1, 3, "Scroll of Miner", 5),
