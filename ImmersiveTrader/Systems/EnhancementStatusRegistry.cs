@@ -22,7 +22,7 @@ internal static class EnhancementStatusRegistry
     internal static readonly string[] Ids =
     {
         "embers","frost","storm","venom","spirit","lumberjack","miner","burden",
-        "vitality","endurance","focus","craftsman","wanderer","pathfinder","hunter","rested"
+        "vitality","endurance","focus","craftsman","wanderer","pathfinder","hunter","rested","laugh"
     };
 
     internal static void Register()
@@ -59,6 +59,9 @@ internal static class EnhancementStatusRegistry
         pathfinder.m_jumpStaminaUseModifier = -0.15f;
 
         AddStats("hunter", "-10% staminy przy użyciu łuku");
+        var laugh = Add("laugh", "");
+        laugh.m_ttl = 1200f;
+        laugh.m_icon = LoadStandaloneIcon("ImmersiveTrader.Assets.ItAintFunny_Status.png", "ImmersiveTrader_StatusIcon_laugh");
     }
 
     private static SE_EnhancementDamage AddDamage(string id, string tooltip, SE_EnhancementDamage.Kind kind)
@@ -174,7 +177,7 @@ internal static class EnhancementStatusRegistry
         if (template == null) return false;
         var active = player.GetSEMan().GetStatusEffect(template.NameHash());
         if (active == null) return false;
-        active.m_ttl = id.Equals("rested", StringComparison.OrdinalIgnoreCase) ? RestedDuration : DefaultDuration;
+        active.m_ttl = id.Equals("rested", StringComparison.OrdinalIgnoreCase) || id.Equals("laugh", StringComparison.OrdinalIgnoreCase) ? RestedDuration : DefaultDuration;
         EnhancementStatusTime.Reset(active);
         if (id.Equals("rested", StringComparison.OrdinalIgnoreCase)) RestedGrantedByEnhancement = true;
         return true;
@@ -193,6 +196,15 @@ internal static class EnhancementStatusRegistry
         if (IconAtlas == null || IconAtlas.width < (index + 1) * 128 || IconAtlas.height < 128) return null;
         var sprite = Sprite.Create(IconAtlas, new Rect(index * 128, 0, 128, 128), new Vector2(0.5f, 0.5f));
         sprite.name = "ImmersiveTrader_StatusIcon_" + id;
+        return sprite;
+    }
+
+    private static Sprite? LoadStandaloneIcon(string resource, string name)
+    {
+        var texture = LoadTexture(resource);
+        if (texture == null) return null;
+        var sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+        sprite.name = name;
         return sprite;
     }
 
@@ -224,5 +236,6 @@ internal static class EnhancementStatusRegistry
 
     internal static void MarkRestedEnhancement(bool value) => RestedGrantedByEnhancement = value;
 
-    internal static string DisplayName(string id) => char.ToUpperInvariant(id[0]) + id.Substring(1);
+    internal static string DisplayName(string id) =>
+        id.Equals("laugh", StringComparison.OrdinalIgnoreCase) ? "It ain't funny" : char.ToUpperInvariant(id[0]) + id.Substring(1);
 }
