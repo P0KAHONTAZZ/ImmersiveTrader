@@ -6,17 +6,14 @@ using Object = UnityEngine.Object;
 
 namespace ImmersiveTrader.Components;
 
-/// <summary>Visual-only club and hide cloak for Troldad's native Troll skeleton.</summary>
+/// <summary>Visual-only hide cloak for Troldad's native Troll skeleton.</summary>
 public sealed class TroldadVisualProps : MonoBehaviour
 {
     private void Start()
     {
         try
         {
-            var hand = FindBone("RightHand", "Hand_R", "Right_Hand", "hand.R");
             var back = FindBone("Spine", "Chest", "spine", "Body");
-            if (hand != null) AttachVisual("Club", "attach", hand, Vector3.zero, Quaternion.identity, 1.8f);
-            else Plugin.Log.LogWarning("Troldad hand bone unavailable; club skipped.");
             if (back != null) AttachVisual("CapeTrollHide", "attach_skin", back,
                 new Vector3(0f, -0.15f, -0.4f), Quaternion.Euler(0f, 180f, 0f), 1.35f);
             else Plugin.Log.LogWarning("Troldad back bone unavailable; cloak skipped.");
