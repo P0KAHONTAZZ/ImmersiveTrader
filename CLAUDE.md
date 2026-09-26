@@ -43,5 +43,6 @@ tablicą `m_shared.m_icons`. Zasady:
 
 ## Build
 - `Environment.props` lokalnie (VALHEIM_INSTALL, w .gitignore). Build: `powershell -ExecutionPolicy Bypass -File .\Build-And-Install-Verified.ps1`.
+- Aktualizacja + build jednym poleceniem: `powershell -ExecutionPolicy Bypass -File .\Update-And-Build.ps1`.
 - DLL: `ImmersiveTrader\bin\Debug\netstandard2.1\ImmersiveTrader.dll` → `Valheim\BepInEx\plugins\`.
 - Log gry: `Valheim\BepInEx\LogOutput.log`.
