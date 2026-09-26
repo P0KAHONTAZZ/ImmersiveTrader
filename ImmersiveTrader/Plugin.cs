@@ -60,6 +60,7 @@ public sealed class Plugin : BaseUnityPlugin
         TreasureRegistry.Register();
         ContractRegistry.Register();
         EnhancementStatusRegistry.Register();
+        EnhancementScrollRegistry.Register();
         TraderRegistry.Initialize();
         TraderActivityRegistry.Validate();
         RewardRegistry.Initialize();
