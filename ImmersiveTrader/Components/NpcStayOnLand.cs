@@ -11,6 +11,7 @@ public sealed class NpcStayOnLand : MonoBehaviour
 {
     public float LeashRadius = 10f;
     public bool DisableDistanceTeleport;
+    public bool HoldAtHome;
     private Vector3 _home;
     private bool _homeSet;
     private float _next;
@@ -33,6 +34,12 @@ public sealed class NpcStayOnLand : MonoBehaviour
 
     private void Update()
     {
+        if (HoldAtHome && _homeSet)
+        {
+            HoldAt(_home + Vector3.up * 0.2f);
+            return;
+        }
+
         var active = NativeTraderWindow.ActiveNpc;
         bool shopOpen = active != null &&
             (active == gameObject || active.transform.IsChildOf(transform) || transform.IsChildOf(active.transform));
