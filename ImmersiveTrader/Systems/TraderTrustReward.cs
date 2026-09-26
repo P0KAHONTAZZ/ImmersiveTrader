@@ -22,7 +22,7 @@ public static class TraderTrustReward
         ["midka"] = new[] { new Gift("MeadHealthMajor", "Major Healing Mead", 5) },
         ["troldad"] = new[] { new Gift("MeadTamer", "Brew of Animal Whispers") },
         ["grimvald"] = new[] { new Gift("IronScrap", "Scrap Iron", 30) },
-        ["rudy_warg"] = new[] { new Gift("HelmetRoot", "Root Mask") },
+        ["rudy_warg"] = Array.Empty<Gift>(), // scrolls only
         ["mokra_dzika"] = new[] { new Gift("SilverOre", "Silver Ore", 30) },
         ["encek"] = new[] { new Gift("SilverOre", "Silver Ore", 30),
                             new Gift(EnhancementScrollItems.PrefabName("endurance"), "Scroll of Endurance") },
