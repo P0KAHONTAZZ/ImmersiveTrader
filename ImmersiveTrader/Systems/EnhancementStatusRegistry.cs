@@ -22,7 +22,7 @@ internal static class EnhancementStatusRegistry
     internal static readonly string[] Ids =
     {
         "embers","frost","storm","venom","spirit","lumberjack","miner","burden",
-        "vitality","endurance","focus","craftsman","wanderer","pathfinder","hunter","rested","laugh"
+        "vitality","endurance","focus","craftsman","wanderer","pathfinder","hunter","rested","nokidding"
     };
 
     internal static void Register()
@@ -59,9 +59,9 @@ internal static class EnhancementStatusRegistry
         pathfinder.m_jumpStaminaUseModifier = -0.15f;
 
         AddStats("hunter", "-10% staminy przy użyciu łuku");
-        var laugh = Add("laugh", "");
+        var laugh = Add("nokidding", "");
         laugh.m_ttl = 1200f;
-        laugh.m_icon = LoadStandaloneIcon("ImmersiveTrader.Assets.ItAintFunny_Status.png", "ImmersiveTrader_StatusIcon_laugh");
+        laugh.m_icon = LoadStandaloneIcon("ImmersiveTrader.Assets.ItAintFunny_Status.png", "ImmersiveTrader_StatusIcon_nokidding");
     }
 
     private static SE_EnhancementDamage AddDamage(string id, string tooltip, SE_EnhancementDamage.Kind kind)
@@ -177,7 +177,7 @@ internal static class EnhancementStatusRegistry
         if (template == null) return false;
         var active = player.GetSEMan().GetStatusEffect(template.NameHash());
         if (active == null) return false;
-        active.m_ttl = id.Equals("rested", StringComparison.OrdinalIgnoreCase) || id.Equals("laugh", StringComparison.OrdinalIgnoreCase) ? RestedDuration : DefaultDuration;
+        active.m_ttl = id.Equals("rested", StringComparison.OrdinalIgnoreCase) || id.Equals("nokidding", StringComparison.OrdinalIgnoreCase) ? RestedDuration : DefaultDuration;
         EnhancementStatusTime.Reset(active);
         if (id.Equals("rested", StringComparison.OrdinalIgnoreCase)) RestedGrantedByEnhancement = true;
         return true;
@@ -237,5 +237,5 @@ internal static class EnhancementStatusRegistry
     internal static void MarkRestedEnhancement(bool value) => RestedGrantedByEnhancement = value;
 
     internal static string DisplayName(string id) =>
-        id.Equals("laugh", StringComparison.OrdinalIgnoreCase) ? "It ain't funny" : char.ToUpperInvariant(id[0]) + id.Substring(1);
+        id.Equals("nokidding", StringComparison.OrdinalIgnoreCase) ? "It ain't funny" : char.ToUpperInvariant(id[0]) + id.Substring(1);
 }
